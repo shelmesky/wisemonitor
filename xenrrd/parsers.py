@@ -22,12 +22,18 @@ def parse_rrd_updates(rrd_xml):
     meta = xport.find('meta')
     data = xport.find('data')
 
+    step = int(meta.find('step').text)
     row_num = int(meta.find('rows').text)
     colum_num = int(meta.find('columns').text)
 
     legend = meta.find('legend')
     legend_entries = [_LegendEntry._make(entry.text.split(':'))
                       for entry in legend.iter('entry')]
+    try:
+        # We're assuming cf in all legend entries are same
+        cf = legend_entries[0].cf
+    except IndexError:
+        pass
 
     from collections import defaultdict
     result = defaultdict(OrderedDict)
@@ -43,9 +49,13 @@ def parse_rrd_updates(rrd_xml):
             record = result[(epoch_time, legend_entry.uuid)]
             record[legend_entry.metric_name] = value
 
+        # All columns of the row processed and result populated with records.
+        # We can begin yield individual result
         while result:
             key, metrics = result.popitem()
             epoch_time, uuid = key
             yield {'epoch_time': epoch_time,
                    'uuid': uuid,
+                   'step': step,
+                   'cf': cf,
                    'metrics': metrics}
