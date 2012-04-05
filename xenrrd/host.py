@@ -17,6 +17,8 @@ class XenHost(object):
                  follow_master=False):
         """Construct a XenHost.
 
+        When used inside a 'with' statement, login and logout are automatic.
+
         :param host: host of Xen
         :type host: string
         :param username: login username
@@ -32,12 +34,20 @@ class XenHost(object):
         self.scheme = scheme
         self.follow_master = follow_master
 
+    def __enter__(self):
+        self.login()
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.logout()
+
     @property
     def url(self):
         """URL connetion string"""
         return '{scheme}://{host}'.format(scheme=self.scheme, host=self.host)
 
     def login(self):
+        """Login to Xen host."""
         try:
             self.session = XenAPI.Session(self.url)
             self.session.xenapi.login_with_password(self.username,
@@ -49,6 +59,10 @@ class XenHost(object):
                 self.session.xenapi.login_with_password('rrd', '123456')
             else:
                 raise
+
+    def logout(self):
+        """Logout Xen host."""
+        self.session.xenapi.logout()
 
     def find_vm(self, exclude_control_domain=True, **kwargs):
         """Find VMs that meets criteria.
