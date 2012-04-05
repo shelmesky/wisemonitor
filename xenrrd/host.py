@@ -7,12 +7,74 @@ Classes:
 
 import urllib
 
+import XenAPI
 
-class XenRRDHost(object):
-    def __init__(self, host, username, password):
+
+class XenHost(object):
+    """Encapsulate operations on Xen host."""
+
+    def __init__(self, host, username=None, password=None, scheme='http',
+                 follow_master=False):
+        """Construct a XenHost.
+
+        :param host: host of Xen
+        :type host: string
+        :param username: login username
+        :param password: login password
+        :param scheme: protocol to use, default is http
+        :param follow_master: whether to auto connect pool master when the
+        host itself is not the pool master
+        :type follow_master: boolean
+        """
         self.host = host
         self.username = username
         self.password = password
+        self.scheme = scheme
+        self.follow_master = follow_master
+
+    @property
+    def url(self):
+        """URL connetion string"""
+        return '{scheme}://{host}'.format(scheme=self.scheme, host=self.host)
+
+    def login(self):
+        try:
+            self.session = XenAPI.Session(self.url)
+            self.session.xenapi.login_with_password(self.username,
+                                                    self.password)
+        except XenAPI.Failure as err:
+            if err.details[0] == 'HOST_IS_SLAVE' and self.follow_master:
+                pool_master = err.details[1]
+                self.session = XenAPI.Session('http://%s' % pool_master)
+                self.session.xenapi.login_with_password('rrd', '123456')
+            else:
+                raise
+
+    def find_vm(self, exclude_control_domain=True, **kwargs):
+        """Find VMs that meets criteria.
+
+        :param exclude_control_domain: do not count control domain in, default
+        is True
+        :param kwargs: queries in keyword argument form, e.g.,
+        name_label='My VM'
+        :returns: an iterator of matching VMs
+        """
+
+        vms = self.session.xenapi.VM.get_all()
+        for vm in vms:
+            record = self.session.xenapi.VM.get_record(vm)
+            if record["is_a_template"]:
+                continue
+            if exclude_control_domain and record["is_control_domain"]:
+                continue
+
+            if all(query in record and record[query] == value
+                   for query, value in kwargs.iteritems()):
+                yield record
+
+
+class XenRRDHost(XenHost):
+    """Encapsulate RRD operations from Xen host."""
 
     def fetch_rrd_updates(self, start, cf=None, interval=None, host=True):
         params = {}
@@ -33,11 +95,12 @@ class XenRRDHost(object):
                                query='?uuid={0}'.format(uuid))
 
     def _fetch_rrd(self, rrd_type, query=''):
-        scheme = 'http'  #FIXME: hardcoded
+        scheme = self.scheme
         username = self.username
         password = self.password
         host = self.host
 
+        # For RRD, we can direct visit and avoid logging in with XenAPI.Session
         url = '{scheme}://{username}:{password}@{host}/{rrd_type}{query}'.format(**locals())
 
         # Adapt from parse_rrd.py from XenServer website, which says "this is
