@@ -2,6 +2,7 @@
 
 Classes:
 
+    XenHost
     XenRRDHost
 """
 
