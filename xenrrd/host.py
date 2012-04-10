@@ -12,7 +12,17 @@ import XenAPI
 
 
 class XenHost(object):
-    """Encapsulate operations on Xen host."""
+    """Encapsulate operations on Xen host.
+
+    Members:
+        host - hostname or ipaddress of the Xen host
+        url - Connection URL string
+
+    Methods:
+        login
+        logout
+        find_vm
+    """
 
     def __init__(self, host, username=None, password=None, scheme='http',
                  follow_master=False):
