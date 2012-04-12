@@ -17,6 +17,7 @@ class XenHost(object):
     Members:
         host - hostname or ipaddress of the Xen host
         url - Connection URL string
+        follow_master - whether to follow master node in the pool
 
     Methods:
         login
@@ -36,7 +37,8 @@ class XenHost(object):
         :param password: login password
         :param scheme: protocol to use, default is http
         :param follow_master: whether to auto connect pool master when the
-        host itself is not the pool master
+        host itself is not the pool master, using same username and password.
+        Useful if you have a pool of xen servers with same credentials.
         :type follow_master: boolean
         """
         self.host = host
@@ -67,7 +69,8 @@ class XenHost(object):
             if err.details[0] == 'HOST_IS_SLAVE' and self.follow_master:
                 pool_master = err.details[1]
                 self.session = XenAPI.Session('http://%s' % pool_master)
-                self.session.xenapi.login_with_password('rrd', '123456')
+                self.session.xenapi.login_with_password(self.username,
+                                                        self.password)
             else:
                 raise
 
