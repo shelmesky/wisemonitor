@@ -97,6 +97,13 @@ class XenHost(object):
                    for query, value in kwargs.iteritems()):
                 yield record
 
+    def find_one_vm(self, **kwargs):
+        """Find one VM that meets criteria. Calls find_vm. """
+        try:
+            return next(self.find_vm(**kwargs))
+        except StopIteration:
+            return None
+
 
 class XenRRDHost(XenHost):
     """Encapsulate RRD operations from Xen host."""
