@@ -37,7 +37,8 @@ class RRDUpdates(object):
 
                 value = float(v.text)
 
-                record = result[(epoch_time, legend_entry.uuid)]
+                record = result[(epoch_time, legend_entry.uuid,
+                                 legend_entry.host_or_vm)]
                 record[legend_entry.metric_name] = value
 
             # All columns of the row processed now.
@@ -45,9 +46,10 @@ class RRDUpdates(object):
             # We can begin yield individual result
             while result:
                 key, metrics = result.popitem()
-                epoch_time, uuid = key
+                epoch_time, uuid, host_or_vm = key
                 yield {'epoch_time': epoch_time,
                        'uuid': uuid,
+                       'host_or_vm': host_or_vm,
                        'metrics': metrics}
 
     def _parse(self, rrd_xml):
