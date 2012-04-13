@@ -1,5 +1,7 @@
+from collections import defaultdict
+
 from bottle import get, request, run
-from pymongo import Connection, ASCENDING, DESCENDING
+from pymongo import Connection, ASCENDING
 
 import conf
 
@@ -8,15 +10,26 @@ conn = Connection(conf.DB_HOST)
 db = conn[conf.DB_NAME]
 
 
-@get('/vm/<vm_name>')
+@get('/vm/<vm_name>/')
 def vm_metrics(vm_name):
-    """Return VM metrics.
+    """Return all metrics of the specified VM.
 
-    TODO: docstring
+    Supported query parameters:
+        start - start time of data points in seconds since epoch
+        end - start time of data points in seconds since epoch
+
+    Example:
+        http://localhost/vm/i-4-33-VM/?start=1334280890&end=1334280910
     """
 
     query_params = {'name': vm_name}
-    query_params.update(request.query)
+    time_range = defaultdict(dict)
+    if request.query.start:
+        time_range['$gte'] = int(request.query.start)
+    if request.query.end:
+        time_range['$lte'] = int(request.query.end)
+    if time_range:
+        query_params['epoch_time'] = time_range
     data = list(db.vm_metrics.find(query_params,
                                    ['epoch_time', 'metrics', 'cf', 'step'],
                                    sort=[('epoch_time', ASCENDING)]))
