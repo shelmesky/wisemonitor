@@ -36,6 +36,6 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(minutes=1),
         'args': ('192.2.3.219', 'tulsa',
                  (('192.2.3.215', 'rrd', '123456'),
-                  ('192.2.3.215', 'rrd', '123456')))
+                  ('192.2.3.216', 'rrd', '123456')))
     }
 }
