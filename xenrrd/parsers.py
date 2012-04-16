@@ -1,7 +1,11 @@
 """Parsers for Xen RRD in XML format."""
 
 import xml.etree.ElementTree
-from collections import defaultdict, OrderedDict, namedtuple
+from collections import defaultdict, namedtuple
+try:
+    from collections import OrderedDict  # Python 2.7
+except ImportError:
+    from ordereddict import OrderedDict  # ordereddict from pypi
 
 
 _LegendEntry = namedtuple('_LegendEntry',
@@ -29,10 +33,10 @@ class RRDUpdates(object):
 
         result = defaultdict(OrderedDict)
 
-        for row in self.data.iter('row'):
+        for row in self.data.getiterator('row'):
             epoch_time = int(row.find('t').text)
 
-            for i, v in enumerate(row.iter('v')):
+            for i, v in enumerate(row.getiterator('v')):
                 legend_entry = self.legend_entries[i]
 
                 value = float(v.text)
@@ -65,7 +69,7 @@ class RRDUpdates(object):
 
         legend = meta.find('legend')
         self.legend_entries = [_LegendEntry._make(entry.text.split(':'))
-                               for entry in legend.iter('entry')]
+                               for entry in legend.getiterator('entry')]
 
         try:
             # We're assuming cf in all legend entries are same
