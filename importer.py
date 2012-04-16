@@ -64,19 +64,25 @@ class MongoDBImporter(object):
         rrd_updates = RRDUpdates(rrd_xml)
 
         def insert(record):
-            record['cf'] = rrd_updates.cf
-            record['step'] = rrd_updates.step
-            record['_id'] = '{uuid}:{epoch_time}:{cf}:{step}'.format(**record)
+            doc = {'uuid': record['uuid'], 'epoch_time': record['epoch_time'],
+                   'cf': rrd_updates.cf, 'step': rrd_updates.step,
+                   'metrics': []}
+            doc['_id'] = '{uuid}:{epoch_time}:{cf}:{step}'.format(**doc),
+
+            # Since metrics name could include dot(.), we can't use it as key
+            # name. We define our name/value pair.
+            for k, v in record['metrics'].iteritems():
+                doc['metrics'].append({'name': k, 'value': v})
 
             host_or_vm = record.pop('host_or_vm', None)
             if host_or_vm == 'host':
-                record['name'] = xen_rrd_host.host
-                self.host_metrics.save(record)
+                doc['name'] = xen_rrd_host.host
+                self.host_metrics.save(doc)
             if host_or_vm == 'vm':
-                record['host'] = xen_rrd_host.host
-                record['name'] = self._get_name_label(xen_rrd_host,
-                                                      record['uuid'])
-                self.vm_metrics.save(record)
+                doc['host'] = xen_rrd_host.host
+                doc['name'] = self._get_name_label(xen_rrd_host,
+                                                   doc['uuid'])
+                self.vm_metrics.save(doc)
 
         map(insert, rrd_updates.records)
 
