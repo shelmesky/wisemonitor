@@ -67,7 +67,7 @@ class MongoDBImporter(object):
             doc = {'uuid': record['uuid'], 'epoch_time': record['epoch_time'],
                    'cf': rrd_updates.cf, 'step': rrd_updates.step,
                    'metrics': []}
-            doc['_id'] = '{uuid}:{epoch_time}:{cf}:{step}'.format(**doc),
+            doc['_id'] = '{uuid}:{epoch_time}:{cf}:{step}'.format(**doc)
 
             # Since metrics name could include dot(.), we can't use it as key
             # name. We define our name/value pair.
@@ -78,16 +78,21 @@ class MongoDBImporter(object):
             if host_or_vm == 'host':
                 doc['name'] = xen_rrd_host.host
                 self.host_metrics.save(doc)
+                insert.count += 1
             if host_or_vm == 'vm':
                 doc['host'] = xen_rrd_host.host
                 doc['name'] = self._get_name_label(xen_rrd_host,
                                                    doc['uuid'])
                 self.vm_metrics.save(doc)
+                insert.count += 1
 
+        insert.count = 0
         map(insert, rrd_updates.records)
 
         host_doc['last_rrd_updates'] = rrd_updates.end
         self.host_info.save(host_doc)
+
+        return insert.count
 
     def _get_name_label(self, xen_rrd_host, uuid):
         vm_doc = self.vm_info.find_one({'uuid': uuid})
