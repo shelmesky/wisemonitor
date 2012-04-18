@@ -31,9 +31,9 @@ def import_rrd(db_host, db_name, redis_host, redis_db,
             lock.release()
 
 
-@task
+@task(ignore_result=True)
 def import_all_rrd(db_host, db_name, redis_host, redis_db, xen_hosts):
     results = [import_rrd.delay(db_host, db_name, redis_host, redis_db,
                                 xen_host_str, xen_username, xen_password)
                for (xen_host_str, xen_username, xen_password) in xen_hosts]
-    return sum(result.get() for result in results)
+    return len(results)
