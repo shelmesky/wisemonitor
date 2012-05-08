@@ -48,6 +48,25 @@ def vif_metrics(vm_name):
     return {'status': 'success', 'result': result}
 
 
+@get('/vm/<vm_name>/vbd/')
+def cpu_metrics(vm_name):
+    """Return VBD (virtual block device) metrics of the specified VM.
+
+    Time series of data will be provided for each block device and read/write
+    combination.
+
+    Supported query parameters:
+        start (optional) - start time of data points in seconds since epoch
+        end (optional) - end time of data points in seconds since epoch
+
+    Example:
+        http://localhost/vm/i-4-33-VM/vbd/?start=1334280890&end=1334280910
+    """
+
+    result = _query_helper(vm_name, request.query, '^vbd_')
+    return {'status': 'success', 'result': result}
+
+
 def _query_helper(vm_name, query, regex=None):
     query_params = {'name': vm_name}
 
