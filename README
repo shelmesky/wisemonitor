@@ -1,1 +1,10 @@
 Please use 'develop' branch as the basis for development. Create lots of feature or bugfix branches and merge back to 'develop' branch. Use 'git merge --no-ff' to leave a trail.
+
+Setup data monitoring with Graphite:
+- Install Graphite independently
+- Find storage-schemas.conf and use Xen VMs config in Graphite
+- Copy celeryconfig.py.example to celeryconfig.py and modify properly
+- Have a running Redis server
+- Run celeryd and celerybeat
+- Confirm data can be imported into Graphite
+- Configure supervisord to start the processes
