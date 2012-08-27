@@ -1,7 +1,7 @@
 import redis
 
 from settings import REDIS, XENSERVERS
-from xenrrd.host import XenHost
+from xenserver.host import XenHost
 
 
 host, port, db = REDIS

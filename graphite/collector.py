@@ -1,7 +1,7 @@
 import time
 
-from xenrrd.host import XenRRDHost
-from xenrrd.parsers import RRDUpdates
+from xenserver.host import XenRRDHost
+from xenserver.parsers import RRDUpdates
 from settings import COLLECTOR_START_SECONDS_AGO
 
 

@@ -23,7 +23,7 @@ class TestWriteMetrics(TestCase):
 
     def test_write_metrics_pickle_to_graphite(self):
         import os.path
-        from ..xenrrd.parsers import RRDUpdates
+        from ..xenserver.parsers import RRDUpdates
         dir = os.path.dirname(__file__)
         with open(os.path.join(dir, 'test_xenrrd.data'), 'r') as f:
             records = RRDUpdates(f.read()).records
