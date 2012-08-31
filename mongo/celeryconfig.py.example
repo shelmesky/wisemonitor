@@ -20,7 +20,7 @@ CELERY_REDIS_DB = 0
 #
 
 CELERY_IMPORTS = (
-    "graphite.tasks",
+    "tasks",
 )
 
 
@@ -31,15 +31,12 @@ CELERY_IMPORTS = (
 from datetime import timedelta
 
 CELERYBEAT_SCHEDULE = {
-    'import-monitoring-data-to-graphite': {
-        'task': 'graphite.tasks.xen_metrics_to_graphite',
+    'import-all-xen-rrd-every-minute': {
+        'task': 'tasks.import_all_rrd',
         'schedule': timedelta(minutes=1),
-        'args': (
-            (
-                ('192.2.4.61', 'rrd', '123456'),
-            ),
-            'localhost',
-             2004
-         )
+        'args': ('192.2.3.219', 'tulsa_ir',  # MongoDB tulsa_ir
+                 '192.2.3.219', '0',         # Redis DB 0
+                 (('192.2.3.215', 'rrd', '123456'),
+                  ('192.2.3.216', 'rrd', '123456')))
     }
 }
