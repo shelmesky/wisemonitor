@@ -17,11 +17,12 @@ def write_metrics_pickle(graphite_cli, records):
 
     Records is an iterator. One record may generate multiple metrics.
     """
-    data = []
+    count = 0
     for record in records:
-        data += _transform(record)
-    graphite_cli.send_pickle(data)
-    return len(data)
+        data_points = _transform(record)
+        graphite_cli.send_pickle(data_points)
+        count += len(data_points)
+    return count
 
 
 def _transform(record):
