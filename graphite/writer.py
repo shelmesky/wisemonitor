@@ -19,9 +19,12 @@ def write_metrics_pickle(graphite_cli, records):
     """
     count = 0
     for record in records:
-        data_points = _transform(record)
-        graphite_cli.send_pickle(data_points)
-        count += len(data_points)
+        try:
+            data_points = _transform(record)
+            graphite_cli.send_pickle(data_points)
+            count += len(data_points)
+        except LookupError, e:
+            print str(e)
     return count
 
 

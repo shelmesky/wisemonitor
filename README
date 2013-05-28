@@ -7,4 +7,4 @@ Setup data monitoring with Graphite:
 - Have a running Redis server
 - Run celeryd and celerybeat
 - Confirm data can be imported into Graphite
-- Configure supervisord to start the processes
+- Configure supervisord to start the processes (change .conf and .sh files accordingly)
