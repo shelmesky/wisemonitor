@@ -1,0 +1,31 @@
+{% extends "system/base.html" %}
+
+{% block head %}
+ 
+<div id="login_form" class="hero-unit">
+    <form class="form-horizontal" action="{% url 'admin_login' %}" method="POST">
+        {% csrf_token %}
+      <div class="control-group">
+        <label class="control-label" for="inputUsername">用户名: </label>
+        <div class="controls">
+          <input type="text" id="inputUsername" name="username" placeholder="用户名">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="inputPassword">密码: </label>
+        <div class="controls">
+          <input type="password" name="password" id="inputPassword" placeholder="密码">
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox"> 记住我
+          </label>
+          <button type="submit" class="btn">登入</button>
+        </div>
+      </div>
+    </form>
+</div>
+
+{% end %}
