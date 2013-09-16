@@ -6,6 +6,12 @@ import XenAPI
 
 
 def get_host_info(session, host_record, verbose=True):
+    '''
+    得到单台xenserver的信息
+    @session: 连接到xenserver的session
+    @host_record: 每条xenserver的记录
+    @verbose: 是否启用详细模式
+    '''
     temp_record = {}
     record = session.xenapi.host.get_record(host_record)
     temp_record['uuid'] = record['uuid']
@@ -65,6 +71,10 @@ def get_host_info(session, host_record, verbose=True):
 
 
 def get_xenserver_host(xenhost):
+    '''
+    获取单台xenserver的相信信息
+    @xenhost: xenserver的IP
+    '''
     for ip, session in global_xenserver_conn.items():
         hosts = session.xenapi.host.get_all()
         for host_record in hosts:
@@ -75,6 +85,9 @@ def get_xenserver_host(xenhost):
 
 
 def get_xenserver_host_all():
+    '''
+    获取所有xenserver的简略信息
+    '''
     final_hosts = []
     for ip, session in global_xenserver_conn.items():
         temp = {}
@@ -93,6 +106,10 @@ def get_xenserver_host_all():
 
 
 def get_xenserver_vm_all(host):
+    '''
+    获取单台xenserver的所有虚拟机
+    @host xenserver的IP地址
+    '''
     final_vms_record = []
     for ip, session in global_xenserver_conn.items():
         if ip == host:
