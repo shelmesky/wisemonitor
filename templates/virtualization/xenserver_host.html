@@ -1,0 +1,182 @@
+{% extends ../base.html %}
+
+{% block title %}
+XenServer列表
+{% end %}
+
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">虚拟化</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/">XenServer</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/{{ host['address'] }}/">{{ host['address'] }}</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+	</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    
+                    <h3>{{ host['address'] }}:</h3>
+			
+			<table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <th rowspan="1" colspan="1" style="width: 110px;">主机名</th>
+                            <th class="sorting_asc" rowspan="1" colspan="1" style="width: 60px;">IP地址</th>
+                            <th rowspan="1" colspan="1" style="width: 30px;">版本</th>
+                            <th rowspan="1" colspan="1" style="width: 60px;">CPU数量</th>
+                            <th rowspan="1" colspan="1" style="width: 150px;">CPU型号</th>
+                            <th rowspan="2" colspan="1" style="width: 80px;">内存总量(MB)</th>
+                            <th rowspan="2" colspan="1" style="width: 80px;">可用内存(MB)</th>
+                            <th rowspan="1" colspan="1" style="width: 190px;">操作</th>
+                           </tr>
+                        </thead>
+                        
+                        <tbody>
+                                <tr class="even">
+                                    <td class="center">{{ host['hostname'] }}</td>
+                                    <td class="center">{{ host['address'] }}</td>
+                                    <td class="center">{{ host['version'] }}</td>
+                                    <td class="center">{{ host['cpu_count'] }}</td>
+                                    <td class="center">{{ host['cpu_modelname'] }}</td>
+                                    <td class="center">{{ host['memory_total'] }}</td>
+                                    <td class="center">{{ host['memory_free'] }}</td>
+                                    
+                                    <td>
+                                        <a class="btn btn-success" href="/virtual/xenserver/{{ host['address'] }}/vms/">
+                                            <i class="icon-zoom-in icon-white"></i>虚拟机
+                                        </a>
+                                        <a class="btn btn-success" href="#">
+                                            <i class="icon-zoom-in icon-white"></i>图表
+                                        </a>
+                                        <a class="btn btn-success" href="#">
+                                            <i class="icon-zoom-in icon-white"></i>编辑
+                                        </a>
+                                    </td>
+                                </tr>
+			</tbody>
+			</table>
+				
+				    <h3>存储设备:</h3>
+				    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+				    <thead>
+				       <tr role="row" class="even">
+					<th class="sorting_asc" rowspan="1" colspan="1" style="width: 20px;">ID</th>
+					<th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+					<th rowspan="1" colspan="1" style="width: 30px;">类型</th>
+					<th class="sorting_asc" rowspan="1" colspan="1" style="width: 60px;">容量(GB)</th>
+					<th rowspan="1" colspan="1" style="width: 60px;">已使用(GB)</th>
+					<th rowspan="1" colspan="1" style="width: 50px;">已挂载</th>
+					<th rowspan="4" colspan="1" style="width: 400px;">参数</th>
+				       </tr>
+				    </thead>
+				    
+				    <tbody>
+				    {% for pbd in host['PBDs'] %}
+					    {% if pbd['id'] & 1 == 0 %}
+						<tr class="odd">
+					    {% else %}
+						<tr class="even">
+					    {% end %}
+						<td class="center">{{ pbd['id'] }}</td>
+						<td class="center">{{ pbd['sr_name'] }}</td>
+						<td class="center">{{ pbd['sr_type'] }}</td>
+						<td class="center">{{ pbd['sr_size'] }}</td>
+						<td class="center">{{ pbd['sr_allocation'] }}</td>
+						<td class="center">
+						    {% if pbd['pbd_attached'] == True %}是{% else %}否{% end %}
+						</td>
+						<td class="center">{{ pbd['pbd_device_config'] }}</td>
+					    </tr>
+				    {% end %}
+				    </tbody>
+				    </table>
+				
+				    <h3>网络设备:</h3>
+				    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+				    <thead>
+				       <tr class="even">
+					<th class="sorting_asc" rowspan="1" colspan="1" style="width: 20px;">ID</th>
+					<th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+					<th rowspan="1" colspan="1" style="width: 30px;">IP</th>
+					<th rowspan="1" colspan="1" style="width: 60px;">掩码</th>
+					<th rowspan="1" colspan="1" style="width: 50px;">MAC</th>
+					<th rowspan="4" colspan="1" style="width: 400px;">VLAN</th>
+					<th rowspan="4" colspan="1" style="width: 400px;">模式</th>
+					<th rowspan="4" colspan="1" style="width: 400px;">物理接口</th>
+					<th rowspan="4" colspan="1" style="width: 400px;">管理接口</th>
+				       </tr>
+				    </thead>
+				    
+				    <tbody>
+				    {% for pif in host['PIFs'] %}
+					    {% if pif['id'] & 1 == 0 %}
+						<tr class="odd">
+					    {% else %}
+						<tr class="even">
+					    {% end %}
+						<td class="center">{{ pif['id'] }}</td>
+						<td class="center">{{ pif['device'] }}</td>
+						<td class="center">
+						    {% if pif['IP'] == "" %}
+							无
+						    {% else %}
+							{{ pif['IP'] }}
+						    {% end %}
+						</td>
+						<td class="center">
+						    {% if pif['netmask'] == "" %}
+							无
+						    {% else %}
+							{{ pif['netmask'] }}
+						    {% end %}
+						</td>
+						<td class="center">{{ pif['MAC'] }}</td>
+						<td class="center">{{ pif['VLAN'] }}</td>
+						<td class="center">
+						    {% if pif['ip_config_mode'] == 'None' %}
+							无
+						    {% else %}
+							{{ pif['ip_config_mode'] }}
+						    {% end %}
+						</td>
+						<td class="center">
+						    {% if pif['is_physical'] == True %}是{% else %}否{% end %}
+						</td>
+						<td class="center">
+						    {% if pif['is_management'] == True %}是{% else %}否{% end %}
+						</td>
+					    </tr>
+				    {% end %}
+				    </tbody>
+				    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+		
+</div>
+{% end %}

@@ -5,6 +5,74 @@ from pprint import pprint
 import XenAPI
 
 
+def get_host_info(session, host_record):
+    temp_record = {}
+    record = session.xenapi.host.get_record(host_record)
+    temp_record['uuid'] = record['uuid']
+    temp_record['hostname'] = record['hostname']
+    temp_record['address'] = record['address']
+    temp_record['cpu_count'] = record['cpu_info']['cpu_count']
+    temp_record['cpu_modelname'] = record['cpu_info']['modelname']
+    temp_record['version'] = record['software_version']['product_version']
+    
+    # get all PBDs
+    temp_record['PBDs'] = []
+    pbds = record['PBDs']
+    j = 1
+    for pbd in pbds:
+        temp_pbd = {}
+        pbd_record = session.xenapi.PBD.get_record(pbd)
+        sr = pbd_record['SR']
+        sr_record = session.xenapi.SR.get_record(sr)
+        temp_pbd['pbd_attached'] = pbd_record['currently_attached']
+        temp_pbd['pbd_device_config'] = str(pbd_record['device_config'])
+        temp_pbd['sr_name'] = sr_record['name_label']
+        temp_pbd['sr_size'] = str(int(sr_record['physical_size']) / (1024**3))
+        temp_pbd['sr_allocation'] = str(int(sr_record['virtual_allocation']) / (1024**3))
+        temp_pbd['sr_utilisation'] = str(int(sr_record['physical_utilisation']) / (1024**3))
+        temp_pbd['sr_type'] = sr_record['type']
+        temp_pbd['id'] = j
+        j += 1
+        temp_record['PBDs'].append(temp_pbd)
+    
+    # get all PIFs
+    temp_record['PIFs'] = []
+    pifs = record['PIFs']
+    k = 1
+    for IF in pifs:
+        temp_pif = {}
+        IF_record = session.xenapi.PIF.get_record(IF)
+        temp_pif['ip_config_mode'] = IF_record['ip_configuration_mode']
+        temp_pif['is_physical'] = IF_record['physical']
+        temp_pif['device'] = IF_record['device']
+        temp_pif['is_management'] = IF_record['management']
+        temp_pif['IP'] = IF_record['IP']
+        temp_pif['netmask'] = IF_record['netmask']
+        temp_pif['MAC'] = IF_record['MAC']
+        temp_pif['VLAN'] = IF_record['VLAN']
+        temp_pif['id'] = k
+        k += 1
+        temp_record['PIFs'].append(temp_pif)
+    
+    # get memory parameters in metrics field
+    metrics = record['metrics']
+    metrics_record = session.xenapi.host_metrics.get_record(metrics)
+    temp_record['memory_total'] = int(metrics_record['memory_total']) / (1024**2)
+    temp_record['memory_free'] = int(metrics_record['memory_free']) / (1024**2)
+    
+    return temp_record
+
+
+def get_xenserver_host(xenhost):
+    for ip, session in global_xenserver_conn.items():
+        hosts = session.xenapi.host.get_all()
+        for host_record in hosts:
+                record = session.xenapi.host.get_record(host_record)
+                if record['address'] == xenhost:
+                    temp_host = get_host_info(session, host_record)
+                    return temp_host
+
+
 def get_xenserver_host_all():
     final_hosts = []
     for ip, session in global_xenserver_conn.items():
@@ -13,64 +81,10 @@ def get_xenserver_host_all():
         temp[ip] = []
         i = 1
         for host in hosts:
-            temp_record = {}
-            record = session.xenapi.host.get_record(host)
-            temp_record['uuid'] = record['uuid']
-            temp_record['hostname'] = record['hostname']
-            temp_record['address'] = record['address']
-            temp_record['cpu_count'] = record['cpu_info']['cpu_count']
-            temp_record['cpu_modelname'] = record['cpu_info']['modelname']
-            temp_record['version'] = record['software_version']['product_version']
-            
-            # get all PBDs
-            temp_record['PBDs'] = []
-            pbds = record['PBDs']
-            j = 1
-            for pbd in pbds:
-                temp_pbd = {}
-                pbd_record = session.xenapi.PBD.get_record(pbd)
-                sr = pbd_record['SR']
-                sr_record = session.xenapi.SR.get_record(sr)
-                temp_pbd['pbd_attached'] = pbd_record['currently_attached']
-                temp_pbd['pbd_device_config'] = str(pbd_record['device_config'])
-                temp_pbd['sr_name'] = sr_record['name_label']
-                temp_pbd['sr_size'] = str(int(sr_record['physical_size']) / (1024**3))
-                temp_pbd['sr_allocation'] = str(int(sr_record['virtual_allocation']) / (1024**3))
-                temp_pbd['sr_utilisation'] = str(int(sr_record['physical_utilisation']) / (1024**3))
-                temp_pbd['sr_type'] = sr_record['type']
-                temp_pbd['id'] = j
-                j += 1
-                temp_record['PBDs'].append(temp_pbd)
-            
-            # get all PIFs
-            temp_record['PIFs'] = []
-            pifs = record['PIFs']
-            k = 1
-            for IF in pifs:
-                temp_pif = {}
-                IF_record = session.xenapi.PIF.get_record(IF)
-                temp_pif['ip_config_mode'] = IF_record['ip_configuration_mode']
-                temp_pif['is_physical'] = IF_record['physical']
-                temp_pif['device'] = IF_record['device']
-                temp_pif['is_management'] = IF_record['management']
-                temp_pif['IP'] = IF_record['IP']
-                temp_pif['netmask'] = IF_record['netmask']
-                temp_pif['MAC'] = IF_record['MAC']
-                temp_pif['VLAN'] = IF_record['VLAN']
-                temp_pif['id'] = k
-                k += 1
-                temp_record['PIFs'].append(temp_pif)
-            
-            # get memory parameters in metrics field
-            metrics = record['metrics']
-            metrics_record = session.xenapi.host_metrics.get_record(metrics)
-            temp_record['memory_total'] = int(metrics_record['memory_total']) / (1024**2)
-            temp_record['memory_free'] = int(metrics_record['memory_free']) / (1024**2)
-            
-            temp_record['id'] = i
+            temp_host = get_host_info(session, host)
+            temp_host['id' ]  = i
             i += 1
-            
-            temp[ip].append(temp_record)
+            temp[ip].append(temp_host)
             
         final_hosts.append(temp)
         
