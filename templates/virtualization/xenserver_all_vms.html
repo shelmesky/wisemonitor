@@ -1,13 +1,13 @@
 {% extends ../base.html %}
 
 {% block title %}
-服务列表
+虚拟机列表
 {% end %}
 
 {% block extra_head %}
 	<script type="text/javascript">
 		$(document).ready(function(){
-			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+			$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
 		});
 	</script>
 {% end %}
@@ -16,13 +16,16 @@
 <div>
     <ul class="breadcrumb">
         <li>
-            <a href="#">基础设施</a> <span class="divider">/</span>
+            <a href="#">虚拟化</a> <span class="divider">/</span>
         </li>
         <li>
-            <a href="/infra/server/">服务器</a> <span class="divider">/</span>
+            <a href="/virtual/xenserver/hosts/">XenServer</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="/infra/server/{{ host_ip }}/">{{ host_ip }}</a>
+            <a href="/virtual/xenserver/hosts/{{ host_address }}/">{{ host_address }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/{{ host_address }}/vms/">VMS</a>
         </li>
     </ul>
     
@@ -34,7 +37,7 @@
 						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
 						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
 					</div>
-			</div>
+	</div>
             
             <div class="box-content">
                 <div class="row-fluid">
@@ -58,43 +61,37 @@
                         </label> 
                     </div>
                     
-                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+			<table class="table table-striped table-bordered bootstrap-datatable" id="">
                         <thead>
                            <tr role="row">
                             <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th>
-                            <th rowspan="1" colspan="1" style="width: 110px;">主机名</th>
-                            <th rowspan="1" colspan="1" style="width: 150px;">服务名</th>
-                            <th rowspan="1" colspan="1" style="width: 30px;">状态</th>
-                            <th rowspan="1" colspan="1" style="width: 260px;">状态输出</th>
-                            <th rowspan="1" colspan="1" style="width: 150px;">更新时间</th>
-                            <th rowspan="1" colspan="1" style="width: 190px;">动作</th>
-                           </tr> 
+                            <th rowspan="1" colspan="1" style="width: 215px;">名称</th>
+                            <th class="sorting_asc" rowspan="1" colspan="1" style="width: 60px;">状态</th>
+                            <th rowspan="1" colspan="1" style="width: 60px;">虚拟CPU</th>
+                            <th rowspan="2" colspan="1" style="width: 40px;">内存总量</th>
+                            <th rowspan="2" colspan="1" style="width: 100px;">网络</th>
+                            <th rowspan="1" colspan="1" style="width: 140px;">操作</th>
+                           </tr>
                         </thead>
                         
                         <tbody>
-                            
-                            {% for service in services_list %}
-                                {% if service['id'] & 1 == 0 %}
+			{% for vm in vms %}
+				{% if vm['id'] & 1 == 0 %}
                                 <tr class="odd">
-                                {% else %}
-                                <tr class="even">
-                                {% end %}
-                                    <td class="center">{{ service['id'] }}</td>
-                                    <td class="center">{{ service['host_name'] }}</td>
-                                    <td class="center">{{ service['service_name'] }}</td>
-                                    <td class="center">
-										{% if service['state'] == 0 %}
-											<span class="label label-success">正常</span>
-										{% elif service['state'] == 1 %}
-											<span class="label label-warning">警告</span>
-										{% elif service['state'] == 2 %}
-											<span class="label label-important">错误</span>
-										{% end %}
-									</td>
-                                    <td class="center">{{ service['output'] }}</td>
-                                    <td class="center">{{ service['last_update'] }}</td>
+				{% else %}
+				<tr class="even">
+				{% end %}
+                                    <td class="center">{{ vm['id'] }}</td>
+                                    <td class="center">{{ vm['name_label'] }}</td>
+                                    <td class="center">{{ vm['power_state'] }}</td>
+                                    <td class="center">{{ vm['vcpu_max'] }}</td>
+                                    <td class="center">{{ vm['memory_static_max'] }}</td>
+                                    <td class="center">{{ vm['networks'] }}</td>
                                     
                                     <td>
+                                        <a class="btn btn-success" href="#">
+                                            <i class="icon-zoom-in icon-white"></i>控制台
+                                        </a>
                                         <a class="btn btn-success" href="#">
                                             <i class="icon-zoom-in icon-white"></i>图表
                                         </a>
@@ -103,13 +100,13 @@
                                         </a>
                                     </td>
                                 </tr>
-                            {% end %}
-                            
-                        </tbody>
-                    </table>
+			{% end %}
+			</tbody>
+			</table>
                 </div>
             </div>
         </div>
     </div>
+		
 </div>
 {% end %}

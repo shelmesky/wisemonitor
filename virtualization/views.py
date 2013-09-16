@@ -37,6 +37,5 @@ class XenServer_Get_ALL(WiseHandler):
 class XenServer_Get_ALL_vms(WiseHandler):
     def get(self, host):
         vms = get_xenserver_vm_all(host)
-        self.set_header("Content-Type", "application/json")
-        self.write(json.dumps(vms))
+        self.render("virtualization/xenserver_all_vms.html", vms=vms, host_address=host)
     

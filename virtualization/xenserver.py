@@ -114,6 +114,7 @@ def get_xenserver_vm_all(host):
     for ip, session in global_xenserver_conn.items():
         if ip == host:
             vms = session.xenapi.VM.get_all()
+            i = 1
             for vm in vms:
                 record = session.xenapi.VM.get_record(vm)
                 if not record['is_a_template'] and not record['is_control_domain']:
@@ -128,6 +129,8 @@ def get_xenserver_vm_all(host):
                     guest_metrics = record['guest_metrics']
                     guest_metrics_record = session.xenapi.VM_guest_metrics.get_record(guest_metrics)
                     temp_record['networks'] = guest_metrics_record['networks']
+                    temp_record['id'] = i
+                    i += 1
                     
                     final_vms_record.append(temp_record)
     
