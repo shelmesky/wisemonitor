@@ -43,9 +43,11 @@ class NovaWebSocketProxy(websockify.WebSocketProxy):
         # Connect to the target
         self.msg("connecting to: %s:%s" % (
                  host, port))
+        # 创建到XenServer的连接
         tsock = self.socket(host, port,
                 connect=True)
 
+        # 连接到XenServer并处理返回的头部
         # Handshake as necessary
         tsock.send("CONNECT %s HTTP/1.1\r\n\r\n" %
                     vnc_location)
@@ -62,6 +64,7 @@ class NovaWebSocketProxy(websockify.WebSocketProxy):
 
         # Start proxying
         try:
+            # 将连接到XenServer的socket作为参数传递给do_proxy
             self.do_proxy(tsock)
         except:
             if tsock:

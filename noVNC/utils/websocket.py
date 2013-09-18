@@ -772,6 +772,10 @@ Sec-WebSocket-Accept: %s\r
 
     def top_new_client(self, startsock, address):
         """ Do something with a WebSockets client connection. """
+        """
+        @startsock: 来自WebSockets的客户连接
+        @address: 连接的地址
+        """
         # Initialize per client settings
         self.send_parts = []
         self.recv_part  = None
@@ -782,6 +786,7 @@ Sec-WebSocket-Accept: %s\r
         # handler process        
         try:
             try:
+                # 为每个WebSockets连接做握手协议
                 self.client = self.do_handshake(startsock, address)
 
                 if self.record:
@@ -797,6 +802,7 @@ Sec-WebSocket-Accept: %s\r
                     self.rec.write("var VNC_frame_data = [\n")
 
                 self.ws_connection = True
+                # 在new_client函数中继续处理每个WebSockets连接
                 self.new_client()
             except self.CClose:
                 # Close the client
@@ -833,7 +839,12 @@ Sec-WebSocket-Accept: %s\r
         do_handshake() method for each connection. If the connection
         is a WebSockets client then call new_client() method (which must
         be overridden) for each new client connection.
+        
+        监听连接，对每个请求做do_handshake()方法。
+        如果连接是一个WebSockets客户，就为每个连接调用new_client()方法(需要在子类中重载)
         """
+        
+        # 创建监听连接，接收来自WebSockts客户的连接
         lsock = self.socket(self.listen_host, self.listen_port, False, self.prefer_ipv6)
 
         if self.daemon:
@@ -881,6 +892,7 @@ Sec-WebSocket-Accept: %s\r
                     try:
                         self.poll()
 
+                        # 监视来自WebSockts的客户连接
                         ready = select.select([lsock], [], [], 1)[0]
                         if lsock in ready:
                             startsock, address = lsock.accept()
@@ -908,6 +920,7 @@ Sec-WebSocket-Accept: %s\r
                             self.msg('%s: exiting due to --run-once'
                                     % address[0])
                             break
+                    # 在子进程中，为每个WebSockets连接做实际的业务处理
                     elif multiprocessing:
                         self.vmsg('%s: new handler Process' % address[0])
                         p = multiprocessing.Process(
