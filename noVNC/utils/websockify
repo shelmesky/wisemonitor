@@ -288,6 +288,7 @@ Traffic Legend:
                 # Send queued client data to the target
                 # 发送tqueue中的数据到XenServer
                 dat = tqueue.pop(0)
+                # TODO: 增加data的translate，再发送到XenServer
                 sent = target.send(dat)
                 if sent == len(dat):
                     self.traffic(">")
@@ -309,6 +310,7 @@ Traffic Legend:
                         self.target_host, self.target_port))
                     raise self.CClose(1000, "Target closed")
 
+                # TODO: 增加data的translate，再存入到cqueue
                 cqueue.append(buf)
                 self.traffic("{")
 
