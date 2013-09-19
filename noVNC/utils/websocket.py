@@ -773,6 +773,9 @@ Sec-WebSocket-Accept: %s\r
     def top_new_client(self, startsock, address):
         """ Do something with a WebSockets client connection. """
         """
+        为每个来自WebSocket的连接处理
+        此函数运行在子进程/线程/协程中
+        
         @startsock: 来自WebSockets的客户连接
         @address: 连接的地址
         """
@@ -862,6 +865,7 @@ Sec-WebSocket-Accept: %s\r
         while True:
             try:
                 try:
+                    # 此处的self.client应该放在子进程/线程中
                     self.client = None
                     startsock = None
                     pid = err = 0

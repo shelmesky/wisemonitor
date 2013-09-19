@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -- coding: utf-8--
 
+XENSERVER_ENABLED = True
+
 LOG_PATH = "server.log"
 LOG_INSTANCE = "Server"
 
@@ -29,3 +31,8 @@ APPS = (
 XEN = (
     ("192.2.3.44", "root", "0x55aa",),
 )
+
+try:
+    from local_conf import *
+except:
+    pass

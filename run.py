@@ -10,6 +10,7 @@ from common.init import *
 from common.api.loader import load_url_handlers
 from common.api import XenAPI
 from logger import logger
+import settings
 from settings import XEN
 
 global_xenserver_conn = {}
@@ -27,7 +28,7 @@ def connect_to_xenserver():
                 logger.error(e)
                 raise e
 
-connect_to_xenserver()
+if settings.XENSERVER_ENABLED: connect_to_xenserver()
 
 
 class iApplication(web.Application):
