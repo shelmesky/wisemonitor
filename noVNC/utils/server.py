@@ -61,7 +61,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
                 session.login_with_password(xen_host[1], xen_host[2])
                 
                 record = session.xenapi.VM.get_record(vm_ref)
-                if not record['is_a_template'] and not record['is_control_domain']:
+                if not record['is_a_template'] and not record['is_a_snapshot']:
                     if record['power_state'] == "Running":
                         console = record['consoles'][0]
                         console_record = session.xenapi.console.get_record(console)

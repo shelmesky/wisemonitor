@@ -173,11 +173,15 @@ if __name__ == '__main__':
         
         session = XenAPI.Session(http + xen_host[0])
         session.login_with_password(xen_host[1], xen_host[2])
+        
         vms = session.xenapi.VM.get_all()
+        
+        vms_running = []
         
         for vm_ref in vms:
             record = session.xenapi.VM.get_record(vm_ref)
-            if not record['is_a_template'] and not record['is_control_domain'] and record['power_state'] == "Running":
+            
+            if not record['is_a_template'] and record['power_state'] == "Running":
                 try:
                     console = record['consoles'][0]
                 except:
@@ -192,6 +196,11 @@ if __name__ == '__main__':
                                    "params": ref + "&session_id=" + session_id,
                                    "name": record['name_label']}
                 
+                if record['is_control_domain']:
+                    vms_vnc[vm_ref]['type'] = "HOST"
+                else:
+                    vms_vnc[vm_ref]['type'] = "VM"
+                
                 #port = get_unused_port()
                 #jobs.append(gevent.spawn(tunnel_listen, session_id, console_location, host, port))
                 #print "Listening on TCP: <%s:%d> for VM: <%s>" % (host, port, record['name_label'])
@@ -200,6 +209,6 @@ if __name__ == '__main__':
 
     print
     pprint(vms_vnc)
-        
+    
     #gevent.joinall(jobs)
       
