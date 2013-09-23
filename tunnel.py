@@ -175,8 +175,8 @@ if __name__ == '__main__':
         session.login_with_password(xen_host[1], xen_host[2])
         vms = session.xenapi.VM.get_all()
         
-        for vm in vms:
-            record = session.xenapi.VM.get_record(vm)
+        for vm_ref in vms:
+            record = session.xenapi.VM.get_record(vm_ref)
             if not record['is_a_template'] and not record['is_control_domain'] and record['power_state'] == "Running":
                 try:
                     console = record['consoles'][0]
@@ -187,15 +187,19 @@ if __name__ == '__main__':
                 console_location = console_record['location']
                 
                 ref = console_location[console_location.find("/", 8):]
-                vms_vnc[record['uuid']] = {"protocol": http,
-                                           "server": xen_host[0],
-                                           "params": ref + "&session_id=" + session_id}
+                vms_vnc[vm_ref] = {"protocol": http,
+                                   "server": xen_host[0],
+                                   "params": ref + "&session_id=" + session_id,
+                                   "name": record['name_label']}
                 
-                port = get_unused_port()
-                jobs.append(gevent.spawn(tunnel_listen, session_id, console_location, host, port))
-                print "Listening on TCP: <%s:%d> for VM: <%s>" % (host, port, record['name_label'])
+                #port = get_unused_port()
+                #jobs.append(gevent.spawn(tunnel_listen, session_id, console_location, host, port))
+                #print "Listening on TCP: <%s:%d> for VM: <%s>" % (host, port, record['name_label'])
         
-    print "\nYou can use any VNC Client to connect to this ports."
+    #print "\nYou can use any VNC Client to connect to this ports."
+
+    print
+    pprint(vms_vnc)
         
-    gevent.joinall(jobs)
+    #gevent.joinall(jobs)
       

@@ -44,51 +44,63 @@ class WebSocketProxy(websockify.WebSocketProxy):
     def __init__(self, *args, **kwargs):
         websockify.WebSocketProxy.__init__(self, *args, **kwargs)
     
-    def make_locations(self):
-        self.vms_vnc = {}
-        
+    def do_get_target(self, host, vm_ref):
         self.http = "http://"
         self.https = "https://"
         
         console_location = None
         
         for xen_host in settings.XEN:
-            proxy = xmlrpclib.ServerProxy(self.http + xen_host[0])
-            result = proxy.session.login_with_password(xen_host[1], xen_host[2])
-            session_id = result['Value']
-            
-            session = XenAPI.Session(self.http + xen_host[0])
-            session.login_with_password(xen_host[1], xen_host[2])
-            vms = session.xenapi.VM.get_all()
-            
-            for vm in vms:
-                record = session.xenapi.VM.get_record(vm)
-                if not record['is_a_template'] and not record['is_control_domain'] and record['power_state'] == "Running":
-                    console = record['consoles'][0]
-                    console_record = session.xenapi.console.get_record(console)
-                    console_location = console_record['location']
-                    
-                    ref = console_location[console_location.find("/", 8):]
-                    self.vms_vnc[record['uuid']] = {"protocol": self.http,
-                                               "server": xen_host[0],
-                                               "params": ref + "&session_id=" + session_id}
+            # 检查host参数
+            if xen_host[0] == host:
+                proxy = xmlrpclib.ServerProxy(self.http + xen_host[0])
+                result = proxy.session.login_with_password(xen_host[1], xen_host[2])
+                session_id = result['Value']
+                
+                session = XenAPI.Session(self.http + xen_host[0])
+                session.login_with_password(xen_host[1], xen_host[2])
+                
+                record = session.xenapi.VM.get_record(vm_ref)
+                if not record['is_a_template'] and not record['is_control_domain']:
+                    if record['power_state'] == "Running":
+                        console = record['consoles'][0]
+                        console_record = session.xenapi.console.get_record(console)
+                        console_location = console_record['location']
+                        
+                        ref = console_location[console_location.find("/", 8):]
+                        protocol = self.http
+                        server = xen_host[0]
+                        params =  ref + "&session_id=" + session_id
+                        return (protocol, server, params, )
+                    else:
+                        return None
+
     def get_target(self, path):
+        """
+        @path: 从websocket客户端传递来的path参数
+        类似这样: /websockify?host=192.2.3.44&vm_ref=cb7ecb5b-ec4a-c372-30d8-c11c686dc21f
+        host: XenServer主机的IP地址
+        vm_ref: VM的reference id(注意不是VM实例属性的'uuid'字段)
+        """
         args = parse_qs(urlparse(path)[4]) # 4 is the query from url
 
-        if not args.has_key('uuid') or not len(args['uuid']):
-            raise self.EClose("Token not present")
+        if not args.has_key('host') or not len(args['host']):
+            raise self.EClose("Host not present")
+        
+        if not args.has_key('vm_ref') or not len(args['vm_ref']):
+            raise self.EClose("VM REF not present")
 
-        uuid = args['uuid'][0].rstrip('\n')
-        for k in self.vms_vnc:
-            if uuid == k:
-                protocol = self.vms_vnc[k]['protocol']
-                if protocol == self.http:
-                    port = 80
-                else:
-                    port = 443
-                server = self.vms_vnc[k]['server']
-                params = self.vms_vnc[k]['params']
-                return (server, port, params, )
+        host = args['host'][0].rstrip('\n')
+        vm_ref_id = args['vm_ref'][0].rstrip('\n')
+        vm_ref_str = "OpaqueRef:" + vm_ref_id
+        
+        protocol, server, params = self.do_get_target(host, vm_ref_str)
+        if protocol == self.http:
+            port = 80
+        else:
+            port = 443
+        
+        return (server, port, params, )
 
     def new_client(self):
         """
@@ -134,7 +146,6 @@ def run_server():
     host = settings.LISTEN_HOST
     port = settings.LISTEN_PORT
     server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True)
-    server.make_locations()
     server.start_server()
 
 
