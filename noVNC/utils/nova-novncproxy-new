@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#! --encoding:utf-8--
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright (c) 2012 Openstack, LLC.
@@ -38,7 +39,7 @@ class NovaWebSocketProxy(websockify.WebSocketProxy):
         """
         host = "192.2.3.44"
         port = 80
-        vnc_location = "/console?uuid=3e282897-9770-f843-9085-aefc7e0810ad&session_id=OpaqueRef:32ba4b8e-9a9a-79a7-6e21-b2f4e3c71272"
+        vnc_location = "/console?uuid=3e282897-9770-f843-9085-aefc7e0810ad&session_id=OpaqueRef:f5051c58-8877-023e-8a49-011ff18d0340"
          
         # Connect to the target
         self.msg("connecting to: %s:%s" % (
@@ -51,14 +52,12 @@ class NovaWebSocketProxy(websockify.WebSocketProxy):
         # Handshake as necessary
         tsock.send("CONNECT %s HTTP/1.1\r\n\r\n" %
                     vnc_location)
-        while True:
-            data = tsock.recv(4096, socket.MSG_PEEK)
-            if data.find("\r\n\r\n") != -1:
-                if not data.split("\r\n")[0].find("200"):
-                    raise Exception("Invalid Connection Info")
-                tsock.recv(len(data))
-                break
-
+        
+        data = tsock.recv(17)
+        data = tsock.recv(24)
+        data = tsock.recv(35)
+        data = tsock.recv(2)
+        
         if self.verbose and not self.daemon:
             print(self.traffic_legend)
 

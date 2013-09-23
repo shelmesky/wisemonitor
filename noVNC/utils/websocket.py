@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 #! encoding: utf-8
 import SocketServer
+import gevent
+from gevent import monkey
+monkey.patch_all()
 
 '''
 Python WebSocket library with support for "wss://" encryption.
@@ -785,7 +788,9 @@ Sec-WebSocket-Accept: %s\r
         self.base64     = False
         self.rec        = None
         self.start_time = int(time.time()*1000)
-
+        # 为每个连接保存self.client
+        self.client = None
+        
         # handler process        
         try:
             try:
@@ -865,8 +870,8 @@ Sec-WebSocket-Accept: %s\r
         while True:
             try:
                 try:
-                    # 此处的self.client应该放在子进程/线程中
-                    self.client = None
+                    # 此处的self.client放在子进程/线程中
+                    #self.client = None
                     startsock = None
                     pid = err = 0
                     child_count = 0
@@ -926,17 +931,20 @@ Sec-WebSocket-Accept: %s\r
                             break
                     # 在子进程中，为每个WebSockets连接做实际的业务处理
                     elif multiprocessing:
-                        self.vmsg('%s: new handler Process' % address[0])
-                        p = multiprocessing.Process(
-                                target=self.top_new_client,
-                                args=(startsock, address))
-                        p.start()
+                        #self.vmsg('%s: new handler Process' % address[0])
+                        #p = multiprocessing.Process(
+                        #        target=self.top_new_client,
+                        #        args=(startsock, address))
+                        #p.start()
                         
                         # child will not return
                         #print "Start new handler in Thread..."
                         #t = Thread(target=self.top_new_client, args=(startsock, address))
                         #t.daemon = False
                         #t.start()
+                        
+                        print "Start new handler in gevent.."
+                        g = gevent.spawn(self.top_new_client, startsock, address)
                     else:
                         # python 2.4
                         self.vmsg('%s: forking handler' % address[0])
@@ -952,6 +960,7 @@ Sec-WebSocket-Accept: %s\r
                 except KeyboardInterrupt:
                     _, exc, _ = sys.exc_info()
                     print("In KeyboardInterrupt")
+                    sys.exit(1)
                     pass
                 except SystemExit:
                     _, exc, _ = sys.exc_info()
@@ -965,9 +974,9 @@ Sec-WebSocket-Accept: %s\r
 
             finally:
                 # 因为所有线程共享栈空间，所以这里关闭socket，子线程同样会关闭
-                #pass
-                if startsock:
-                    startsock.close()
+                pass
+                #if startsock:
+                #   startsock.close()
 
         # Close listen port
         self.vmsg("Closing socket listening at %s:%s"
