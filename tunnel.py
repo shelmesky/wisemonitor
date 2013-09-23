@@ -1,7 +1,16 @@
+#!/usr/bin/evn python
+# --encoding: utf-8--
+
+import gevent
+from gevent import monkey
+monkey.patch_all()
+
 import socket, select
 import sys
 from threading import Thread
 import traceback
+
+from settings import XEN
 
 class Tunnel:
     def __init__(self, session, location):
@@ -13,20 +22,25 @@ class Tunnel:
         self.halt = False
         self.translate = False
         self.key = None
-    def listen(self, port=None):
+    def listen(self, host="0.0.0.0", port=None):
         sock = socket.socket()
-        sock.bind(("127.0.0.1", port))
+        sock.bind((host, port))
         sock.listen(1)
+        # client_fd是接受vnc客户端的连接
         self.client_fd, addr = sock.accept()
+        # server_fd是连接到XenServer的链接
         self.server_fd  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_fd.connect((self.ip, 80))
         # self.server_fd.send("CONNECT /console?ref=%s&session_id=%s HTTP/1.1\r\n\r\n" % (self.ref, self.session))
+        # 连接到XenServer
         self.server_fd.send("CONNECT %s&session_id=%s HTTP/1.1\r\n\r\n" % (self.ref, self.session))
         data = self.server_fd.recv(17)
         data = self.server_fd.recv(24)
         data = self.server_fd.recv(35)
         data = self.server_fd.recv(2)
+        # 设置到XenServer的连接为非阻塞
         self.server_fd.setblocking(0)
+        # 启动线程从XenServer接收数据并发送给VNC客户端
         Thread(target=self.read_from_server, args=()).start()
         try:
             codes = ["\x39", "\x02", "\x28", "\x04", "\x05", "\x06", "\x08", "\x28", #/*  !"#$%&' */
@@ -56,6 +70,7 @@ class Tunnel:
                    "\x1a", "\x2b", "\x1b", "\x29" #//{|}~
             ]
             from struct import pack
+            # 循环从VNC客户端接收数据
             data = self.client_fd.recv(1024)
             while data and self.halt == False:
                 if ord(data[0]) == 4 and self.translate:
@@ -65,6 +80,7 @@ class Tunnel:
                             data = "\xfe" + data[1:7] + chr(int(self.key,16))
                         else:
                             data = "\xfe" + data[1:7] + codes[ord(data[7])-32]
+                # 发送给XenServer
                 self.server_fd.send(data)
                 data = self.client_fd.recv(1024)
         except:
@@ -88,8 +104,10 @@ class Tunnel:
     def read_from_server(self):
         try:
             while self.halt == False:
+                # 检测到XenServer连接的读事件
                  ready_to_read, ready_to_write, in_error = select.select([self.server_fd], [], [])
                  if self.server_fd in ready_to_read:
+                    # 从XenServer接收数据
                      data = self.server_fd.recv(1024)
                      if "XenServer Virtual Terminal" in data:
                          self.translate = False
@@ -97,6 +115,7 @@ class Tunnel:
                      elif "+HVMXEN-" in data:
                          self.translate = True 
                          data = data[:7] + "\x00" + data[8:]
+                    # 发送给VNC客户端
                      self.client_fd.send(data)
         except:
             if self.halt == False:
@@ -104,6 +123,7 @@ class Tunnel:
                  print traceback.print_exc()
             else:
                  pass
+        # 关闭到XenServer的连接
         self.server_fd.close()
 
     def close(self):
@@ -118,11 +138,26 @@ class Tunnel:
 
 
 if __name__ == '__main__':
-    # make a simple test
+    print "Make TCP Proxy for VNC Server of XenServer\n"
     
-    test_xenserver = "http://192.2.3.44"
-    username = "root"
-    password = "0x55aa"
+    # make a simple test
+    def tunnel_listen(session, location, host, port):
+        tunnel = Tunnel(session, location)
+        tunnel.listen(host, port)
+    
+    def get_unused_port():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('', 0))
+        target_port = sock.getsockname()[1]
+        sock.close()
+        return target_port
+    
+    vms_vnc = {}
+    
+    host = "0.0.0.0"
+    
+    http = "http://"
+    https = "https://"
     
     console_location = None
     
@@ -130,25 +165,37 @@ if __name__ == '__main__':
     from common.api import XenAPI
     from pprint import pprint
     
-    proxy = xmlrpclib.ServerProxy(test_xenserver)
-    result = proxy.session.login_with_password(username, password)
-    session_id = result['Value']
-    
-    session = XenAPI.Session(test_xenserver)
-    session.login_with_password(username, password)
-    vms = session.xenapi.VM.get_all()
-    for vm in vms:
-        record = session.xenapi.VM.get_record(vm)
-        if not record['is_a_template'] and not record['is_control_domain']:
-            #pprint(record)
-            console = record['consoles'][0]
-            console_record = session.xenapi.console.get_record(console)
-            console_location = console_record['location']
-            break
-    
-    print "session_id: ", session_id
-    print "location: ", console_location
-    print "URL: ", console_location + "&session_id=" + session_id
-    tunnel = Tunnel(session_id, console_location)
-    tunnel.listen(1999)
-
+    jobs = []
+    for xen_host in XEN:
+        proxy = xmlrpclib.ServerProxy(http + xen_host[0])
+        result = proxy.session.login_with_password(xen_host[1], xen_host[2])
+        session_id = result['Value']
+        
+        session = XenAPI.Session(http + xen_host[0])
+        session.login_with_password(xen_host[1], xen_host[2])
+        vms = session.xenapi.VM.get_all()
+        
+        for vm in vms:
+            record = session.xenapi.VM.get_record(vm)
+            if not record['is_a_template'] and not record['is_control_domain'] and record['power_state'] == "Running":
+                try:
+                    console = record['consoles'][0]
+                except:
+                    pprint(record)
+                    sys.exit(1)
+                console_record = session.xenapi.console.get_record(console)
+                console_location = console_record['location']
+                
+                ref = console_location[console_location.find("/", 8):]
+                vms_vnc[record['uuid']] = {"protocol": http,
+                                           "server": xen_host[0],
+                                           "params": ref + "&session_id=" + session_id}
+                
+                port = get_unused_port()
+                jobs.append(gevent.spawn(tunnel_listen, session_id, console_location, host, port))
+                print "Listening on TCP: <%s:%d> for VM: <%s>" % (host, port, record['name_label'])
+        
+    print "\nYou can use any VNC Client to connect to this ports."
+        
+    gevent.joinall(jobs)
+      

@@ -28,18 +28,75 @@ import sys
 
 import websockify
 
+import xmlrpclib
+import XenAPI
+import settings
+from pprint import pprint
 
-class NovaWebSocketProxy(websockify.WebSocketProxy):
+try:
+    from urllib.parse import parse_qs, urlparse
+except:
+    from cgi import parse_qs
+    from urlparse import urlparse
+
+
+class WebSocketProxy(websockify.WebSocketProxy):
     def __init__(self, *args, **kwargs):
         websockify.WebSocketProxy.__init__(self, *args, **kwargs)
+    
+    def make_locations(self):
+        self.vms_vnc = {}
+        
+        self.http = "http://"
+        self.https = "https://"
+        
+        console_location = None
+        
+        for xen_host in settings.XEN:
+            proxy = xmlrpclib.ServerProxy(self.http + xen_host[0])
+            result = proxy.session.login_with_password(xen_host[1], xen_host[2])
+            session_id = result['Value']
+            
+            session = XenAPI.Session(self.http + xen_host[0])
+            session.login_with_password(xen_host[1], xen_host[2])
+            vms = session.xenapi.VM.get_all()
+            
+            for vm in vms:
+                record = session.xenapi.VM.get_record(vm)
+                if not record['is_a_template'] and not record['is_control_domain'] and record['power_state'] == "Running":
+                    console = record['consoles'][0]
+                    console_record = session.xenapi.console.get_record(console)
+                    console_location = console_record['location']
+                    
+                    ref = console_location[console_location.find("/", 8):]
+                    self.vms_vnc[record['uuid']] = {"protocol": self.http,
+                                               "server": xen_host[0],
+                                               "params": ref + "&session_id=" + session_id}
+    def get_target(self, path):
+        args = parse_qs(urlparse(path)[4]) # 4 is the query from url
+
+        if not args.has_key('uuid') or not len(args['uuid']):
+            raise self.EClose("Token not present")
+
+        uuid = args['uuid'][0].rstrip('\n')
+        for k in self.vms_vnc:
+            if uuid == k:
+                protocol = self.vms_vnc[k]['protocol']
+                if protocol == self.http:
+                    port = 80
+                else:
+                    port = 443
+                server = self.vms_vnc[k]['server']
+                params = self.vms_vnc[k]['params']
+                return (server, port, params, )
 
     def new_client(self):
         """
         Called after a new WebSocket connection has been established.
         """
-        host = "192.2.3.44"
-        port = 80
-        vnc_location = "/console?uuid=3e282897-9770-f843-9085-aefc7e0810ad&session_id=OpaqueRef:f5051c58-8877-023e-8a49-011ff18d0340"
+        # 根据websocket client传递过来的PATH
+        # 找到UUID对应的vnc location
+        host, port, vnc_location = self.get_target(self.path)
          
         # Connect to the target
         self.msg("connecting to: %s:%s" % (
@@ -73,6 +130,13 @@ class NovaWebSocketProxy(websockify.WebSocketProxy):
             raise
 
 
-if __name__ == '__main__':
-    server = NovaWebSocketProxy(listen_host="127.0.0.1", listen_port=1999, verbose=True)
+def run_server():
+    host = settings.LISTEN_HOST
+    port = settings.LISTEN_PORT
+    server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True)
+    server.make_locations()
     server.start_server()
+
+
+if __name__ == '__main__':
+    run_server()
