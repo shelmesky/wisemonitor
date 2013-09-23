@@ -239,7 +239,7 @@ Traffic Legend:
         else:
             raise self.EClose("Token '%s' not found" % token)
 
-    def do_proxy(self, target):
+    def do_proxy(self, target, client):
         """
         Proxy client WebSocket to normal target socket.
         """
@@ -248,7 +248,7 @@ Traffic Legend:
         tqueue = []     # 保存发送到XenServer的数据的缓存
         
         # 需要监视可读事件的socket: [WebSockets客户的连接, 到XenServer的连接]
-        rlist = [self.client, target]
+        rlist = [client, target]
 
         while True:
             # 每次循环都将可写的socket列表置空
@@ -257,7 +257,7 @@ Traffic Legend:
             # 如果tqueue有数据，则将到XenServer的连接加入到可写socket列表
             if tqueue: wlist.append(target)
             # 如果cqueue有数据，则WebSockets的连接加入到可写socket列表
-            if cqueue or c_pend: wlist.append(self.client)
+            if cqueue or c_pend: wlist.append(client)
             
             # 监视读写的socket列表
             ins, outs, excepts = select(rlist, wlist, [], 1)
@@ -265,18 +265,18 @@ Traffic Legend:
 
             # 如果WebSockets连接可写(前面已经根据cqueue将连接加入到wlist)
             # 将cqueue中的数据，用WebSockets协议发送给WebSockets客户端
-            if self.client in outs:
+            if client in outs:
                 # Send queued target data to the client
-                c_pend = self.send_frames(cqueue)
+                c_pend = self.send_frames(cqueue, client)
 
                 cqueue = []
 
             # 如果WebSockets连接可读
-            if self.client in ins:
+            if client in ins:
                 # Receive client data, decode it, and queue for target
                 # 从WebSockts连接接收数据，从WebSockets解码到TCP协议
                 # 并将解码后的数据，加入到需要发送到XenServer的数据的缓冲中
-                bufs, closed = self.recv_frames()
+                bufs, closed = self.recv_frames(client)
                 tqueue.extend(bufs)
 
                 if closed:

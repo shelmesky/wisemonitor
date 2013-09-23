@@ -102,7 +102,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
         
         return (server, port, params, )
 
-    def new_client(self):
+    def new_client(self, client):
         """
         Called after a new WebSocket connection has been established.
         """
@@ -133,7 +133,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
         # Start proxying
         try:
             # 将连接到XenServer的socket作为参数传递给do_proxy
-            self.do_proxy(tsock)
+            self.do_proxy(tsock, client)
         except:
             if tsock:
                 tsock.shutdown(socket.SHUT_RDWR)

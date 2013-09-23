@@ -438,7 +438,7 @@ Sec-WebSocket-Accept: %s\r
     #
     # Main WebSocketServer methods
     #
-    def send_frames(self, bufs=None):
+    def send_frames(self, bufs=None, client=None):
         """ Encode and send WebSocket frames. Any frames already
         queued will be sent first. If buf is not set then only queued
         frames will be sent. Returns the number of pending frames that
@@ -471,7 +471,7 @@ Sec-WebSocket-Accept: %s\r
         while self.send_parts:
             # Send pending frames
             buf = self.send_parts.pop(0)
-            sent = self.client.send(buf)
+            sent = client.send(buf)
 
             if sent == len(buf):
                 self.traffic("<")
@@ -482,7 +482,7 @@ Sec-WebSocket-Accept: %s\r
 
         return len(self.send_parts)
 
-    def recv_frames(self):
+    def recv_frames(self, client):
         """ Receive and decode WebSocket frames.
 
         Returns:
@@ -493,7 +493,7 @@ Sec-WebSocket-Accept: %s\r
         bufs = []
         tdelta = int(time.time()*1000) - self.start_time
 
-        buf = self.client.recv(self.buffer_size)
+        buf = client.recv(self.buffer_size)
         if len(buf) == 0:
             closed = {'code': 1000, 'reason': "Client closed abruptly"}
             return bufs, closed
@@ -563,18 +563,18 @@ Sec-WebSocket-Accept: %s\r
 
         return bufs, closed
 
-    def send_close(self, code=1000, reason=''):
+    def send_close(self, code=1000, reason='', client=None):
         """ Send a WebSocket orderly close frame. """
 
         if self.version.startswith("hybi"):
             msg = pack(">H%ds" % len(reason), code, reason)
 
             buf, h, t = self.encode_hybi(msg, opcode=0x08, base64=False)
-            self.client.send(buf)
+            client.send(buf)
 
         elif self.version == "hixie-76":
             buf = s2b('\xff\x00')
-            self.client.send(buf)
+            client.send(buf)
 
         # No orderly close for 75
 
@@ -789,13 +789,13 @@ Sec-WebSocket-Accept: %s\r
         self.rec        = None
         self.start_time = int(time.time()*1000)
         # 为每个连接保存self.client
-        self.client = None
+        client = None
         
         # handler process        
         try:
             try:
                 # 为每个WebSockets连接做握手协议
-                self.client = self.do_handshake(startsock, address)
+                client = self.do_handshake(startsock, address)
 
                 if self.record:
                     # Record raw frame data as JavaScript array
@@ -811,12 +811,12 @@ Sec-WebSocket-Accept: %s\r
 
                 self.ws_connection = True
                 # 在new_client函数中继续处理每个WebSockets连接
-                self.new_client()
+                self.new_client(client)
             except self.CClose:
                 # Close the client
                 _, exc, _ = sys.exc_info()
-                if self.client:
-                    self.send_close(exc.args[0], exc.args[1])
+                if client:
+                    self.send_close(exc.args[0], exc.args[1], client)
             except self.EClose:
                 _, exc, _ = sys.exc_info()
                 # Connection was not a WebSockets connection
@@ -832,10 +832,10 @@ Sec-WebSocket-Accept: %s\r
                 self.rec.write("'EOF'];\n")
                 self.rec.close()
 
-            if self.client and self.client != startsock:
+            if client and client != startsock:
                 # Close the SSL wrapped socket
                 # Original socket closed by caller
-                self.client.close()
+                client.close()
 
     def new_client(self):
         """ Do something with a WebSockets client connection. """
