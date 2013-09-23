@@ -33,7 +33,7 @@ XEN = (
     ("192.2.4.10", "root", "123456",),
 )
 
-NOVNC_SERVER_IP = "127.0.0.1"
+NOVNC_SERVER_IP = "192.2.3.188"
 NOVNC_SERVER_PORT = 19999
 
 try:

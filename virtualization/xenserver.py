@@ -124,6 +124,8 @@ def get_xenserver_vm_all(host):
                     temp_record['memory_static_max'] = int(record['memory_static_max']) / (1024**2)
                     temp_record['name_label'] = record['name_label']
                     temp_record['power_state'] = record['power_state']
+                    vm_ref = vm.split(":")[1]
+                    temp_record['vm_ref' ] = vm_ref
                     
                     #get network information
                     guest_metrics = record['guest_metrics']
