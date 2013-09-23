@@ -127,8 +127,11 @@ def get_xenserver_vm_all(host):
                     
                     #get network information
                     guest_metrics = record['guest_metrics']
-                    guest_metrics_record = session.xenapi.VM_guest_metrics.get_record(guest_metrics)
-                    temp_record['networks'] = guest_metrics_record['networks']
+                    if guest_metrics != "OpaqueRef:NULL":
+                        guest_metrics_record = session.xenapi.VM_guest_metrics.get_record(guest_metrics)
+                        temp_record['networks'] = guest_metrics_record['networks']
+                    else:
+                        temp_record['networks'] = {}
                     temp_record['id'] = i
                     i += 1
                     
