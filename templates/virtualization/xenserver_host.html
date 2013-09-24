@@ -104,8 +104,20 @@ XenServer列表
 						<td class="center">{{ pbd['id'] }}</td>
 						<td class="center">{{ pbd['sr_name'] }}</td>
 						<td class="center">{{ pbd['sr_type'] }}</td>
-						<td class="center">{{ pbd['sr_size'] }}</td>
-						<td class="center">{{ pbd['sr_utilisation'] }}</td>
+						<td class="center">
+						    {% if pbd['sr_size'].startswith('0') or pbd['sr_size'].startswith('-') %}
+							0
+						    {% else %}
+							{{ pbd['sr_size'] }}
+						    {% end %}
+						</td>
+						<td class="center">
+						    {% if pbd['sr_utilisation'].startswith('0') or pbd['sr_utilisation'].startswith('-') %}
+							0
+						    {% else %}
+							{{ pbd['sr_utilisation'] }}
+						    {% end %}
+						</td>
 						<td class="center">
 						    {% if pbd['pbd_attached'] == True %}是{% else %}否{% end %}
 						</td>
