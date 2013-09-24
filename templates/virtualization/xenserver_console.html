@@ -129,7 +129,6 @@
 				    $D('sendCtrlAltDelButton').onclick = sendCtrlAltDel;
 			
 				    WebUtil.init_logging(WebUtil.getQueryVar('logging', 'warn'));
-				    document.title = unescape(WebUtil.getQueryVar('title', 'noVNC'));
 				    
 				    host = "{{ novnc_host }}";
 				    port = {{ novnc_port }};
