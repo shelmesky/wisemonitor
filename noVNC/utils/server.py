@@ -63,15 +63,19 @@ class WebSocketProxy(websockify.WebSocketProxy):
                 record = session.xenapi.VM.get_record(vm_ref)
                 if not record['is_a_template'] and not record['is_a_snapshot']:
                     if record['power_state'] == "Running":
-                        console = record['consoles'][0]
-                        console_record = session.xenapi.console.get_record(console)
-                        console_location = console_record['location']
-                        
-                        ref = console_location[console_location.find("/", 8):]
-                        protocol = self.http
-                        server = xen_host[0]
-                        params =  ref + "&session_id=" + session_id
-                        return (protocol, server, params, )
+                        all_consoles = record['consoles']
+                        for console in all_consoles:
+                            console_record = session.xenapi.console.get_record(console)
+                            # XenServer 6.2同时提供了vt100和rfb协议的console
+                            # 我们使用rfb协议
+                            if console_record['protocol'] == "rfb":
+                                console_location = console_record['location']
+                                
+                                ref = console_location[console_location.find("/", 8):]
+                                protocol = self.http
+                                server = xen_host[0]
+                                params =  ref + "&session_id=" + session_id
+                                return (protocol, server, params, )
                     else:
                         return None
 
