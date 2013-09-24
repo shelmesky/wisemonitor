@@ -90,7 +90,7 @@
                                     
                                     <td>
 					{% if vm['power_state'] == "Running" %}
-					    <a class="btn btn-success" href="/virtual/xenserver/{{ host_address }}/vms/{{ vm['vm_ref'] }}/console">
+					    <a class="btn btn-success" href="/virtual/xenserver/{{ host_address }}/vms/{{ vm['vm_ref'] }}/console/">
 						<i class="icon-zoom-in icon-white"></i>控制台
 					    </a>
 					{% else %}

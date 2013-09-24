@@ -5,7 +5,26 @@ from pprint import pprint
 import XenAPI
 
 
+def get_control_domain(host):
+    """
+    得到XenServer主机的控制域VM
+    @host: XenServer主机
+    """
+    session = global_xenserver_conn.get(host, None)
+    if session != None:
+        all_vm = session.xenapi.VM.get_all()
+        for vm_ref in all_vm:
+            record = session.xenapi.VM.get_record(vm_ref)
+            if record['is_control_domain']:
+                return vm_ref
+
+
 def get_vm_info(host, vm_ref):
+    """
+    得到单台VM的简略信息
+    @host: XenServer主机
+    @vm_ref: VM的reference
+    """
     vm_info = {}
     session = global_xenserver_conn.get(host, None)
     if session != None:
@@ -24,6 +43,8 @@ def get_host_info(session, host_record, verbose=True):
     '''
     temp_record = {}
     record = session.xenapi.host.get_record(host_record)
+    control_domain_vm_ref = get_control_domain(record['address']).split(":")[1]
+    temp_record['control_domain_vm_ref'] = control_domain_vm_ref
     temp_record['uuid'] = record['uuid']
     temp_record['hostname'] = record['hostname']
     temp_record['address'] = record['address']
