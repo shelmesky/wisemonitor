@@ -58,3 +58,13 @@ class Infra_Server_Services_Handler(WiseHandler):
         ret['objects'].sort(key=lambda x: x['_id'])
         self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
 
+
+class Infra_Server_Chart_Handler(WiseHandler):
+    def get(self, host):
+        self.render("infrastracture/server_chart.html")
+    
+    
+class Infra_Service_Chart_Handler(WiseHandler):
+    def get(self, host, service):
+        pass
+
