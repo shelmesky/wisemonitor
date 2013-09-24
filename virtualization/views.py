@@ -8,6 +8,7 @@ from common.init import *
 from common.api.mongo_driver import db_handler as wise_db_handler
 from common.api.mongo_api import MongoExecuter
 
+from xenserver import get_vm_info
 from xenserver import get_xenserver_host
 from xenserver import get_xenserver_host_all
 from xenserver import get_xenserver_vm_all
@@ -44,8 +45,9 @@ class XenServer_Get_ALL_vms(WiseHandler):
 
 class XenServer_Get_VM_Console(WiseHandler):
     def get(self, host, vm_ref):
+        vm_info = get_vm_info(host, vm_ref)
         self.render("virtualization/xenserver_console.html",
                     novnc_host=settings.NOVNC_SERVER_IP,
                     novnc_port = settings.NOVNC_SERVER_PORT,
-                    vm_ref=vm_ref, host_address=host)
+                    vm_ref=vm_ref, host_address=host, vm_info=vm_info)
 

@@ -5,6 +5,16 @@ from pprint import pprint
 import XenAPI
 
 
+def get_vm_info(host, vm_ref):
+    vm_info = {}
+    session = global_xenserver_conn.get(host, None)
+    if session != None:
+        vm_record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+        vm_info['name_label'] = vm_record['name_label']
+        vm_info['power_state'] = vm_record['power_state']
+        return vm_info
+
+
 def get_host_info(session, host_record, verbose=True):
     '''
     得到单台xenserver的信息

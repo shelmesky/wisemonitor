@@ -51,6 +51,8 @@ except:
         slice = buffer(buf, offset, struct.calcsize(fmt))
         return struct.unpack(fmt, slice)
 
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+
 # Degraded functionality if these imports are missing
 for mod, sup in [('numpy', 'HyBi protocol'), ('ssl', 'TLS/SSL/wss'),
         ('multiprocessing', 'Multi-Processing'),
