@@ -37,8 +37,6 @@ else:
     s2a = lambda s: [ord(c) for c in s]
 try:    from io import StringIO
 except: from cStringIO import StringIO
-try:    from http.server import SimpleHTTPRequestHandler
-except: from SimpleHTTPServer import SimpleHTTPRequestHandler
 
 # python 2.6 differences
 try:    from hashlib import md5, sha1
@@ -63,11 +61,6 @@ for mod, sup in [('numpy', 'HyBi protocol'), ('ssl', 'TLS/SSL/wss'),
         globals()[mod] = None
         print("WARNING: no '%s' module, %s is slower or disabled" % (
             mod, sup))
-if multiprocessing and sys.platform == 'win32':
-    # make sockets pickle-able/inheritable
-    import multiprocessing.reduction
-
-from threading import Thread
 
 
 class AttachedObject(object):
