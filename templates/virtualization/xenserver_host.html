@@ -69,11 +69,11 @@ XenServer列表
                                         <a class="btn btn-success" href="/virtual/xenserver/{{ host['address'] }}/vms/">
                                             <i class="icon-zoom-in icon-white"></i>虚拟机
                                         </a>
-                                        <a class="btn btn-success" href="#">
-                                            <i class="icon-zoom-in icon-white"></i>图表
+                                        <a class="btn btn-success" href="/virtual/xenserver/{{ host['address'] }}/vms/{{ host['control_domain_vm_ref'] }}/console/">
+                                            <i class="icon-zoom-in icon-white"></i>控制台
                                         </a>
                                         <a class="btn btn-success" href="#">
-                                            <i class="icon-zoom-in icon-white"></i>编辑
+                                            <i class="icon-zoom-in icon-white"></i>图表
                                         </a>
                                     </td>
                                 </tr>
