@@ -1,6 +1,8 @@
+#! --encoding: utf-8--
 import os
 import sys
 import json
+import re
 
 from tornado import web
 
@@ -61,11 +63,63 @@ class Infra_Server_Services_Handler(WiseHandler):
         self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
 
 
+def parse_perdata(original_data):
+    fields_data = {}
+    
+    # 获取性能数据的字段
+    fields = []
+    for record in original_data:
+        perf_data = record['perf_data']
+        for item in perf_data:
+           field = item['field']
+           fields.append(field)
+        break
+    
+    # 预先填充字段名
+    for field in fields:
+        fields_data[str(field)] = {}
+        fields_data[str(field)]['data'] = []
+    
+    for record in original_data:
+        perf_data = record['perf_data']
+        for item in perf_data:
+            field = str(item['field'])
+            data = item['data'][0]
+            
+            # 如果记录中已经存在字段的'别名'
+            if "field_alias" in item:
+                fields_data[field]['field_alias'] = item['field_alias']
+                    
+            # 如果数据的'单位'已经存在与记录中
+            if "unit" in item:
+                unit = item['unit']
+            else:
+                unit = re.match(r".*\d(.*)", data).groups()[0]
+            fields_data[field]['unit'] = str(unit)
+            
+            # 替换数据中的'单位'字符串为空格
+            data = data.replace(unit, "")
+            
+            fields_data[field]['data'].append([int(record['timestamp']) * 1000, float(data)])
+            
+    return fields_data
+
+
 class Infra_Server_Chart_Handler(WiseHandler):
     def get(self, host):
+        two_hours_ago = get_two_hours_ago()
+        one_day_ago = get_one_day_ago()
+        one_week_ago = get_one_week_ago()
+        one_year_ago = get_one_year_ago()
+        
         executer = MongoExecuter(wise_db_handler)
-        two_hour_data = executer.query("nagios_perf_data")
-        self.render("infrastracture/server_chart.html")
+        
+        two_hours_data = executer.query("nagios_host_perfdata", {"timestamp": {"$gte": two_hours_ago}})
+        
+        fields_data_two_hours = parse_perdata(two_hours_data)
+        
+        print >> sys.stderr, json.dumps(fields_data_two_hours)
+        self.render("infrastracture/server_chart.html", data=json.dumps(fields_data_two_hours))
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
