@@ -63,7 +63,7 @@ class Infra_Server_Services_Handler(WiseHandler):
         self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
 
 
-def parse_perdata(original_data):
+def parse_perdata(original_data, frequency=1):
     fields_data = {}
     
     # 获取性能数据的字段
@@ -80,7 +80,18 @@ def parse_perdata(original_data):
         fields_data[str(field)] = {}
         fields_data[str(field)]['data'] = []
     
-    for record in original_data:
+    # 根据采样率，提取数据
+    if frequency > 1:
+        # 重置cursor
+        original_data.rewind()
+        data_length = original_data.count()
+        final_data = []
+        for i in xrange(0, data_length, frequency):
+            final_data.append(original_data[i])
+    else:
+        final_data = original_data
+    
+    for record in final_data:
         perf_data = record['perf_data']
         for item in perf_data:
             field = str(item['field'])
@@ -100,13 +111,15 @@ def parse_perdata(original_data):
             # 替换数据中的'单位'字符串为空格
             data = data.replace(unit, "")
             
-            fields_data[field]['data'].append([int(record['timestamp']) * 1000, float(data)])
+            fields_data[field]['data'].append([record['last_update'], float(data)])
             
     return fields_data
 
 
 class Infra_Server_Chart_Handler(WiseHandler):
     def get(self, host):
+        collection = "nagios_host_perfdata"
+        
         two_hours_ago = get_two_hours_ago()
         one_day_ago = get_one_day_ago()
         one_week_ago = get_one_week_ago()
@@ -114,12 +127,15 @@ class Infra_Server_Chart_Handler(WiseHandler):
         
         executer = MongoExecuter(wise_db_handler)
         
-        two_hours_data = executer.query("nagios_host_perfdata", {"timestamp": {"$gte": two_hours_ago}})
+        two_hours_data = executer.query(collection, {"timestamp": {"$gte": two_hours_ago}})
+        one_day_data = executer.query(collection, {"timestamp": {"$gte": one_day_ago}})
         
-        fields_data_two_hours = parse_perdata(two_hours_data)
+        #fields_data_two_hours = parse_perdata(two_hours_data)
+        fields_data_one_day = parse_perdata(one_day_data, frequency=4)
         
-        print >> sys.stderr, json.dumps(fields_data_two_hours)
-        self.render("infrastracture/server_chart.html", data=json.dumps(fields_data_two_hours))
+        #print >> sys.stderr, json.dumps(fields_data_two_hours)
+        print >> sys.stderr, json.dumps(fields_data_one_day)
+        self.render("infrastracture/server_chart.html")
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
