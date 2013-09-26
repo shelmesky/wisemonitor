@@ -1,6 +1,11 @@
 #!/usr/bin/python
+import sys
 import time
 from datetime import datetime, timedelta
+
+
+def force_print(msg):
+    print >> sys.stderr, msg
 
 
 def make_timestamp(datetime):
