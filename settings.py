@@ -36,6 +36,8 @@ XEN = (
 NOVNC_SERVER_IP = "192.2.3.188"
 NOVNC_SERVER_PORT = 19999
 
+THREADS_MAPREDUCE = 4
+
 try:
     from local_conf import *
 except:
