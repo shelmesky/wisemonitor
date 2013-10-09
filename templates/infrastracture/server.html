@@ -54,9 +54,9 @@
                             <th rowspan="1" colspan="1" style="width: 110px;">主机名</th>
                             <th class="sorting_asc" rowspan="1" colspan="1" style="width: 90px;">IP地址</th>
                             <th rowspan="1" colspan="1" style="width: 30px;">状态</th>
-                            <th rowspan="1" colspan="1" style="width: 182px;">状态输出</th>
+                            <th rowspan="1" colspan="1" style="width: 200px;">状态输出</th>
                             <th rowspan="1" colspan="1" style="width: 150px;">更新时间</th>
-                            <th rowspan="2" colspan="1" style="width: 190px;">动作</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">动作</th>
                            </tr> 
                         </thead>
                         
@@ -84,15 +84,27 @@
                                     <td class="center">{{ host['last_update'] }}</td>
                                     
                                     <td>
+										<div class="btn-group">
                                         <a class="btn btn-success" href="/infra/server/{{ host['host_address'] }}/">
                                             <i class="icon-zoom-in icon-white"></i>服务
                                         </a>
-                                        <a class="btn btn-success" href="/infra/server/{{ host['host_address'] }}/chart/">
-                                            <i class="icon-zoom-in icon-white"></i>图表
-                                        </a>
+										
+										<a class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+											图表
+											<span class="caret"></span>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a href="/infra/server/{{ host['host_address'] }}/chart/2h/">2小时</a></li>
+											<li><a href="/infra/server/{{ host['host_address'] }}/chart/24h/">24小时</a></li>
+											<li><a href="/infra/server/{{ host['host_address'] }}/chart/1w/">1星期</a></li>
+											<li class="divider"></li>
+											<li><a href="/infra/server/{{ host['host_address'] }}/chart/1y/">1年</a></li>
+										</ul>
+										
                                         <a class="btn btn-success" href="#">
                                             <i class="icon-zoom-in icon-white"></i>编辑
                                         </a>
+										</div>
                                     </td>
                                 </tr>
                             {% end %}

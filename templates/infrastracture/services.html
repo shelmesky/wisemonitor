@@ -65,9 +65,9 @@
                             <th rowspan="1" colspan="1" style="width: 110px;">主机名</th>
                             <th rowspan="1" colspan="1" style="width: 150px;">服务名</th>
                             <th rowspan="1" colspan="1" style="width: 30px;">状态</th>
-                            <th rowspan="1" colspan="1" style="width: 260px;">状态输出</th>
+                            <th rowspan="1" colspan="1" style="width: 320px;">状态输出</th>
                             <th rowspan="1" colspan="1" style="width: 150px;">更新时间</th>
-                            <th rowspan="1" colspan="1" style="width: 190px;">动作</th>
+                            <th rowspan="1" colspan="1" style="width: 130px;">动作</th>
                            </tr> 
                         </thead>
                         
@@ -95,12 +95,22 @@
                                     <td class="center">{{ service['last_update'] }}</td>
                                     
                                     <td>
-                                        <a class="btn btn-success" href="#">
-                                            <i class="icon-zoom-in icon-white"></i>图表
-                                        </a>
+										<div class="btn-group">
+										<a class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+											图表
+											<span class="caret"></span>
+										</a>
+										<ul class="dropdown-menu">
+											<li><a href="/infra/server/{{ service['host_name'] }}/{{ service['_id'] }}/chart/2h/">2小时</a></li>
+											<li><a href="/infra/server/{{ service['host_name'] }}/{{ service['_id'] }}/chart/24h/">24小时</a></li>
+											<li><a href="/infra/server/{{ service['host_name'] }}/{{ service['_id'] }}/chart/1w/">1周</a></li>
+											<li class="divider"></li>
+											<li><a href="/infra/server/{{ service['host_name'] }}/{{ service['_id'] }}/chart/1y/">1年</a></li>
+										</ul>
                                         <a class="btn btn-success" href="#">
                                             <i class="icon-zoom-in icon-white"></i>编辑
                                         </a>
+										</div>
                                     </td>
                                 </tr>
                             {% end %}
