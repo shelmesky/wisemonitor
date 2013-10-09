@@ -9,7 +9,7 @@ from tornado import web
 from common.init import WiseHandler
 from common.api.mongo_driver import db_handler as wise_db_handler
 from common.api.mongo_api import MongoExecuter
-from common.utils import get_two_hours_ago, get_one_day_ago
+from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
 
 
@@ -80,39 +80,46 @@ def parse_perdata(original_data, frequency=1):
         fields_data[str(field)] = {}
         fields_data[str(field)]['data'] = []
     
-    # 根据采样率，提取数据
-    if frequency > 1:
-        # 重置cursor
-        original_data.rewind()
-        data_length = original_data.count()
-        final_data = []
-        for i in xrange(0, data_length, frequency):
-            final_data.append(original_data[i])
-    else:
-        final_data = original_data
+    final_data = []
+    for r in original_data:
+        final_data.append(r)
+    data_length = original_data.count()
     
-    for record in final_data:
-        perf_data = record['perf_data']
-        for item in perf_data:
-            field = str(item['field'])
-            data = item['data'][0]
+    for i in xrange(0, data_length, frequency):
+        start = i
+        if start >0:
+            start = start - 1
+        end = i + frequency
+        
+        temp_data = {}
+        for f in fields:
+            temp_data[str(f)] = 0
+        
+        temp_timestamp = final_data[start]['last_update']
+        
+        for record in final_data[start:end]:
+            perf_data = record['perf_data']
+            for item in perf_data:
+                field = str(item['field'])
+                data = item['data'][0]
+                
+                # 如果记录中已经存在字段的'别名'
+                if "field_alias" in item:
+                    fields_data[field]['field_alias'] = item['field_alias']
+                        
+                # 如果数据的'单位'已经存在与记录中
+                if "unit" in item:
+                    unit = item['unit']
+                else:
+                    unit = re.match(r".*\d(.*)", data).groups()[0]
+                fields_data[field]['unit'] = str(unit)
+                
+                # 替换数据中的'单位'字符串为空格
+                temp_data[field] += float(data.replace(unit, ""))
             
-            # 如果记录中已经存在字段的'别名'
-            if "field_alias" in item:
-                fields_data[field]['field_alias'] = item['field_alias']
-                    
-            # 如果数据的'单位'已经存在与记录中
-            if "unit" in item:
-                unit = item['unit']
-            else:
-                unit = re.match(r".*\d(.*)", data).groups()[0]
-            fields_data[field]['unit'] = str(unit)
-            
-            # 替换数据中的'单位'字符串为空格
-            data = data.replace(unit, "")
-            
-            fields_data[field]['data'].append([record['last_update'], float(data)])
-            
+        for k,v in temp_data.items():
+            fields_data[k]['data'].append([temp_timestamp, v/frequency])
+        
     return fields_data
 
 
@@ -120,22 +127,38 @@ class Infra_Server_Chart_Handler(WiseHandler):
     def get(self, host, chart_type):
         collection = "nagios_host_perfdata"
         
-        two_hours_ago = get_two_hours_ago()
-        one_day_ago = get_one_day_ago()
-        one_week_ago = get_one_week_ago()
-        one_year_ago = get_one_year_ago()
+        if not chart_type or not host:
+            self.send_error(404)
         
-        executer = MongoExecuter(wise_db_handler)
+        if chart_type == "4h":
+            ago = get_four_hours_ago()
+            frequency = 1
+        elif chart_type == "24h":
+            ago = get_one_day_ago()
+            frequency = 4
+        elif chart_type == "1w":
+            ago = get_one_week_ago()
+            frequency = 12
+        elif chart_type == "1y":
+            ago = get_one_year_ago()
+        else:
+            ago = None
         
-        two_hours_data = executer.query(collection, {"timestamp": {"$gte": two_hours_ago}})
-        one_day_data = executer.query(collection, {"timestamp": {"$gte": one_day_ago}})
+        if chart_type != "1y":
+            executer = MongoExecuter(wise_db_handler)
+            
+            if ago:
+                data = executer.query(collection, {"timestamp": {"$gte": ago}})
+            
+                fields_data = parse_perdata(data, frequency)
+                #print >> sys.stderr, json.dumps(fields_data)
+            else:
+                self.send_error(500)
+        else:
+            pass
         
-        #fields_data_two_hours = parse_perdata(two_hours_data)
-        fields_data_one_day = parse_perdata(one_day_data, frequency=4)
-        
-        #print >> sys.stderr, json.dumps(fields_data_two_hours)
-        print >> sys.stderr, json.dumps(fields_data_one_day)
-        self.render("infrastracture/server_chart.html")
+        self.render("infrastracture/server_chart.html", host=host,
+                    chart_type=chart_type, data=json.dumps(fields_data))
     
     
 class Infra_Service_Chart_Handler(WiseHandler):

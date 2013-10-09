@@ -17,8 +17,8 @@ def get_before(**kwargs):
     return now - timedelta(**kwargs)
 
 
-def get_two_hours_ago():
-    ago = get_before(seconds=7200)
+def get_four_hours_ago():
+    ago = get_before(seconds=14400)
     return make_timestamp(ago.timetuple())
 
 
@@ -38,7 +38,7 @@ def get_one_year_ago():
 
 
 if __name__ == '__main__':
-    print get_two_hours_ago()
+    print get_four_hours_ago()
     print get_one_day_ago()
     print get_one_week_ago()
     print get_one_year_ago()
