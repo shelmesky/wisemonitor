@@ -117,7 +117,7 @@ def parse_perdata(original_data, frequency=1):
 
 
 class Infra_Server_Chart_Handler(WiseHandler):
-    def get(self, host):
+    def get(self, host, chart_type):
         collection = "nagios_host_perfdata"
         
         two_hours_ago = get_two_hours_ago()
@@ -139,6 +139,6 @@ class Infra_Server_Chart_Handler(WiseHandler):
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
-    def get(self, host, service):
+    def get(self, host, service, chart_type):
         pass
 
