@@ -63,7 +63,11 @@ class Infra_Server_Services_Handler(WiseHandler):
         self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
 
 
-def parse_perdata(original_data, frequency=1):
+def parse_perfdata(original_data, frequency=1):
+    """
+    根据frequency(频率)计算平均值
+    每段数据的时间点，取每段的第一条数据
+    """
     fields_data = {}
     
     # 获取性能数据的字段
@@ -150,7 +154,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
             if ago:
                 data = executer.query(collection, {"timestamp": {"$gte": ago}})
             
-                fields_data = parse_perdata(data, frequency)
+                fields_data = parse_perfdata(data, frequency)
                 #print >> sys.stderr, json.dumps(fields_data)
             else:
                 self.send_error(500)
