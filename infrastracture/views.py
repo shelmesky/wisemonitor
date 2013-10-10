@@ -81,7 +81,8 @@ class Infra_Server_Services_Handler(WiseHandler):
         self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
 
 
-def parse_perfdata(original_data, frequency=1):
+@gen.coroutine
+def parse_perfdata(cursor, frequency=1, callback=None):
     """
     根据frequency(频率)计算平均值
     每段数据的时间点，取每段的第一条数据
@@ -90,12 +91,15 @@ def parse_perfdata(original_data, frequency=1):
     
     # 获取性能数据的字段
     fields = []
-    for record in original_data:
+    while(yield cursor.fetch_next):
+        record = cursor.next_object()
         perf_data = record['perf_data']
         for item in perf_data:
            field = item['field']
            fields.append(field)
         break
+    
+    cursor.rewind()
     
     # 预先填充字段名
     for field in fields:
@@ -103,9 +107,11 @@ def parse_perfdata(original_data, frequency=1):
         fields_data[str(field)]['data'] = []
     
     final_data = []
-    for r in original_data:
-        final_data.append(r)
-    data_length = original_data.count()
+    while(yield cursor.fetch_next):
+        record = cursor.next_object()
+        final_data.append(record)
+        
+    data_length = len(final_data)
     
     for i in xrange(0, data_length, frequency):
         start = i
@@ -142,16 +148,21 @@ def parse_perfdata(original_data, frequency=1):
         for k,v in temp_data.items():
             fields_data[k]['data'].append([temp_timestamp, v/frequency])
         
-    return fields_data
+    callback(fields_data)
 
 
 class Infra_Server_Chart_Handler(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
     def get(self, host, chart_type):
         collection_perfdata = "nagios_host_perfdata"
         collection_hosts = "nagios_hosts"
         
         if not chart_type or not host:
             self.send_error(404)
+        
+        self.host = host
+        self.chart_type = chart_type
         
         if chart_type == "4h":
             ago = get_four_hours_ago()
@@ -168,22 +179,23 @@ class Infra_Server_Chart_Handler(WiseHandler):
             ago = None
         
         if chart_type != "1y":
-            executer = MongoExecuter(wise_db_handler)
-            
             if ago:
-                result = executer.query_one(collection_hosts, {"host_address": host})
+                cursor = DB.nagios_hosts.find({"host_address": host})
+                yield cursor.fetch_next
+                result = cursor.next_object()
+                
                 object_id = result['object_id']
-                data = executer.query(collection_perfdata, {"object_id": object_id, "timestamp": {"$gte": ago}})
+                cursor = DB.nagios_host_perfdata.find({"object_id": object_id, "timestamp": {"$gte": ago}})
             
-                fields_data = parse_perfdata(data, frequency)
-                #print >> sys.stderr, json.dumps(fields_data)
+                yield parse_perfdata(cursor, frequency, self.on_parse_finished)
             else:
                 self.send_error(500)
         else:
             pass
         
-        self.render("infrastracture/server_chart.html", host=host,
-                    chart_type=chart_type, data=json.dumps(fields_data))
+    def on_parse_finished(self, data):
+        self.render("infrastracture/server_chart.html", host=self.host,
+                    chart_type=self.chart_type, data=json.dumps(data))
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
