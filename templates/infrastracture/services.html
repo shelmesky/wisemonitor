@@ -83,11 +83,11 @@
                                     <td class="center">{{ service['host_name'] }}</td>
                                     <td class="center">{{ service['service_name'] }}</td>
                                     <td class="center">
-										{% if service['state'] == 0 %}
+										{% if service['return_code'] == 0 %}
 											<span class="label label-success">正常</span>
-										{% elif service['state'] == 1 %}
+										{% elif service['return_code'] == 1 %}
 											<span class="label label-warning">警告</span>
-										{% elif service['state'] == 2 %}
+										{% elif service['return_code'] == 2 %}
 											<span class="label label-important">错误</span>
 										{% end %}
 									</td>

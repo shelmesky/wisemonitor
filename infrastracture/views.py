@@ -23,13 +23,14 @@ class Infra_Server_Handler(WiseHandler):
         for host in hosts:
             temp = dict()
             host_object_id = host['object_id']
-            host_status = executer.query_one("nagios_host_status", None)
+            host_status = executer.query_one("nagios_host_status", {"object_id": host['object_id']})
             temp['id'] = i
             temp['_id'] = str(host_object_id)
             temp['host_name'] = host['host_name']
             temp['host_address'] = host['host_address']
             temp['notification_period'] = host['host_notification_period']
             temp['state'] = host_status['state']
+            temp['return_code'] = host_status['return_code']
             temp['last_update'] = host_status['last_update']
             temp['output'] = host_status['output']
             i += 1
@@ -54,6 +55,7 @@ class Infra_Server_Services_Handler(WiseHandler):
             temp['host_name'] = service['host']
             temp['service_name'] = service['service']
             temp['state'] = service['state']
+            temp['return_code'] = service['return_code']
             temp['output'] = service['output']
             temp['last_update'] = service['last_update']
             i += 1

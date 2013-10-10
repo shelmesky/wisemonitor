@@ -72,11 +72,11 @@
                                     <td class="center">{{ host['host_name'] }}</td>
                                     <td class="center">{{ host['host_address'] }}</td>
                                     <td class="center">
-										{% if host['state'] == 0 %}
+										{% if host['return_code'] == 0 %}
 											<span class="label label-success">正常</span>
-										{% elif host['state'] == 1 %}
+										{% elif host['return_code'] == 1 %}
 											<span class="label label-warning">警告</span>
-										{% elif host['state'] == 2 %}
+										{% elif host['return_code'] == 2 %}
 											<span class="label label-important">错误</span>
 										{% end %}
 									</td>

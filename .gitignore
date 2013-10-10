@@ -1,4 +1,5 @@
 *.pyc
+*.pyo
 *.log
 local_conf.py
 tests/

@@ -2,7 +2,7 @@
 from run import global_xenserver_conn
 from logger import logger
 from pprint import pprint
-import XenAPI
+from common.api import XenAPI
 
 
 def get_control_domain(host):
