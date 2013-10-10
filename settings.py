@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -- coding: utf-8--
+import motor
 
 XENSERVER_ENABLED = True
 
@@ -37,6 +38,9 @@ NOVNC_SERVER_IP = "192.2.3.188"
 NOVNC_SERVER_PORT = 19999
 
 THREADS_MAPREDUCE = 4
+
+MOTOR_CLIENT = motor.MotorClient(MONGO_URI, MONGO_PORT).open_sync()
+MOTOR_DB = MOTOR_CLIENT[MONGO_DB_NAME]
 
 try:
     from local_conf import *

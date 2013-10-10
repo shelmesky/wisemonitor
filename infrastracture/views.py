@@ -5,6 +5,10 @@ import json
 import re
 
 from tornado import web
+from tornado import gen
+from settings import MOTOR_DB as DB
+
+import motor
 
 from common.init import WiseHandler
 from common.api.mongo_driver import db_handler as wise_db_handler
@@ -14,16 +18,22 @@ from common.utils import get_one_week_ago, get_one_year_ago
 
 
 class Infra_Server_Handler(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
     def get(self):
-        executer = MongoExecuter(wise_db_handler)
-        hosts = executer.query("nagios_hosts", None)
+        cursor = DB.nagios_hosts.find()
+            
         ret = dict()
         ret['objects'] = list()
         i = 1
-        for host in hosts:
+        
+        while(yield cursor.fetch_next):
+            host = cursor.next_object()
             temp = dict()
             host_object_id = host['object_id']
-            host_status = executer.query_one("nagios_host_status", {"object_id": host['object_id']})
+            cursor_one = DB.nagios_host_status.find({"object_id": host['object_id']})
+            yield cursor_one.fetch_next
+            host_status = cursor_one.next_object()
             temp['id'] = i
             temp['_id'] = str(host_object_id)
             temp['host_name'] = host['host_name']
@@ -41,14 +51,20 @@ class Infra_Server_Handler(WiseHandler):
 
 
 class Infra_Server_Services_Handler(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
     def get(self, ip):
-        executer = MongoExecuter(wise_db_handler)
-        host = executer.query_one("nagios_hosts", {"host_address": ip})
-        services = executer.query("nagios_service_status", {"host": host['host_name']})
+        cursor = DB.nagios_hosts.find({"host_address": ip})
+        yield cursor.fetch_next
+        host = cursor.next_object()
+        
+        cursor_one = DB.nagios_service_status.find({"host": host['host_name']})
+            
         ret = dict()
         ret['objects'] = list()
         i = 1
-        for service in services:
+        while(yield cursor_one.fetch_next):
+            service = cursor_one.next_object()
             temp = dict()
             temp['_id'] = str(service['object_id'])
             temp['id'] = i
