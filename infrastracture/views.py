@@ -131,7 +131,8 @@ def parse_perfdata(original_data, frequency=1):
 
 class Infra_Server_Chart_Handler(WiseHandler):
     def get(self, host, chart_type):
-        collection = "nagios_host_perfdata"
+        collection_perfdata = "nagios_host_perfdata"
+        collection_hosts = "nagios_hosts"
         
         if not chart_type or not host:
             self.send_error(404)
@@ -154,10 +155,12 @@ class Infra_Server_Chart_Handler(WiseHandler):
             executer = MongoExecuter(wise_db_handler)
             
             if ago:
-                data = executer.query(collection, {"timestamp": {"$gte": ago}})
+                result = executer.query_one(collection_hosts, {"host_address": host})
+                object_id = result['object_id']
+                data = executer.query(collection_perfdata, {"object_id": object_id, "timestamp": {"$gte": ago}})
             
                 fields_data = parse_perfdata(data, frequency)
-                #print >> sys.stderr, json.dumps(fields_data)
+                print >> sys.stderr, json.dumps(fields_data)
             else:
                 self.send_error(500)
         else:
