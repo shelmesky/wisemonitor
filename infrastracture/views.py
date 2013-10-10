@@ -160,7 +160,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
                 data = executer.query(collection_perfdata, {"object_id": object_id, "timestamp": {"$gte": ago}})
             
                 fields_data = parse_perfdata(data, frequency)
-                print >> sys.stderr, json.dumps(fields_data)
+                #print >> sys.stderr, json.dumps(fields_data)
             else:
                 self.send_error(500)
         else:
