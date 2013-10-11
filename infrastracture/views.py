@@ -121,7 +121,7 @@ def parse_perfdata(cursor, frequency=1, callback=None):
         for f in fields:
             temp_data[str(f)] = 0
         
-        temp_timestamp = final_data[start]['timestamp'] * 1000
+        temp_timestamp = int(final_data[start]['timestamp'] * 1000)
         
         for record in final_data[start:end]:
             perf_data = record['perf_data']
@@ -194,7 +194,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
         
     def on_parse_finished(self, data):
         self.render("infrastracture/server_chart.html", host=self.host,
-                    chart_type=self.chart_type, data=json.dumps(data))
+                    chart_type=self.chart_type, data=data)
     
     
 class Infra_Service_Chart_Handler(WiseHandler):

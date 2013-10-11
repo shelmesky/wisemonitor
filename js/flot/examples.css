@@ -51,12 +51,6 @@ input[type=checkbox] {
 	color: #000;
 }
 
-#content {
-	width: 1024px;
-	margin: 0 auto;
-	padding: 10px;
-}
-
 #footer {
 	margin-top: 25px;
 	margin-bottom: 10px;
@@ -68,7 +62,7 @@ input[type=checkbox] {
 .demo-container {
 	box-sizing: border-box;
 	width: 1024px;
-	height: 450px;
+	height: 230px;
 	padding: 20px 15px 15px 15px;
 	margin: 15px auto 30px auto;
 	border: 1px solid #ddd;
@@ -94,4 +88,13 @@ input[type=checkbox] {
 
 .legend table {
 	border-spacing: 5px;
+}
+
+.xAxis > .tickLabel 
+{
+margin-top:30px;
+-moz-transform:rotate(-90deg);
+-o-transform:rotate(-90deg);
+-webkit-transform:rotate(-90deg);
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
 }
