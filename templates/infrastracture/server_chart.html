@@ -1,75 +1,106 @@
+{% extends ../base.html %}
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>Flot Examples: Canvas text</title>
-	<link href="/js/flot/examples.css" rel="stylesheet" type="text/css">
-	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="/js/flot/excanvas.min.js"></script><![endif]-->
-	<script language="javascript" type="text/javascript" src="/js/flot/jquery.js"></script>
-	<script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.js"></script>
-	<script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.time.js"></script>
-	<script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.canvas.js"></script>
-</head>
-</body>
+{% block title %}
+性能图表
+{% end %}
 
-	{% for key, value in data.items() %}
+{% block extra_head %}
 	<script type="text/javascript">
-	$(function() {
-		{
-		var record = {{ value['data'] }};
-
-		var data = [
-			{
-				data: record,
-				label: "{{ key }}",
-				color: "#00f800"
-			},
-		];
-		
-		var options = {
-		    grid: {hoverable: true},
-			series: {
-				lines: {show: true, fill: true, zero: true, steps: false},
-				bars: {show: true, lineWidth: 1, zero: true},
-		    },
-			canvas: true,
-			{% if chart_type == "4h" %}
-				xaxes: [{
-							mode: "time",
-						    timeformat: "%H:%M",
-						    timezone: "browser",
-							tickLength: 0,
-							ticks: 15,
-							labelWidth: 30,
-						}],
-		    {% end %}
-			yaxes: [{
-				min:0,
-				position: "right",
-				tickFormatter: function(value, axis) {
-					return value.toFixed(axis.tickDecimals) + "{{ value['unit'] }}";
-				},
-			}],
-			
-			legend: {
-				position: "nw",
-		    }
-		}
-
-		$.plot("#placeholder_{{ key }}", data, options);
-		}
-		
-	});
-
+		$(document).ready(function(){
+			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
 	</script>
+{% end %}
 
-
-        <center><p>{{ key }}</p></center>
-		<div class="demo-container">
-			<div id="placeholder_{{ key }}" class="demo-placeholder"></div>
-		</div>
-	{% end %}
-
-</body>
-</html>
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">基础设施</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/infra/server/">服务器</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/infra/server/{{ host }}/">{{ host }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/infra/server/{{ host }}/chart/{{ chart_type }}/">性能图表</a><span class="divider"></span>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+					
+						{% for key, value in data.items() %}
+						<script type="text/javascript">
+						$(function() {
+							{
+							var record = {{ value['data'] }};
+					
+							var data = [
+								{
+									data: record,
+									label: "{{ key }}",
+									color: "#00f800"
+								},
+							];
+							
+							var options = {
+								grid: {hoverable: true},
+								series: {
+									lines: {show: true, fill: true, zero: true, steps: false},
+									bars: {show: true, lineWidth: 1, zero: true},
+								},
+								canvas: true,
+								{% if chart_type == "4h" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%H:%M",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+											}],
+								{% end %}
+								yaxes: [{
+									min:0,
+									position: "right",
+									tickFormatter: function(value, axis) {
+										return value.toFixed(axis.tickDecimals) + "{{ value['unit'] }}";
+									},
+								}],
+								
+								legend: {
+									position: "nw",
+								}
+							}
+					
+							$.plot("#placeholder_{{ key }}", data, options);
+							}
+							
+						});
+					
+						</script>
+					
+							<center><h3><p>{{ key }}</p></h3></center>
+							<div class="demo-container">
+								<div id="placeholder_{{ key }}" class="demo-placeholder"></div>
+							</div>
+						{% end %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}
