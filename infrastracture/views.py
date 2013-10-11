@@ -121,7 +121,7 @@ def parse_perfdata(cursor, frequency=1, callback=None):
         for f in fields:
             temp_data[str(f)] = 0
         
-        temp_timestamp = final_data[start]['last_update']
+        temp_timestamp = final_data[start]['timestamp'] * 1000
         
         for record in final_data[start:end]:
             perf_data = record['perf_data']
@@ -144,7 +144,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
                 temp_data[field] += float(data.replace(unit, ""))
             
         for k,v in temp_data.items():
-            fields_data[k]['data'].append([temp_timestamp, v/frequency])
+            value = "%.2f" % (v/frequency)
+            fields_data[k]['data'].append([temp_timestamp, float(value)])
         
     callback(fields_data)
 
