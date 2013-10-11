@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import re
+import bson
 
 from tornado import web
 from tornado import gen
@@ -198,6 +199,46 @@ class Infra_Server_Chart_Handler(WiseHandler):
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
     def get(self, host, service, chart_type):
-        pass
+        if not chart_type or not host or not service:
+            self.send_error(404)
+        
+        self.host_address = host
+        self.chart_type = chart_type
+        self.service_object_id = bson.ObjectId(service)
+        
+        cursor = DB.nagios_services.find({"object_id": self.service_object_id})
+        yield cursor.fetch_next
+        self.service_name = cursor.next_object()['service_description']
+        
+        if chart_type == "4h":
+            ago = get_four_hours_ago()
+            frequency = 1
+        elif chart_type == "24h":
+            ago = get_one_day_ago()
+            frequency = 4
+        elif chart_type == "1w":
+            ago = get_one_week_ago()
+            frequency = 12
+        elif chart_type == "1y":
+            ago = get_one_year_ago()
+        else:
+            ago = None
+        
+        if chart_type != "1y":
+            if ago:
+                cursor = DB.nagios_service_perfdata.find({"object_id": self.service_object_id, "timestamp": {"$gte": ago}})
+            
+                yield parse_perfdata(cursor, frequency, self.on_parse_finished)
+            else:
+                self.send_error(500)
+        else:
+            pass
+        
+    def on_parse_finished(self, data):
+        self.render("infrastracture/service_chart.html", host_address=self.host_address,
+                    service_name=self.service_name, chart_type=self.chart_type,
+                    service_object_id=self.service_object_id, data=data)
 
