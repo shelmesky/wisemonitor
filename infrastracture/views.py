@@ -14,6 +14,7 @@ import motor
 from common.init import WiseHandler
 from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
+from common.utils import get_chart_colors
 
 
 class Infra_Server_Handler(WiseHandler):
@@ -104,10 +105,14 @@ def parse_perfdata(cursor, frequency=1, callback=None):
     
     cursor.rewind()
     
+    #根据预先定义的颜色值，设置每个数据字段的颜色
+    colors = get_chart_colors()
+    
     # 预先填充字段名
     for field in fields:
         fields_data[str(field)] = {}
         fields_data[str(field)]['data'] = []
+        fields_data[str(field)]['color'] = colors.pop()
     
     final_data = []
     while(yield cursor.fetch_next):

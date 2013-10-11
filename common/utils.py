@@ -2,6 +2,8 @@
 import sys
 import time
 from datetime import datetime, timedelta
+import settings
+import copy
 
 
 def force_print(msg):
@@ -35,6 +37,13 @@ def get_one_week_ago():
 def get_one_year_ago():
     ago = get_before(days=365)
     return make_timestamp(ago.timetuple())
+
+
+def get_chart_colors():
+    original_colors = settings.CHART_COLORS
+    colors = copy.deepcopy(original_colors)
+    colors.reverse()
+    return colors
 
 
 if __name__ == '__main__':
