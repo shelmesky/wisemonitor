@@ -96,17 +96,24 @@
                                     
                                     <td>
 										<div class="btn-group">
-										<a class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-											图表
-											<span class="caret"></span>
-										</a>
-										<ul class="dropdown-menu">
-											<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/4h/">4小时</a></li>
-											<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/24h/">24小时</a></li>
-											<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/1w/">1周</a></li>
-											<li class="divider"></li>
-											<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/1y/">1年</a></li>
-										</ul>
+										{% if service['has_perfdata'] %}
+												<a class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+													图表
+													<span class="caret"></span>
+												</a>
+												<ul class="dropdown-menu">
+													<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/4h/">4小时</a></li>
+													<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/24h/">24小时</a></li>
+													<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/1w/">1周</a></li>
+													<li class="divider"></li>
+													<li><a href="/infra/server/{{ host_ip }}/{{ service['_id'] }}/chart/1y/">1年</a></li>
+												</ul>
+										{% else %}
+												<a class="btn btn-success disabled">
+													图表
+													<span class="caret"></span>
+												</a>
+										{% end %}
                                         <a class="btn btn-success" href="#">
                                             <i class="icon-zoom-in icon-white"></i>编辑
                                         </a>

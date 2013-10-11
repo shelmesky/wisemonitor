@@ -73,6 +73,10 @@ class Infra_Server_Services_Handler(WiseHandler):
             temp['return_code'] = service['return_code']
             temp['output'] = service['output']
             temp['last_update'] = service['last_update']
+            if service['perfdata'] != "":
+                temp['has_perfdata'] = True
+            else:
+                temp['has_perfdata'] = False
             i += 1
             ret['objects'].append(temp)
             
