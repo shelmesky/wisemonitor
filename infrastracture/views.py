@@ -11,8 +11,6 @@ from settings import MOTOR_DB as DB
 import motor
 
 from common.init import WiseHandler
-from common.api.mongo_driver import db_handler as wise_db_handler
-from common.api.mongo_api import MongoExecuter
 from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
 

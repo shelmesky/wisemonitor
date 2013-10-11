@@ -5,8 +5,6 @@ import json
 from tornado import web
 
 from common.init import *
-from common.api.mongo_driver import db_handler as wise_db_handler
-from common.api.mongo_api import MongoExecuter
 
 from xenserver import get_vm_info
 from xenserver import get_xenserver_host
