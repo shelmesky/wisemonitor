@@ -72,6 +72,27 @@
 												tickLength: 0,
 												ticks: 15,
 												labelWidth: 30,
+												tickLength: 8
+											}],
+								{% elif chart_type == "24h" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%H:%M",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+												tickLength: 8
+											}],
+								{% elif chart_type == "1w" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%m/%d-%H:00",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+												tickLength: 8
 											}],
 								{% end %}
 								yaxes: [{
