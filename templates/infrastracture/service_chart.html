@@ -45,6 +45,7 @@
             <div class="box-content">
                 <div class="row-fluid">
 					
+						{% if not data %}无数据{% end %}
 						{% for key, value in data.items() %}
 						<script type="text/javascript">
 						$(function() {
