@@ -3,6 +3,7 @@ import sys
 import json
 
 from tornado import web
+from tornado import gen
 
 from common.init import *
 
@@ -13,14 +14,28 @@ from xenserver import get_xenserver_vm_all
 from logger import logger
 
 import settings
+from settings import MOTOR_DB as DB
+
+
+@gen.coroutine
+def parse_perfdata(cursor, callback):
+    fields_data = []
+    yield cursor.fetch_next
+    record = cursor.next_object()
+    data = record['data']
+    callback(data)
 
 
 class XenServer_VMs_Chart_Handler(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
     def get(self, uuid, ttype):
-        executer = MongoExecuter(wise_db_handler)
-        result = executer.query("virtual_host", {"uuid": uuid, "type": ttype})
-        for data in result:
-            self.write(json.dumps(data))
+        print uuid,ttype
+        cursor = DB.virtual_host.find({"uuid": uuid, "type": ttype})
+        yield parse_perfdata(cursor, self.on_parse_finished)
+    
+    def on_parse_finished(self, data):
+        self.render("virtualization/xenserver_vm_chart.html", data=data)
 
 
 class XenServer_Get_Host(WiseHandler):
