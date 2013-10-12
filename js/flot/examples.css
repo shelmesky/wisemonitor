@@ -1,7 +1,7 @@
 
 .demo-container {
 	box-sizing: border-box;
-	width: 1024px;
+	width: auto;
 	height: 230px;
 	padding: 20px 15px 15px 15px;
 	margin: 15px auto 30px auto;
