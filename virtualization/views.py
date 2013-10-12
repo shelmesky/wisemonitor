@@ -1,3 +1,5 @@
+#!--encoding:utf-8--
+
 import os
 import sys
 import json
@@ -19,11 +21,25 @@ from settings import MOTOR_DB as DB
 
 @gen.coroutine
 def parse_perfdata(cursor, callback):
-    fields_data = []
+    final_data = {}
+    final_data['data'] = {}
     yield cursor.fetch_next
     record = cursor.next_object()
-    data = record['data']
-    callback(data)
+    all_records = record['data']
+    final_data['uuid'] = record['uuid']
+    final_data['type'] = record['type']
+    
+    # 填充keys
+    for key in all_records.keys():
+        final_data['data'][key] = []
+        
+    # 填充数据
+    for key, items in all_records.items():
+        for item in items:
+            data = float("%1.f" % item['data'])
+            time = int(item['timestamp']) * 1000
+            final_data['data'][key].append([time, data])
+    callback(final_data)
 
 
 class XenServer_VMs_Chart_Handler(WiseHandler):
