@@ -1,1 +1,131 @@
-{{ data }}
+{% extends ../base.html %}
+
+{% block title %}
+虚拟机性能图表
+{% end %}
+
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#virtual_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">虚拟化</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/">XenServer</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ xenserver_address }}/">{{ xenserver_address }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">{{ vm_name }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/infra/server/{{ xenserver_address }}/{{ vm_uuid }}/chart/{{ chart_type }}/">性能图表</a><span class="divider"></span>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+					
+						{% if not data %}无数据{% end %}
+						{% for key, value in data['data'].items() %}
+						<script type="text/javascript">
+						$(function() {
+							{
+							var record = {{ value }};
+					
+							var data = [
+								{
+									data: record,
+									label: "{{ key }}",
+									color: "#000000"
+								},
+							];
+							
+							var options = {
+								grid: {hoverable: true},
+								series: {
+									lines: {show: true, fill: true, zero: true, steps: false},
+									bars: {show: true, lineWidth: 1, zero: true},
+								},
+								canvas: true,
+								{% if chart_type == "10m" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%H:%M",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+												tickLength: 8
+											}],
+								{% elif chart_type == "2h" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%H:%M",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+												tickLength: 8
+											}],
+								{% elif chart_type == "1w" %}
+									xaxes: [{
+												mode: "time",
+												timeformat: "%m/%d-%H:00",
+												timezone: "browser",
+												tickLength: 0,
+												ticks: 15,
+												labelWidth: 30,
+												tickLength: 8
+											}],
+								{% end %}
+								yaxes: [{
+									min:0,
+									position: "right",
+									tickFormatter: function(value, axis) {
+										return value.toFixed(axis.tickDecimals);
+									},
+								}],
+								
+								legend: {
+									position: "nw",
+								}
+							}
+					
+							$.plot("#placeholder_{{ key }}", data, options);
+							}
+							
+						});
+					
+						</script>
+					
+							<center><h3><p>{{ key }}</p></h3></center>
+							<div class="demo-container">
+								<div id="placeholder_{{ key }}" class="demo-placeholder"></div>
+							</div>
+						{% end %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}

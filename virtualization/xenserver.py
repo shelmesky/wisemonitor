@@ -19,6 +19,17 @@ def get_control_domain(host):
                 return vm_ref
 
 
+def get_vm_info_by_uuid(host, vm_uuid):
+    for ip, session in global_xenserver_conn.items():
+        if ip == host:
+            vms = session.xenapi.VM.get_all()
+            for vm in vms:
+                record = session.xenapi.VM.get_record(vm)
+                if not record['is_a_template'] and not record['is_control_domain']:
+                    if record['uuid'] == vm_uuid:
+                        return record
+
+
 def get_vm_info(host, vm_ref):
     """
     得到单台VM的简略信息

@@ -44,6 +44,8 @@ MOTOR_DB = MOTOR_CLIENT[MONGO_DB_NAME]
 
 CHART_COLORS = ["#00f800", "#c64747", "#2d0ded", "#b7a022"]
 
+XENSERVER_CHART_DISABLED_FIELDS = ["inflight", "avgqu", "iops", "internal"]
+
 try:
     from local_conf import *
 except:

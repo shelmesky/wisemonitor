@@ -105,11 +105,11 @@
 												<span class="caret"></span>
 											</a>
 											<ul class="dropdown-menu">
-												<li><a href="/virtual/xenserver/{{ vm['uuid'] }}/chart/10m/">10分钟</a></li>
-												<li><a href="/virtual/xenserver/{{ vm['uuid'] }}/chart/2h/">2小时</a></li>
-												<li><a href="/virtual/xenserver/{{ vm['uuid'] }}/chart/1w/">1星期</a></li>
+												<li><a href="/virtual/xenserver/{{ host_address }}/{{ vm['uuid'] }}/chart/10m/">10分钟</a></li>
+												<li><a href="/virtual/xenserver/{{ host_address }}/{{ vm['uuid'] }}/chart/2h/">2小时</a></li>
+												<li><a href="/virtual/xenserver/{{ host_address }}/{{ vm['uuid'] }}/chart/1w/">1星期</a></li>
 												<li class="divider"></li>
-												<li><a href="/virtual/xenserver/{{ vm['uuid'] }}/chart/1y/">1年</a></li>
+												<li><a href="/virtual/xenserver/{{ host_address }}/{{ vm['uuid'] }}/chart/1y/">1年</a></li>
 											</ul>
 											
 											<a class="btn btn-success" href="#">
