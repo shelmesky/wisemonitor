@@ -56,6 +56,12 @@ CHART_COLORS = [
                 "#990033",
                 "#663366",
                 "#993333",
+				"#ff9999",
+				"#cc3399",
+				"#ff6600",
+				"#993366",
+				"#ff0033"
+				"#99cccc",
                 ]
 
 XENSERVER_CHART_DISABLED_FIELDS = ["inflight", "avgqu", "iops", "internal"]
