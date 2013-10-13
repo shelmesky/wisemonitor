@@ -15,6 +15,7 @@ from xenserver import get_xenserver_host
 from xenserver import get_xenserver_host_all
 from xenserver import get_xenserver_vm_all
 from xenserver import get_vm_info_by_uuid
+from xenserver import get_control_domain
 from logger import logger
 
 import settings
@@ -81,6 +82,10 @@ class XenServer_VMs_Chart_Handler(WiseHandler):
     
     def on_parse_finished(self, data):
         vm_record = get_vm_info_by_uuid(self.host, self.uuid)
+        if not vm_record:
+            control_domain_ref = get_control_domain(self.host)
+            control_domain_ref = control_domain_ref.split(":")[1]
+            vm_record = get_vm_info(self.host, control_domain_ref)
         vm_name = vm_record['name_label']
         
         self.render("virtualization/xenserver_vm_chart.html",
