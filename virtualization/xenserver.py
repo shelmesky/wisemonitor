@@ -20,6 +20,11 @@ def get_control_domain(host):
 
 
 def get_vm_info_by_uuid(host, vm_uuid):
+    """
+    得到单台VM的详细
+    @host: XenServer主机
+    @vm_uuid: VM的UUID
+    """
     for ip, session in global_xenserver_conn.items():
         if ip == host:
             vms = session.xenapi.VM.get_all()
