@@ -100,6 +100,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
         perf_data = record['perf_data']
         for item in perf_data:
            field = item['field']
+           if "/" in field:
+               field = field.replace("/", "_")
            fields.append(field)
         break
     
@@ -110,6 +112,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
     
     # 预先填充字段名
     for field in fields:
+        if "/" in field:
+            field = field.replace("/", "_")
         fields_data[str(field)] = {}
         fields_data[str(field)]['data'] = []
         fields_data[str(field)]['color'] = colors.pop()
@@ -137,6 +141,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
             perf_data = record['perf_data']
             for item in perf_data:
                 field = str(item['field'])
+                if "/" in field:
+                    field = field.replace("/", "_")
                 data = item['data'][0]
                 
                 # 如果记录中已经存在字段的'别名'

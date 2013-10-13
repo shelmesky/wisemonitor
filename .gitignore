@@ -3,3 +3,4 @@
 *.log
 local_conf.py
 tests/
+nohup.out
