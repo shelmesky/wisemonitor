@@ -8,6 +8,7 @@ from tornado import web
 from tornado import gen
 
 from common.init import *
+from common.utils import get_chart_colors
 
 from xenserver import get_vm_info
 from xenserver import get_xenserver_host
@@ -33,6 +34,9 @@ def parse_perfdata(cursor, callback):
     final_data['uuid'] = record['uuid']
     final_data['type'] = record['type']
     
+    #根据预先定义的颜色值，设置每个数据字段的颜色
+    colors = get_chart_colors()
+    
     # 填充keys
     for key in all_records.keys():
         has_disabled_filed = False
@@ -42,7 +46,9 @@ def parse_perfdata(cursor, callback):
                 break
         if has_disabled_filed:
             continue
-        final_data['data'][key] = []
+        final_data['data'][key] = {}
+        final_data['data'][key]['data'] = []
+        final_data['data'][key]['color'] = colors.pop()
         
     # 填充数据
     for key, items in all_records.items():
@@ -56,7 +62,7 @@ def parse_perfdata(cursor, callback):
         for item in items:
             data = float("%1.f" % item['data'])
             time = int(item['timestamp']) * 1000
-            final_data['data'][key].append([time, data])
+            final_data['data'][key]['data'].append([time, data])
     
     callback(final_data)
 

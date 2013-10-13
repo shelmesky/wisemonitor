@@ -42,7 +42,21 @@ THREADS_MAPREDUCE = 4
 MOTOR_CLIENT = motor.MotorClient(MONGO_URI, MONGO_PORT).open_sync()
 MOTOR_DB = MOTOR_CLIENT[MONGO_DB_NAME]
 
-CHART_COLORS = ["#00f800", "#c64747", "#2d0ded", "#b7a022"]
+CHART_COLORS = [
+                "#666699",
+                "#003366",
+                "#99ccff",
+                "#333399",
+                "#336699",
+                "#0099ff",
+                "#0099cc",
+                "666666",
+                "#669999",
+                "#333366",
+                "#990033",
+                "#663366",
+                "#993333",
+                ]
 
 XENSERVER_CHART_DISABLED_FIELDS = ["inflight", "avgqu", "iops", "internal"]
 
