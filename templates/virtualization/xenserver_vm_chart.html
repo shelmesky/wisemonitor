@@ -19,16 +19,16 @@
             <a href="#">虚拟化</a> <span class="divider">/</span>
         </li>
         <li>
-            <a href="/virtual/xenserver/">XenServer</a><span class="divider">/</span>
+            <a href="/virtual/xenserver/hosts/">XenServer</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="/virtual/xenserver/{{ xenserver_address }}/">{{ xenserver_address }}</a><span class="divider">/</span>
+            <a href="/virtual/xenserver/hosts/{{ xenserver_address }}/">{{ xenserver_address }}</a><span class="divider">/</span>
         </li>
         <li>
             <a href="#">{{ vm_name }}</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="/infra/server/{{ xenserver_address }}/{{ vm_uuid }}/chart/{{ chart_type }}/">性能图表</a><span class="divider"></span>
+            <a href="/infra/server/hosts/{{ xenserver_address }}/{{ vm_uuid }}/chart/{{ chart_type }}/">性能图表</a><span class="divider"></span>
         </li>
     </ul>
     
