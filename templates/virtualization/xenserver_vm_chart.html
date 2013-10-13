@@ -44,8 +44,8 @@
             
             <div class="box-content">
                 <div class="row-fluid">
-					
-						{% if not data %}无数据{% end %}
+				
+						{% if data %}
 						{% for key, value in data['data'].items() %}
 						<script type="text/javascript">
 						$(function() {
@@ -128,4 +128,7 @@
         </div>
     </div>
 </div>
+{% else %}
+无数据
+{% end %}
 {% end %}

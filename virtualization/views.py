@@ -30,6 +30,8 @@ def parse_perfdata(cursor, callback):
     final_data['data'] = {}
     yield cursor.fetch_next
     record = cursor.next_object()
+    if not record:
+        callback(None)
     all_records = record['data']
     final_data['uuid'] = record['uuid']
     final_data['type'] = record['type']
