@@ -139,7 +139,11 @@ def get_xenserver_host_all():
     final_hosts = []
     for ip, session in global_xenserver_conn.items():
         temp = {}
-        hosts = session.xenapi.host.get_all()
+        try:
+            hosts = session.xenapi.host.get_all()
+        except Exception, e:
+            print ip, e.details
+            continue
         temp[ip] = []
         i = 1
         for host in hosts:
