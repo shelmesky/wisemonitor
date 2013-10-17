@@ -43,7 +43,11 @@ def get_vm_info_by_uuid(host, vm_uuid):
     """
     for ip, session in global_xenserver_conn.items():
         if ip == host:
-            vms = session.xenapi.VM.get_all()
+            try:
+                vms = session.xenapi.VM.get_all()
+            except Exception, e:
+                session = global_xenserver_conn.get(e.details[1])
+                vms = session.xenapi.VM.get_all()
             for vm in vms:
                 record = session.xenapi.VM.get_record(vm)
                 if not record['is_a_template'] and not record['is_control_domain']:
