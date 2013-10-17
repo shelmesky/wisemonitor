@@ -175,8 +175,11 @@ def get_xenserver_host_all():
             temp_host['id' ]  = i
             i += 1
             temp[ip].append(temp_host)
-            
+
+        temp[ip].sort()
         final_hosts.append(temp)
+
+	final_hosts.sort()
         
     return final_hosts
 
