@@ -124,7 +124,10 @@ def get_xenserver_host(xenhost):
     @xenhost: xenserver的IP
     '''
     for ip, session in global_xenserver_conn.items():
-        hosts = session.xenapi.host.get_all()
+        try:
+            hosts = session.xenapi.host.get_all()
+        except Exception, e:
+            continue
         for host_record in hosts:
                 record = session.xenapi.host.get_record(host_record)
                 if record['address'] == xenhost:
