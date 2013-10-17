@@ -187,32 +187,48 @@ def get_xenserver_vm_all(host):
     @host xenserver的IP地址
     '''
     final_vms_record = []
-    for ip, session in global_xenserver_conn.items():
-        if ip == host:
+    session = global_xenserver_conn.get(host, None)
+    if session != None:
+        try:
             vms = session.xenapi.VM.get_all()
-            i = 1
-            for vm in vms:
-                record = session.xenapi.VM.get_record(vm)
-                if not record['is_a_template'] and not record['is_control_domain']:
-                    temp_record = {}
-                    temp_record['uuid'] = record['uuid']
-                    temp_record['vcpu_max'] = record['VCPUs_max']
-                    temp_record['memory_static_max'] = int(record['memory_static_max']) / (1024**2)
-                    temp_record['name_label'] = record['name_label']
-                    temp_record['power_state'] = record['power_state']
-                    vm_ref = vm.split(":")[1]
-                    temp_record['vm_ref' ] = vm_ref
+        except Exception, e:
+            session = global_xenserver_conn.get(e.details[1])
+            vms = session.xenapi.VM.get_all()
+
+        # 并对比含有is_control_domain的VM
+        # 它的resident_on是否等于传递的参数host
+        all_host = session.xenapi.host.get_all()
+        for xenhost in all_host:
+            host_record = session.xenapi.host.get_record(xenhost)
+            if host_record['address'] == host:
+                main_host = xenhost
+
+        i = 1
+        for vm in vms:
+            record = session.xenapi.VM.get_record(vm)
+			# 判断resident_on参数
+            if record['resident_on'] != main_host:
+                continue
+            if not record['is_a_template'] and not record['is_control_domain']:
+                temp_record = {}
+                temp_record['uuid'] = record['uuid']
+                temp_record['vcpu_max'] = record['VCPUs_max']
+                temp_record['memory_static_max'] = int(record['memory_static_max']) / (1024**2)
+                temp_record['name_label'] = record['name_label']
+                temp_record['power_state'] = record['power_state']
+                vm_ref = vm.split(":")[1]
+                temp_record['vm_ref' ] = vm_ref
+                
+                #get network information
+                guest_metrics = record['guest_metrics']
+                if guest_metrics != "OpaqueRef:NULL":
+                   guest_metrics_record = session.xenapi.VM_guest_metrics.get_record(guest_metrics)
+                   temp_record['networks'] = guest_metrics_record['networks']
+                else:
+                    temp_record['networks'] = {}
+                temp_record['id'] = i
+                i += 1
                     
-                    #get network information
-                    guest_metrics = record['guest_metrics']
-                    if guest_metrics != "OpaqueRef:NULL":
-                        guest_metrics_record = session.xenapi.VM_guest_metrics.get_record(guest_metrics)
-                        temp_record['networks'] = guest_metrics_record['networks']
-                    else:
-                        temp_record['networks'] = {}
-                    temp_record['id'] = i
-                    i += 1
-                    
-                    final_vms_record.append(temp_record)
-    
+                final_vms_record.append(temp_record)
+
     return final_vms_record
