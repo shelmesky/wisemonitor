@@ -206,8 +206,13 @@ def get_xenserver_vm_all(host):
         i = 1
         for vm in vms:
             record = session.xenapi.VM.get_record(vm)
-			# 判断resident_on参数
-            if record['resident_on'] != main_host:
+			# 排除以下两种情况的VM
+            # resident_on参数不等于当前需要查询的主机的VM
+            # 并且电源状态是Running的
+
+            # 这样在M/S架构中，Halted的VM不属于任何NODE
+            # 使用这样的判断可以将这些VM添加到当前HOST的VM列表中，方便管理
+            if record['resident_on'] != main_host and record['power_state'] == 'Running':
                 continue
             if not record['is_a_template'] and not record['is_control_domain']:
                 temp_record = {}
