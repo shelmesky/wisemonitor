@@ -157,6 +157,17 @@ def get_xenserver_host(xenhost):
                     return temp_host
 
 
+def check_if_has_master(hosts, session):
+    return hosts
+    for xen_host, internal_hosts in hosts.items():
+        if len(internal_hosts) > 1:
+            pools = session.xenapi.pool.get_all()
+            for pool in pools:
+                pool_record = session.xenapi.pool.get_record(pool)
+        else:
+            return hosts
+
+
 def get_xenserver_host_all():
     '''
     获取所有xenserver的简略信息
@@ -177,6 +188,7 @@ def get_xenserver_host_all():
             temp[ip].append(temp_host)
 
         temp[ip].sort()
+        temp = check_if_has_master(temp, session)
         final_hosts.append(temp)
 
 	final_hosts.sort()
