@@ -8,14 +8,30 @@ from common.api import XenAPI
 def get_control_domain(host):
     """
     得到XenServer主机的控制域VM
-    @host: XenServer主机
+    @host: XenServer主机的IP
     """
     session = global_xenserver_conn.get(host, None)
+    main_host = None
     if session != None:
-        all_vm = session.xenapi.VM.get_all()
+        try:
+            all_vm = session.xenapi.VM.get_all()
+        except Exception, e:
+            # 如果出现异常，说明这是台slave
+            # 需要从它的master上获取所有VM
+            session = global_xenserver_conn.get(e.details[1], None)
+            all_vm = session.xenapi.VM.get_all()
+
+        # 并对比含有is_control_domain的VM
+        # 它的resident_on是否等于传递的参数host
+        all_host = session.xenapi.host.get_all()
+        for xenhost in all_host:
+            host_record = session.xenapi.host.get_record(xenhost)
+            if host_record['address'] == host:
+                main_host = xenhost
+
         for vm_ref in all_vm:
             record = session.xenapi.VM.get_record(vm_ref)
-            if record['is_control_domain']:
+            if record['is_control_domain'] and record['resident_on'] == main_host:
                 return vm_ref
 
 
@@ -44,7 +60,11 @@ def get_vm_info(host, vm_ref):
     vm_info = {}
     session = global_xenserver_conn.get(host, None)
     if session != None:
-        vm_record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+        try:
+            vm_record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+        except Exception,e:
+            session = global_xenserver_conn.get(e.details[1], None)
+            vm_record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
         vm_info['name_label'] = vm_record['name_label']
         vm_info['power_state'] = vm_record['power_state']
         return vm_info
@@ -123,11 +143,13 @@ def get_xenserver_host(xenhost):
     获取单台xenserver的相信信息
     @xenhost: xenserver的IP
     '''
-    for ip, session in global_xenserver_conn.items():
+    session = global_xenserver_conn.get(xenhost, None)
+    if session != None:
         try:
             hosts = session.xenapi.host.get_all()
         except Exception, e:
-            continue
+            session = global_xenserver_conn.get(e.details[1])
+            hosts = session.xenapi.host.get_all()
         for host_record in hosts:
                 record = session.xenapi.host.get_record(host_record)
                 if record['address'] == xenhost:
@@ -145,7 +167,6 @@ def get_xenserver_host_all():
         try:
             hosts = session.xenapi.host.get_all()
         except Exception, e:
-            print ip, e.details
             continue
         temp[ip] = []
         i = 1

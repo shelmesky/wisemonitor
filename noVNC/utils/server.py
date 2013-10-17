@@ -43,6 +43,11 @@ except:
 class WebSocketProxy(websockify.WebSocketProxy):
     def __init__(self, *args, **kwargs):
         websockify.WebSocketProxy.__init__(self, *args, **kwargs)
+
+    def get_username_password(self, host_ip):
+        for xen_host in settings.XEN:
+            if xen_host[0] == host_ip:
+                return xen_host[1], xen_host[2]
     
     def do_get_target(self, host, vm_ref):
         self.http = "http://"
@@ -58,9 +63,20 @@ class WebSocketProxy(websockify.WebSocketProxy):
                 session_id = result['Value']
                 
                 session = XenAPI.Session(self.http + xen_host[0])
-                session.login_with_password(xen_host[1], xen_host[2])
+                account_info = self.get_username_password(xen_host[0])
+                session.login_with_password(account_info[0], account_info[1])
                 
-                record = session.xenapi.VM.get_record(vm_ref)
+                try:
+                    record = session.xenapi.VM.get_record(vm_ref)
+                except Exception, e:
+                    # 如果抛出异常说明是slave机器
+                    # 从它的master机器寻找vm
+                    # 在XenServer的master/slaver架构下，所有的VM都从master寻找
+                    session = XenAPI.Session(self.http + e.details[1])
+                    account_info = self.get_username_password(e.details[1])
+                    session.login_with_password(account_info[0], account_info[1])
+                    record = session.xenapi.VM.get_record(vm_ref)
+
                 if not record['is_a_template'] and not record['is_a_snapshot']:
                     if record['power_state'] == "Running":
                         all_consoles = record['consoles']
