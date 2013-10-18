@@ -172,6 +172,15 @@ if __name__ == '__main__':
             print "#" * 100
             result = yield client.listHosts()
             pprint(result)
+
+            print "#" * 100
+            result = yield client.listVirtualMachines()
+            pprint(result)
+            
+            print "#" * 100
+            result = yield client.listSystemVms()
+            pprint(result)
+
     
     app = web.Application([
         (u"/", Main)
