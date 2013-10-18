@@ -28,6 +28,7 @@ def get_control_domain(host):
             host_record = session.xenapi.host.get_record(xenhost)
             if host_record['address'] == host:
                 main_host = xenhost
+                break
 
         for vm_ref in all_vm:
             record = session.xenapi.VM.get_record(vm_ref)
@@ -221,6 +222,7 @@ def get_xenserver_vm_all(host):
             host_record = session.xenapi.host.get_record(xenhost)
             if host_record['address'] == host:
                 main_host = xenhost
+                break
 
         i = 1
         for vm in vms:
