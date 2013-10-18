@@ -1,15 +1,5 @@
-###########################################################################
-#
-# This program is part of Zenoss Core, an open source monitoring platform.
-# Copyright (C) 2011, 2012 Zenoss Inc.
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License version 2 or (at your
-# option) any later version as published by the Free Software Foundation.
-#
-# For complete information please visit: http://www.zenoss.com/oss/
-#
-###########################################################################
+#!/usr/bin/env python
+#!--encoding:utf-8--
 
 import base64
 import hashlib
@@ -17,20 +7,15 @@ import hmac
 import json
 import urllib
 
-from twisted.internet import defer
-import twisted.web.client
-
-
-__all__ = ['Client', 'capacity_type_string']
+from tornado import gen
+from tornado import web
+from tornado import ioloop
+from tornado import escape
+from tornado.httpclient import AsyncHTTPClient
 
 
 def capacity_type_string(type_id):
-    """Return a string representation for the given capacity type_id.
-
-    This list comes from the following URL:
-    http://cloudstack.org/forum/6-general-discussion/7102-performance-monitoring-option-for-cloudcom.html
-    """
-    return {
+    return {                                                                                
         0: 'memory',  # bytes
         1: 'cpu',  # MHz
         2: 'primary_storage_used',  # bytes
@@ -38,214 +23,159 @@ def capacity_type_string(type_id):
         4: 'public_ips',
         5: 'private_ips',
         6: 'secondary_storage',  # bytes
-        }.get(type_id, 'unknown')
+    }.get(type_id, 'unknown')
 
 
 class Client(object):
-    """CloudStack client."""
-
     def __init__(self, base_url, api_key, secret_key):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url
         self.api_key = api_key
         self.secret_key = secret_key
         self._page_size = None
-
+    
     def _sign(self, url):
-        """Generate a signed URL for the provided url and secret key.
-
-        The procedure for creating a signature is documented at
-        http://docs.cloud.com/CloudStack_Documentation/Developer's_Guide%3A_CloudStack
-        """
-
         base_url, query_string = url.split('?')
         msg = '&'.join(sorted(x.lower() for x in query_string.split('&')))
-
+        
         signature = base64.b64encode(hmac.new(
             self.secret_key, msg=msg, digestmod=hashlib.sha1).digest())
-
-        return '%s?%s&signature=%s' % (
+        
+        return "%s?%s&signature=%s" % (
             base_url, query_string, urllib.quote(signature))
-
+    
+    @gen.coroutine
     def _request_single(self, command, **kwargs):
-        def process_result(result):
-            data = json.loads(result)
-
-            # For generating test data.
-            # f = open('%s.json' % data.keys()[0], 'wb')
-            # f.write(result)
-            # f.close()
-
-            return data
-
+        _http_client = AsyncHTTPClient()
+        
         params = kwargs
         params['command'] = command
         params['apiKey'] = self.api_key
         params['response'] = 'json'
-
+        
         url = self._sign("%s/client/api?%s" % (
             self.base_url, urllib.urlencode(params)))
-
-        return twisted.web.client.getPage(url).addCallback(process_result)
-
-    def _get_page_size(self):
-        if self._page_size is None:
-            d = self._request_single(
-                'listConfigurations', name='default.page.size')
-
-            return d.addCallback(self._process_page_size)
-        else:
-            return defer.succeed()
-
+        
+        resp = yield _http_client.fetch(url)
+        body = escape.json_decode(resp.body)
+        raise gen.Return(body)
+    
     def _process_page_size(self, result):
         configs_response = result.get('listconfigurationsresponse', {})
         configs = configs_response.get('configuration', [])
         if len(configs) == 1 and configs[0]['name'] == 'default.page.size':
-            self._page_size = int(configs[0]['value'])
+            return int(configs[0]['value'])
 
-    def _request_page(self, result, page, all_results, command, **kwargs):
-        response_key = '%sresponse' % command.lower()
-
-        # Need to get first page.
-        if result is None:
-            d = self._request_single(
-                command, page=page, pagesize=self._page_size, **kwargs)
-
-            d.addCallback(
-                self._request_page, page, all_results, command, **kwargs)
-
-            return d
-
-        # Already have at least one page. Combine and decide if we need another.
-        else:
-            all_results.setdefault(response_key, {})
-
-            for k, v in result[response_key].items():
-                if k in all_results[response_key]:
-                    if k == 'count':
-                        all_results[response_key][k] += v
-                    else:
-                        all_results[response_key][k].extend(v)
-                else:
-                    all_results[response_key][k] = v
-
-            # Internal hard limit of 20 pages. At this many pages responses
-            # take too long to be useful. More data can be captured by
-            # increasing CloudStack's API page size configuration.
-            if page > 20:
-                return all_results
-
-            if result[response_key].get('count', 0) >= self._page_size:
-                page += 1
-                d = self._request_single(
-                    command, page=page, pagesize=self._page_size, **kwargs)
-
-                d.addCallback(
-                    self._request_page, page, all_results, command, **kwargs)
-
-                return d
-            else:
-                return all_results
-
+    @gen.coroutine
+    def _get_page_size(self):
+        if self._page_size is None:
+            _result = yield self._request_single('listConfigurations', name='default.page.size')
+            self._page_size = self._process_page_size(_result)
+    
+    @gen.coroutine
     def _request(self, command, **kwargs):
-        if command.startswith('list'):
-            all_results = {}
-
-            d = self._get_page_size()
-            d.addCallback(self._request_page, 0, all_results, command, **kwargs)
-
-            return d
-        else:
-            return self._single_request(command, **kwargs)
-
-    def listConfigurations(self, **kwargs):
-        return self._request('listConfigurations', **kwargs)
-
-    def listDomains(self, **kwargs):
-        return self._request('listDomains', **kwargs)
-
-    def listDomainChildren(self, **kwargs):
-        return self._request('listDomainChildren', **kwargs)
-
-    def listZones(self, **kwargs):
-        return self._request('listZones', **kwargs)
-
-    def listPods(self, **kwargs):
-        return self._request('listPods', **kwargs)
-
-    def listClusters(self, **kwargs):
-        return self._request('listClusters', **kwargs)
-
+        #yield self._get_page_size()
+        result = yield self._request_single(command, **kwargs)
+        raise gen.Return(result)
+    
+    @gen.coroutine
     def listHosts(self, **kwargs):
-        return self._request('listHosts', **kwargs)
+        result = yield self._request('listHosts', **kwargs)
+        raise gen.Return(result)
+    
+    @gen.coroutine
+    def listConfigurations(self, **kwargs):
+        result = yield self._request('listConfigurations', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
+    def listDomains(self, **kwargs):
+        result = yield self._request('listDomains', **kwargs)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def listDomainChildren(self, **kwargs):
+        result = self._request('listDomainChildren', **kwargs)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def listZones(self, **kwargs):
+        result = yield self._request('listZones', **kwargs)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def listPods(self, **kwargs):
+        result = yield self._request('listPods', **kwargs)
+        raise gen.Return(result)
+
+    @gen.coroutine
+    def listClusters(self, **kwargs):
+        result = yield self._request('listClusters', **kwargs)
+        raise gen.Return(result)
+
+    @gen.coroutine
     def listSystemVms(self, **kwargs):
-        return self._request('listSystemVms', **kwargs)
+        result = yield self._request('listSystemVms', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
     def listRouters(self, **kwargs):
-        return self._request('listRouters', **kwargs)
+        result = yield self._request('listRouters', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
     def listVirtualMachines(self, **kwargs):
-        return self._request('listVirtualMachines', **kwargs)
+        result = yield self._request('listVirtualMachines', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
     def listCapacity(self, **kwargs):
-        return self._request('listCapacity', **kwargs)
+        result = yield self._request('listCapacity', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
     def listAlerts(self, **kwargs):
-        return self._request('listAlerts', **kwargs)
+        result = yield self._request('listAlerts', **kwargs)
+        raise gen.Return(result)
 
+    @gen.coroutine
     def listEvents(self, **kwargs):
-        return self._request('listEvents', **kwargs)
+        result = yield self._request('listEvents', **kwargs)
+        raise gen.Return(result)
 
 
 if __name__ == '__main__':
-    import os
-    import sys
 
-    from twisted.internet import reactor
-    from twisted.internet.defer import DeferredList
-
-    client = Client(
-		os.environ.get('CLOUDSTACK_URL', 'http://192.2.4.47:8080'),
-        os.environ.get('CLOUDSTACK_APIKEY', 'XzWLh7bedfPB7-TYAUZvo_7zWtup4Y753k-5W5cUWymrTYI0sjZrYTbjrGuCbuAFrO2v22By-wL1epYv5StT2w'),
-        os.environ.get('CLOUDSTACK_SECRETKEY', 'edHQLvITjgOxBNzPcqUJ-KwjYW7X0aE7UL3HAJ7JaMdpOudnA5NmGX2wOCYKrZDuQF3x3iKCrTUu0WlGI2soWg'))
-
-    def callback(results):
-        reactor.stop()
-
-        for success, result in results:
-            if success:
-                from pprint import pprint
-                pprint(result)
-            else:
-                print result.printTraceback()
-
-    deferreds = []
-    if len(sys.argv) < 2:
-        deferreds.extend((
-            client.listConfigurations(name='default.page.size'),
-            client.listZones(),
-            client.listPods(),
-            client.listClusters(),
-            client.listHosts(),
-            client.listSystemVms(),
-            client.listRouters(),
-            client.listVirtualMachines(),
-            client.listCapacity(),
-            client.listAlerts(),
-            client.listEvents(),
-            ))
-    else:
-        for command in sys.argv[1:]:
-            call = getattr(client, command, None)
-            if call is not None:
-                if command == 'listConfigurations':
-                    deferreds.append(call(name='default.page.size'))
-                elif command == 'listHosts':
-                    deferreds.append(call(type='Routing'))
-                elif command == 'listVirtualMachines':
-                    deferreds.append(call(domainid='1', isrecursive=True, state='Running'))
-                else:
-                    deferreds.append(call())
-
-    DeferredList(deferreds, consumeErrors=True).addCallback(callback)
-    reactor.run()
+    CLOUDSTACK_URL='http://192.2.4.47:8080'
+    CLOUDSTACK_APIKEY='XzWLh7bedfPB7-TYAUZvo_7zWtup4Y753k-5W5cUWymrTYI0sjZrYTbjrGuCbuAFrO2v22By-wL1epYv5StT2w'
+    CLOUDSTACK_SECRETKEY='edHQLvITjgOxBNzPcqUJ-KwjYW7X0aE7UL3HAJ7JaMdpOudnA5NmGX2wOCYKrZDuQF3x3iKCrTUu0WlGI2soWg'
+    
+    
+    class Main(web.RequestHandler):
+        @web.asynchronous
+        @gen.coroutine
+        def get(self):
+            from pprint import pprint
+            client = Client(CLOUDSTACK_URL,
+                            CLOUDSTACK_APIKEY,
+                            CLOUDSTACK_SECRETKEY)
+            result = yield client.listZones()
+            pprint(result)
+            
+            print "#" * 100
+            result = yield client.listPods()
+            pprint(result)
+            
+            print "#" * 100
+            result = yield client.listClusters()
+            pprint(result)
+            
+            print "#" * 100
+            result = yield client.listHosts()
+            pprint(result)
+    
+    app = web.Application([
+        (u"/", Main)
+        ])
+    
+    app.listen(8888)
+    ioloop.IOLoop.instance().start()
