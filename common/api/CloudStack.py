@@ -146,8 +146,8 @@ class Client(object):
 if __name__ == '__main__':
 
     CLOUDSTACK_URL='http://192.2.4.47:8080'
-    CLOUDSTACK_APIKEY='XzWLh7bedfPB7-TYAUZvo_7zWtup4Y753k-5W5cUWymrTYI0sjZrYTbjrGuCbuAFrO2v22By-wL1epYv5StT2w'
-    CLOUDSTACK_SECRETKEY='edHQLvITjgOxBNzPcqUJ-KwjYW7X0aE7UL3HAJ7JaMdpOudnA5NmGX2wOCYKrZDuQF3x3iKCrTUu0WlGI2soWg'
+    CLOUDSTACK_APIKEY='7jMTaFbgPUNvJxrYenL49Fy7VqPxjD47vh8tGKnHnez3xhVYf85QX-E5CL7TGmZrX-q9f__xyhQp4UV7Y7W36A'
+    CLOUDSTACK_SECRETKEY='otwkgDSRGauj8OX7EGfwGtWZWIJjpm98UurRE_EAwJmdhvwbcB8tBdTbx4ftmkhM9MOsCLIkILbUsO2KCWFitA'
     
     
     class Main(web.RequestHandler):
