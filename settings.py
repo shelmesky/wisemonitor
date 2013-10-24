@@ -84,6 +84,14 @@ CHART_COLORS = [
 
 XENSERVER_CHART_DISABLED_FIELDS = ["inflight", "avgqu", "iops", "internal"]
 
+CLOUD_STACKS = (
+    {
+        "host": "http://192.2.4.47:8080",
+        "api_key": "7jMTaFbgPUNvJxrYenL49Fy7VqPxjD47vh8tGKnHnez3xhVYf85QX-E5CL7TGmZrX-q9f__xyhQp4UV7Y7W36A",
+        "secret_key": "otwkgDSRGauj8OX7EGfwGtWZWIJjpm98UurRE_EAwJmdhvwbcB8tBdTbx4ftmkhM9MOsCLIkILbUsO2KCWFitA"
+    },
+)
+
 try:
     from local_conf import *
 except:
