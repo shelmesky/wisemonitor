@@ -144,20 +144,22 @@ class Client(object):
 
 
 if __name__ == '__main__':
+    import sys
+    sys.path.insert(0, "../../")
 
-    CLOUDSTACK_URL='http://192.2.4.47:8080'
-    CLOUDSTACK_APIKEY='7jMTaFbgPUNvJxrYenL49Fy7VqPxjD47vh8tGKnHnez3xhVYf85QX-E5CL7TGmZrX-q9f__xyhQp4UV7Y7W36A'
-    CLOUDSTACK_SECRETKEY='otwkgDSRGauj8OX7EGfwGtWZWIJjpm98UurRE_EAwJmdhvwbcB8tBdTbx4ftmkhM9MOsCLIkILbUsO2KCWFitA'
-    
+    import  settings
+    cs_host = settings.CLOUD_STACKS[0]
+    url = "http://" + cs_host['host'] + ":" + cs_host['port']
+    api_key = cs_host['api_key']
+    secret_key = cs_host['secret_key']
+
     
     class Main(web.RequestHandler):
         @web.asynchronous
         @gen.coroutine
         def get(self):
             from pprint import pprint
-            client = Client(CLOUDSTACK_URL,
-                            CLOUDSTACK_APIKEY,
-                            CLOUDSTACK_SECRETKEY)
+            client = Client(url, api_key, secret_key)
             result = yield client.listZones()
             pprint(result)
             
