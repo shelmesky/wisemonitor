@@ -1,0 +1,93 @@
+{% extends ../base.html %}
+
+{% block title %}
+CloudStack平台列表
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">基础设施</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/platform/cloudstack/">CloudStack</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div id="DataTables_Table_0_wrapper" class="dataTables_length">
+                            <label>
+                                <select size="1" name="page_size">
+                                    <option value="10" selected="selected">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="25">25</option>
+                                </select>
+                                 每页数量
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="span6"> <label>
+                            搜索：
+                            <input type="text">
+                        </label> 
+                    </div>
+                    
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">平台地址</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">区域</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">分配状态</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">DNS1</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">DNS2</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS1</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS2</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">用户网络</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">网络域</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">启用本地存储</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                            
+                            {% for host_record in data %}
+                                {% for zone in host_record['data']['listzonesresponse']['zone'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ host_record['cs_host'] }}</td>
+                                    <td class="center">{{ zone['name'] }}</td>
+                                    <td class="center">{{ zone['allocationstate'] }}</td>
+                                    <td class="center">{{ zone['dns1'] }}</td>
+                                    <td class="center">{{ zone['dns2'] }}</td>
+                                    <td class="center">{{ zone['internaldns1'] }}</td>
+                                    <td class="center">{{ zone['internaldns2'] }}</td>
+                                    <td class="center">{{ zone['guestcidraddress'] }}</td>
+                                    <td class="center">{{ zone['networktype'] }}</td>
+                                    <td class="center">{{ zone['securitygroupsenabled'] }}</td>
+                                </tr>
+								{% end %}
+                            {% end %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}

@@ -32,16 +32,14 @@ class CloudStack_Zone_Handler(WiseHandler):
         zones = []
         for cs_host in settings.CLOUD_STACKS:
             temp = {}
-            temp['cloudstack'] = cs_host['host']
-            
             host = 'http://' + cs_host['host'] + ':' + cs_host['port']
             client = cloudstack_api.Client(host, cs_host['api_key'], cs_host['secret_key'])
             result = yield client.listZones()
             temp['data'] = result
+            temp['cs_host'] = cs_host['host']
             zones.append(temp)
             
-        self.write(json.dumps(zones))
-        self.finish()
+        self.render("platform/cloudstack_zones.html", data=zones)
 
 
 class CloudStack_Zone_Detail_Handler(WiseHandler):
