@@ -62,13 +62,8 @@ CloudStack平台列表
                             <th rowspan="1" colspan="1" style="width: 110px;">平台地址</th>
                             <th rowspan="1" colspan="1" style="width: 100px;">区域</th>
                             <th rowspan="1" colspan="1" style="width: 100px;">分配状态</th>
-                            <th rowspan="1" colspan="1" style="width: 100px;">DNS1</th>
-                            <th rowspan="1" colspan="1" style="width: 100px;">DNS2</th>
-                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS1</th>
-                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS2</th>
                             <th rowspan="2" colspan="1" style="width: 150px;">用户网络</th>
                             <th rowspan="2" colspan="1" style="width: 150px;">网络域</th>
-                            <th rowspan="2" colspan="1" style="width: 170px;">启用本地存储</th>
                            </tr> 
                         </thead>
                         
@@ -80,13 +75,17 @@ CloudStack平台列表
                                     <td class="center">{{ host_record['cs_host'] }}</td>
                                     <td class="center"><a href="/platform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">{{ zone['name'] }}</a></td>
                                     <td class="center">{{ zone['allocationstate'] }}</td>
-                                    <td class="center">{{ zone['dns1'] }}</td>
-                                    <td class="center">{{ zone['dns2'] }}</td>
-                                    <td class="center">{{ zone['internaldns1'] }}</td>
-                                    <td class="center">{{ zone['internaldns2'] }}</td>
                                     <td class="center">{{ zone['guestcidraddress'] }}</td>
                                     <td class="center">{{ zone['networktype'] }}</td>
-                                    <td class="center">{{ zone['securitygroupsenabled'] }}</td>
+									
+									<td class="center">
+                                        <a class="btn btn-success" href="/platform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">
+                                            <i class="icon-zoom-in icon-white"></i>详情
+                                        </a>
+                                        <a class="btn btn-success" href="#">
+                                            <i class="icon-zoom-in icon-white"></i>资源使用统计
+                                        </a>
+									</td>
                                 </tr>
 								{% end %}
                             {% end %}
