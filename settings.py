@@ -94,5 +94,5 @@ CLOUD_STACKS = (
 
 try:
     from local_conf import *
-except:
-    pass
+except Exception, e:
+    raise e
