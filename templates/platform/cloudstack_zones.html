@@ -4,6 +4,14 @@
 CloudStack平台列表
 {% end %}
 
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#cloudstack_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+{% end %}
+
 {% block main_content %}
 <div>
     <ul class="breadcrumb">
@@ -70,7 +78,7 @@ CloudStack平台列表
                                 {% for zone in host_record['data']['listzonesresponse']['zone'] %}
                                 <tr class="odd">
                                     <td class="center">{{ host_record['cs_host'] }}</td>
-                                    <td class="center">{{ zone['name'] }}</td>
+                                    <td class="center"><a href="/platform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">{{ zone['name'] }}</a></td>
                                     <td class="center">{{ zone['allocationstate'] }}</td>
                                     <td class="center">{{ zone['dns1'] }}</td>
                                     <td class="center">{{ zone['dns2'] }}</td>

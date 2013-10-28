@@ -1,0 +1,234 @@
+{% extends ../base.html %}
+
+{% block title %}
+CloudStack详情
+{% end %}
+
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#cloudstack_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">基础设施</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/platform/cloudstack/">CloudStack</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">{{ data['cs_host'] }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/platform/cloudstack/{{ data['cs_host'] }}/{{ data['zone_id'] }}/detail/">{{ data['zone_name'] }}</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div id="DataTables_Table_0_wrapper" class="dataTables_length">
+                            <label>
+                                <select size="1" name="page_size">
+                                    <option value="10" selected="selected">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="25">25</option>
+                                </select>
+                                 每页数量
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="span6"> <label>
+                            搜索：
+                            <input type="text">
+                        </label> 
+                    </div>
+                    
+					<h3>区域:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">平台地址</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">区域</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">分配状态</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">DNS1</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">DNS2</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS1</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">内部DNS2</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">用户网络</th>
+                            <th rowspan="2" colspan="1" style="width: 150px;">网络域</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">启用本地存储</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                            
+                                {% for zone in data['current_zone']['listzonesresponse']['zone'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ data['cs_host'] }}</td>
+                                    <td class="center">{{ zone['name'] }}</td>
+                                    <td class="center">{{ zone['allocationstate'] }}</td>
+                                    <td class="center">{{ zone['dns1'] }}</td>
+                                    <td class="center">{{ zone['dns2'] }}</td>
+                                    <td class="center">{{ zone['internaldns1'] }}</td>
+                                    <td class="center">{{ zone['internaldns2'] }}</td>
+                                    <td class="center">{{ zone['guestcidraddress'] }}</td>
+                                    <td class="center">{{ zone['networktype'] }}</td>
+                                    <td class="center">{{ zone['securitygroupsenabled'] }}</td>
+                                </tr>
+								{% end %}
+                            
+                        </tbody>
+                    </table>
+					
+					<h3>提供点:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+                            <th rowspan="1" colspan="1" style="width: 110px;">区域</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">网关</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">网络掩码</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">分配状态</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                                {% for pod in data['pods']['listpodsresponse']['pod'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ pod['name'] }}</td>
+                                    <td class="center">{{ data['zone_name'] }}</td>
+                                    <td class="center">{{ pod['gateway'] }}</td>
+                                    <td class="center">{{ pod['netmask'] }}</td>
+                                    <td class="center">{{ pod['allocationstate'] }}</td>
+                                </tr>
+								{% end %}
+                        </tbody>
+                    </table>
+					
+					<h3>群集:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">提供点</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">虚拟机平台</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">状态</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                                {% for item in data['clusters']['listclustersresponse']['cluster'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ item['name'] }}</td>
+                                    <td class="center">{{ item['podname'] }}</td>
+                                    <td class="center">{{ item['hypervisortype'] }}</td>
+                                    <td class="center">{{ item['allocationstate'] }}</td>
+                                </tr>
+								{% end %}
+                        </tbody>
+                    </table>
+					
+					<h3>主机:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+                            <th rowspan="1" colspan="1" style="width: 110px;">区域</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">提供点</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">群集</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">状态</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                                {% for item in data['hosts']['listhostsresponse']['host'] %}
+								{% if item['type']  == "Routing" %}
+                                <tr class="odd">
+                                    <td class="center">{{ item['name'] }}</td>
+                                    <td class="center">{{ item['zonename'] }}</td>
+                                    <td class="center">{{ item['podname'] }}</td>
+                                    <td class="center">{{ item['clustername'] }}</td>
+                                    <td class="center">{{ item['resourcestate'] }}</td>
+                                </tr>
+								{% end %}
+								{% end %}
+                        </tbody>
+                    </table>
+					
+					<h3>系统虚拟机:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">类型</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">区域</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">状态</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                                {% for item in data['sysvms']['listsystemvmsresponse']['systemvm'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ item['name'] }}</td>
+                                    <td class="center">{{ item['systemvmtype'] }}</td>
+                                    <td class="center">{{ item['zonename'] }}</td>
+                                    <td class="center">{{ item['state'] }}</td>
+                                </tr>
+								{% end %}
+                        </tbody>
+                    </table>
+					
+					<h3>实例:</h3>
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
+                            <th rowspan="1" colspan="1" style="width: 110px;">内部名称</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">显示名称</th>
+                            <th rowspan="1" colspan="1" style="width: 100px;">区域名称</th>
+                            <th rowspan="2" colspan="1" style="width: 170px;">状态</th>
+                           </tr> 
+                        </thead>
+                        
+                        <tbody>
+                                {% for item in data['vms']['listvirtualmachinesresponse']['virtualmachine'] %}
+                                <tr class="odd">
+                                    <td class="center">{{ item['name'] }}</td>
+                                    <td class="center">{{ item['instancename'] }}</td>
+                                    <td class="center">{{ item['displayname'] }}</td>
+                                    <td class="center">{{ item['zonename'] }}</td>
+                                    <td class="center">{{ item['state'] }}</td>
+                                </tr>
+								{% end %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}

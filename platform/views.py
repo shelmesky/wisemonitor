@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+from pprint import pprint
 
 from tornado import web
 from tornado import gen
@@ -66,17 +67,18 @@ class CloudStack_Zone_Detail_Handler(WiseHandler):
             zone_name = zone['listzonesresponse']['zone'][0]['name']
     
             final_data = {
+                'current_zone': zone,
                 'pods': pods,
                 'clusters': clusters,
                 'hosts': hosts,
                 'vms': vms,
                 'sysvms': sysvms,
                 'zone_name': zone_name,
+                'zone_id': zone_id,
                 'cs_host': cs
             }
             
-            self.write(json.dumps(final_data))
-            self.finish()
+            self.render("platform/cloudstack_zones_detail.html", data=final_data)
 
 
 class CloudStack_Pod_Handler(WiseHandler):
