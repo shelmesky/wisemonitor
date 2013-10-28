@@ -60,7 +60,7 @@ class CloudStack_Zone_Detail_Handler(WiseHandler):
             pods = yield client.listPods(zoneid=zone_id)
             clusters = yield client.listClusters(zoneid=zone_id)
             hosts = yield client.listHosts(zoneid=zone_id)
-            vms = yield client.listVirtualMachines(zoneid=zone_id)
+            vms = yield client.listVirtualMachines(zoneid=zone_id, listall=True)
             sysvms = yield client.listSystemVms(zoneid=zone_id)
             
             zone = yield client.listZones(id=zone_id)
