@@ -68,13 +68,13 @@ class NagiosReceiver(object):
     
     def handle_delivery(self, ch, method, header, body):
         if self.callback:
-            self.callback(body)
+            self.callback(ch, method, header, body)
 
 
 if __name__ == '__main__':
     # make simple test
     
-    def print_body(body):
+    def print_body(ch, method, header, body):
         print body
     
     from tornado.ioloop import IOLoop
