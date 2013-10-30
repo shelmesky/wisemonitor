@@ -42,7 +42,7 @@ class XenServer_Name_To_RefID(WiseHandler):
         else:
             msg = {
                 'state': 1,
-                'message': 'error occured'
+                'message': 'error occurred'
             }
             self.set_status(500)
             self.write(json.dumps(msg))

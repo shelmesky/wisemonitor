@@ -82,7 +82,7 @@ CloudStack资源
 											<td class="center">已分配的主存储</td>
 											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
 										{% elif item ['type'] == 4 %}
-											<td class="center">共用 IP 地址</td>
+											<td class="center">公用 IP 地址</td>
 											<td class="center">{{ item['capacityused'] }} / {{ item['capacitytotal'] }}</td>
 										{% elif item ['type'] == 5 %}
 											<td class="center">管理类 IP</td>
