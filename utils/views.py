@@ -19,6 +19,7 @@ class XenServer_Name_To_RefID(WiseHandler):
         host_ip = self.get_argument("host", None)
         vm_name = self.get_argument("vm", None)
         
+        self.set_header("Content-Type", "application/json")
         if not host_ip or not vm_name:
             msg = {
                 'state': -1,
