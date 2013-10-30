@@ -36,6 +36,22 @@ def get_control_domain(host):
                 return vm_ref
 
 
+def get_vm_info_by_name(host_ip, vm_name):
+    session = global_xenserver_conn.get(host_ip, None)
+    if session != None:
+        try:
+            vm_ref = session.xenapi.VM.get_by_name_label(vm_name)
+        except Exception, e:
+            return False
+        else:
+            try:
+                return vm_ref[0]
+            except Exception, e:
+                return False
+    else:
+        return False
+
+
 def get_vm_info_by_uuid(host, vm_uuid):
     """
     得到单台VM的详细

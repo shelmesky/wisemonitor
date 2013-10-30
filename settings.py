@@ -27,6 +27,7 @@ APPS = (
     "infrastracture",
     "virtualization",
     "platform",
+	"utils",
 )
 
 XEN = (
