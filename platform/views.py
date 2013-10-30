@@ -81,6 +81,33 @@ class CloudStack_Zone_Detail_Handler(WiseHandler):
             self.render("platform/cloudstack_zones_detail.html", data=final_data)
 
 
+class CloudStack_Zone_Capacity_Handler(WiseHandler):
+    """
+    列出Zone的使用量信息
+    
+    参数：
+    @cs CloudStack的主机
+    @zone_id Zone的ID
+    """
+    @web.asynchronous
+    @gen.coroutine
+    def get(self, cs, zone_id):
+        client = get_cs_conn(cs)
+        capacitys = yield client.listCapacity(zoneid=zone_id, fetchlatest=True)
+        
+        zone = yield client.listZones(zoneid=zone_id)
+        zone_name = zone['listzonesresponse']['zone'][0]['name']
+        
+        final_data = {
+            'capacitys': capacitys,
+            'zone_id': zone_id,
+            'zone_name': zone_name,
+            'cs_host': cs
+        }
+        
+        self.render("platform/cloudstack_capacity.html", data=final_data)
+
+
 class CloudStack_Pod_Handler(WiseHandler):
     """
     列出所有的pod

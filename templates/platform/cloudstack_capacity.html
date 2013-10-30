@@ -1,0 +1,122 @@
+{% extends ../base.html %}
+
+{% block title %}
+CloudStack资源
+{% end %}
+
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#cloudstack_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">基础设施</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/platform/cloudstack/">CloudStack</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">{{ data['cs_host'] }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/platform/cloudstack/{{ data['cs_host'] }}/{{ data['zone_id'] }}/detail/">{{ data['zone_name'] }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">资源使用</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div id="DataTables_Table_0_wrapper" class="dataTables_length">
+                            <label>
+                                <select size="1" name="page_size">
+                                    <option value="10" selected="selected">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="25">25</option>
+                                </select>
+                                 每页数量
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="span6"> <label>
+                            搜索：
+                            <input type="text">
+                        </label> 
+                    </div>
+                    
+                    <table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <tbody>
+                            
+                                {% for item in data['capacitys']['listcapacityresponse']['capacity'] %}
+                                <tr class="odd">
+										{% if item['type'] == 0 %}
+											<td class="center" style="width: 10%">内存</td>
+											<td class="center" style="width: 20%">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
+										{% elif item ['type'] == 1 %}
+											<td class="center">CPU</td>
+											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024)) }} GHz / {{ "%.2f" % float(item['capacitytotal']/float(1024)) }} GHz</td>
+										{% elif item ['type'] == 2 %}
+											<td class="center">存储</td>
+											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
+										{% elif item ['type'] == 3 %}
+											<td class="center">已分配的主存储</td>
+											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
+										{% elif item ['type'] == 4 %}
+											<td class="center">共用 IP 地址</td>
+											<td class="center">{{ item['capacityused'] }} / {{ item['capacitytotal'] }}</td>
+										{% elif item ['type'] == 5 %}
+											<td class="center">管理类 IP</td>
+											<td class="center">{{ item['capacityused'] }} / {{ item['capacitytotal'] }}</td>
+										{% elif item ['type'] == 6 %}
+											<td class="center">二级存储</td>
+											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
+										{% elif item ['type'] == 7 %}
+											<td class="center">VLAN</td>
+											<td class="center">{{ item['capacityused'] }} / {{ item['capacitytotal'] }}</td>
+										{% elif item ['type'] == 8 %}
+											<td class="center">直接 IP</td>
+											<td class="center">{{ item['capacityused'] }} / {{ item['capacitytotal'] }}</td>
+										{% elif item ['type'] == 9 %}
+											<td class="center">本地存储</td>
+											<td class="center">{{ "%.2f" % float(item['capacityused']/float(1024**3)) }} GB / {{ "%.2f" % float(item['capacitytotal']/float(1024**3)) }} GB</td>
+										{% end  %}
+										
+										<td class="center" style="width: 30%">
+											<div class="progress progress-striped" style="float: left;width: 450px;position: absolute">
+												<div class="bar" style="width: {{ float(item['percentused']) }}%;"></div>
+											</div>
+											<div style="float: right; font-style: oblique">
+												{{ float(item['percentused']) }}%
+											</div>
+										</td>
+								</tr>
+								{% end %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% end %}

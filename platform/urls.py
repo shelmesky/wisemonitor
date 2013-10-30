@@ -9,6 +9,10 @@ url_handlers = [
 # 参数: cloudstack主机/zone
 (r"^/platform/cloudstack/([^/]+)/([^/]+)/detail/$", CloudStack_Zone_Detail_Handler),
 
+# 列出zone的使用量信息
+# 参数: cloudstack主机/zone
+(r"^/platform/cloudstack/([^/]+)/([^/]+)/capacity/$", CloudStack_Zone_Capacity_Handler),
+
 # 列出所有的pod
 # 参数: cloudstack主机/zone
 (r"^/platform/cloudstack/([^/]+)/([^/]+)/pod/$", CloudStack_Pod_Handler),
