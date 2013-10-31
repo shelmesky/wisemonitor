@@ -16,6 +16,8 @@ from xenserver import get_xenserver_host_all
 from xenserver import get_xenserver_vm_all
 from xenserver import get_vm_info_by_uuid
 from xenserver import get_control_domain
+from xenserver import get_xenserver_conn
+from utils import parse_perfmon_xml
 from logger import logger
 
 import settings
@@ -91,6 +93,25 @@ class XenServer_VMs_Chart_Handler(WiseHandler):
         self.render("virtualization/xenserver_vm_chart.html",
                     data=data, xenserver_address=self.host,
                     vm_uuid=self.uuid, chart_type=self.ttype, vm_name=vm_name)
+
+
+class XenServer_VM_Perfmon(WiseHandler):
+    def get(self, xen_host, vm_ref):
+        session = get_xenserver_conn(xen_host)
+        if session != None:
+            record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+            try:
+                perfmon = record['other_config']['perfmon']
+            except Exception, e:
+                perfmon = None
+            if perfmon:
+                data = parse_perfmon_xml(perfmon)
+                self.render("virtualization/xenserver_vm_perfmon.html", data=data)
+            else:
+                self.render("virtualization/xenserver_vm_perfmon.html", data=None)
+    
+    def post(self):
+        pass
 
 
 class XenServer_Get_Host(WiseHandler):

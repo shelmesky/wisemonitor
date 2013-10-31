@@ -5,6 +5,10 @@ from pprint import pprint
 from common.api import XenAPI
 
 
+def get_xenserver_conn(xenhost):
+    return global_xenserver_conn.get(xenhost, None)
+
+
 def get_control_domain(host):
     """
     得到XenServer主机的控制域VM
