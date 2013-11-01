@@ -18,7 +18,7 @@ from xenserver import get_vm_info_by_uuid
 from xenserver import get_control_domain
 from xenserver import get_xenserver_conn
 from utils import parse_perfmon_xml
-from utils import general_perfmon_xml
+from utils import generate_perfmon_xml
 from logger import logger
 
 import settings
@@ -144,7 +144,7 @@ class XenServer_VM_Perfmon(WiseHandler):
             "disk_period": disk_period
         }
         
-        perfmon_xml = general_perfmon_xml(data)
+        perfmon_xml = generate_perfmon_xml(data)
         perfmon_xml = perfmon_xml.replace("\n", "")
         perfmon_xml = perfmon_xml.replace("\t", "")
         

@@ -12,7 +12,7 @@ xml_str = """<variable>
 </variable>"""
 
 
-def general_perfmon_xml(data):
+def generate_perfmon_xml(data):
     global_period = data.get("global_period", None)
     if not global_period:
         return False
