@@ -56,6 +56,19 @@ def general_perfmon_xml(data):
 
 def parse_perfmon_xml(data):
     final_data = []
+    
+    if not data:
+        usage_name = ["cpu_usage", "network_usage", "disk_usage"]
+        for name_value in usage_name:
+            temp = {}
+            temp['name'] = name_value
+            temp['alarm_trigger_level'] = 0
+            temp['alarm_trigger_period'] = 0
+            temp['alarm_auto_inhibit_period'] = 0
+            final_data.append(temp)
+        
+        return final_data
+    
     doc = xml.dom.minidom.parseString(data)
     for node in doc.getElementsByTagName("variable"):
         temp = {}

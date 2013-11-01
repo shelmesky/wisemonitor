@@ -106,14 +106,10 @@ class XenServer_VM_Perfmon(WiseHandler):
                 perfmon = record['other_config']['perfmon']
             except Exception, e:
                 perfmon = None
-            if perfmon:
-                data = parse_perfmon_xml(perfmon)
-                self.render("virtualization/xenserver_vm_perfmon.html",
+                
+            data = parse_perfmon_xml(perfmon)
+            self.render("virtualization/xenserver_vm_perfmon.html",
                             data=data, host_address=xen_host,
-                            vm_ref=vm_ref, vm_info=vm_info)
-            else:
-                self.render("virtualization/xenserver_vm_perfmon.html",
-                            data=None, host_address=xen_host,
                             vm_ref=vm_ref, vm_info=vm_info)
     
     def post(self, xen_host, vm_ref):
