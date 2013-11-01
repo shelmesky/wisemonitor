@@ -2,6 +2,58 @@
 import xml.dom.minidom
 
 
+xml_config_str = "<config>%s</config>"
+
+xml_str = """<variable>
+<name value="%s"/>
+<alarm_trigger_level value="%s"/>
+<alarm_trigger_period value="%s"/>
+<alarm_auto_inhibit_period value="%s"/>
+</variable>"""
+
+
+def general_perfmon_xml(data):
+    global_period = data.get("global_period", None)
+    if not global_period:
+        return False
+    
+    global_period = data.get("global_period", None)
+    
+    cpu_name = "cpu_usage"
+    cpu_level = data.get("cpu_level", None)
+    cpu_period = data.get("cpu_period", None)
+    
+    network_name = "network_usage"
+    network_level = data.get("network_level", None)
+    network_period = data.get("network_period", None)
+    
+    disk_name = "disk_usage"
+    disk_level = data.get("disk_level", None)
+    disk_period = data.get("disk_period", None)
+    
+    xml_content = ""
+    
+    if cpu_level and cpu_period:
+        cpu_xml_str = xml_str % (
+            cpu_name, cpu_level, cpu_period, global_period
+        )
+        xml_content += cpu_xml_str
+    
+    if network_level and network_period:
+        network_xml_str = xml_str % (
+            network_name, network_level, network_period, global_period
+        )
+        xml_content += network_xml_str
+
+    if disk_level and disk_period:
+        disk_xml_str = xml_str % (
+            disk_name, disk_level, disk_period, global_period
+        )
+        xml_content += disk_xml_str
+    
+    return xml_config_str % xml_content
+
+
 def parse_perfmon_xml(data):
     final_data = []
     doc = xml.dom.minidom.parseString(data)

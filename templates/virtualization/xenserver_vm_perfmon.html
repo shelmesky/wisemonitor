@@ -1,1 +1,152 @@
-{{ data }}
+{% extends ../base.html %}
+
+{% block title %}
+虚拟机报警设置
+{% end %}
+
+{% block extra_head %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		});
+	</script>
+	
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/base.css" title="plain">
+    <script src="/css/util.js"></script>
+    
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">虚拟化</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/">XenServer</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/{{ host_address }}/">{{ host_address }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ host_address }}/vms/">VMS</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">{{ vm_info['name_label'] }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/perfmon/">性能报警设置</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+			<div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i><span id="vm_name_label"> {{ vm_info['name_label'] }}</span></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+			</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    <div class="span6" style="display: inline">
+						{% if data %}
+						<form action="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/perfmon/" method="post">
+							<p>报警重复周期&nbsp;&nbsp;<input type="text" name="global_period" value="{{ int(data[0]['alarm_auto_inhibit_period'])/60 }}"> 分钟</p>
+							{% for item in data %}
+								<div class="well well-small" style="width: 100%;">
+									{% if item['name'] == "cpu_usage" %}
+									<table>
+										<tbody>
+											
+										<tr>
+										<td style="float: left; margin-right: 20px;">
+											当CPU使用率超过
+										</td>
+										<td>
+											<input type="text" name="cpu_level" value="{{ int(float(item['alarm_trigger_level']) * 100) }}"> %
+										</td>
+										</tr>
+										
+										<tr>
+										<td>
+											<p>持续时间超过</p>
+										</td>
+										<td>
+											<input type="text" name="cpu_period" value="{{ int(item['alarm_trigger_period'])/60 }}"> 分钟
+										</td>
+										</tr>
+										
+										</tbody>
+									</table>
+									{% elif item['name'] == "network_usage" %}
+									<table>
+										<tbody>
+											
+										<tr>
+										<td style="float: left; margin-right: 20px;">
+											当网卡使用率超过
+										</td>
+										<td>
+											<input type="text" name="network_level" value="{{ int(item['alarm_trigger_level']) / 1024 }}"> KB
+										</td>
+										</tr>
+										
+										<tr>
+										<td>
+											持续时间超过
+										</td>
+										<td>
+											<input type="text" name="network_period" value="{{ int(item['alarm_trigger_period'])/60 }}"> 分钟
+										</td>
+										</tr>
+										
+										</tbody>
+									</table>
+									{% elif item['name'] == "disk_usage" %}
+									<table>
+										<tbody>
+											
+										<tr>
+										<td style="float: left; margin-right: 20px;">
+											当磁盘使用率超过
+										</td>
+										<td>
+											<input type="text" name="disk_level" value="{{ int(item['alarm_trigger_level']) / 1024 }}"> KB
+										</td>
+										</tr>
+										
+										<tr>
+										<td>
+											持续时间超过
+										</td>
+										<td>
+											<input type="text" name="disk_period" value="{{ int(item['alarm_trigger_period'])/60 }}"> 分钟
+										</td>
+										</tr>
+										
+										</tbody>
+									</table>
+									{% end %}
+								</div>
+							{% end %}
+							
+							<input class="btn btn-large btn-primary" type="submit" value="保存">
+						</form>
+						{% elif not data %}
+						无数据
+						{% end %}
+			
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+		
+</div>
+{% end %}
