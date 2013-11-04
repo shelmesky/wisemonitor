@@ -26,7 +26,7 @@ else:
 APPS = (
     "infrastracture",
     "virtualization",
-    "platform",
+    "cloudform",
 	"utils",
 )
 

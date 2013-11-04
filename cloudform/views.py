@@ -40,7 +40,7 @@ class CloudStack_Zone_Handler(WiseHandler):
             temp['cs_host'] = cs_host['host']
             zones.append(temp)
             
-        self.render("platform/cloudstack_zones.html", data=zones)
+        self.render("cloudform/cloudstack_zones.html", data=zones)
 
 
 class CloudStack_Zone_Detail_Handler(WiseHandler):
@@ -78,7 +78,7 @@ class CloudStack_Zone_Detail_Handler(WiseHandler):
                 'cs_host': cs
             }
             
-            self.render("platform/cloudstack_zones_detail.html", data=final_data)
+            self.render("cloudform/cloudstack_zones_detail.html", data=final_data)
 
 
 class CloudStack_Zone_Capacity_Handler(WiseHandler):
@@ -105,7 +105,7 @@ class CloudStack_Zone_Capacity_Handler(WiseHandler):
             'cs_host': cs
         }
         
-        self.render("platform/cloudstack_capacity.html", data=final_data)
+        self.render("cloudform/cloudstack_capacity.html", data=final_data)
 
 
 class CloudStack_Pod_Handler(WiseHandler):
