@@ -183,6 +183,10 @@ if __name__ == '__main__':
             result = yield client.listSystemVms()
             pprint(result)
 
+            print "#" * 100
+            result = yield client.listAlerts()
+            pprint(result)
+
     
     app = web.Application([
         (u"/", Main)
