@@ -9,6 +9,8 @@ from tornado import ioloop
 from common.init import *
 from common.api.loader import load_url_handlers
 from common.api import XenAPI
+from common.api import rabbitmq_client
+from common.alert_handlers.nagios import nagios_alert_handler
 from logger import logger
 import settings
 from settings import XEN
@@ -66,6 +68,16 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
     except Exception:
         port = 1984
+    
+    # Receive alerts from RabbitMQ that send by Nagios
+    if settings.NAGIOS_HANDLE_ENABLED:
+        mq_host = settings.MQ_HOST
+        mq_username = settings.MQ_USERNAME
+        mq_password =  settings.MQ_PASSWORD
+        mq_virtual_host = settings.MQ_VIRTUAL_HOST
+        
+        rabbitmq_client.NagiosReceiver(mq_host, mq_username, mq_password,
+                       mq_virtual_host, callback=nagios_alert_handler)
     
     app = iApplication()
     app.listen(port, xheaders=True)

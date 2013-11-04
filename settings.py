@@ -93,6 +93,13 @@ CLOUD_STACKS = (
     },
 )
 
+NAGIOS_HANDLE_ENABLED = True
+
+MQ_HOST = "127.0.0.1"
+MQ_USERNAME = "guest"
+MQ_PASSWORD = "guest"
+MQ_VIRTUAL_HOST = "/"
+
 try:
     from local_conf import *
 except Exception, e:
