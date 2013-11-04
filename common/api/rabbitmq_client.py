@@ -50,6 +50,7 @@ class NagiosReceiver(object):
         self.channel = _channel
         self.channel.exchange_declare(exchange='nagios',
                                               type='fanout',
+                                              durable=True,
                                               callback=self.on_exchange_declared)
 
     def on_exchange_declared(self, _exchange):
