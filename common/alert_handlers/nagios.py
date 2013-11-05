@@ -25,5 +25,5 @@ def nagios_alert_handler(ch, method, header, data):
                     'output': message['output']
                 }
             }
-            DB.nagios_alerts.insert(msg)
+            DB.alerts.insert(msg)
 

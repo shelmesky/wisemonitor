@@ -9,8 +9,12 @@ from tornado import ioloop
 from common.init import *
 from common.api.loader import load_url_handlers
 from common.api import XenAPI
+
 from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
+from common.api.watch_xenserver_events import XenServer_Alerts_Watcher
+from common.alert_handlers.xenserver import xenserver_event_handler
+
 from logger import logger
 import settings
 from settings import XEN
@@ -79,6 +83,20 @@ if __name__ == '__main__':
         rabbitmq_client.NagiosReceiver(mq_host, mq_username, mq_password,
                        mq_virtual_host, callback=nagios_alert_handler)
     
+    # Receive alerts from XenServer
+    if settings.XENSERVER_HANDLE_ENABLED:
+        for host, session in global_xenserver_conn.items():
+            t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
+            t.start()
+    
     app = iApplication()
     app.listen(port, xheaders=True)
-    ioloop.IOLoop.instance().start()
+    
+    try:
+        ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt, e:
+        ioloop.IOLoop.instance().close()
+        for _, session in global_xenserver_conn.items():
+            session.xenapi.event.unregister(["*"])
+            session.xenapi.session.logout()
+

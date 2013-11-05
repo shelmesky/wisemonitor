@@ -100,6 +100,8 @@ MQ_USERNAME = "guest"
 MQ_PASSWORD = "guest"
 MQ_VIRTUAL_HOST = "/"
 
+XENSERVER_HANDLE_ENABLED = True
+
 try:
     from local_conf import *
 except Exception, e:
