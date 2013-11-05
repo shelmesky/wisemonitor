@@ -2,6 +2,8 @@
 # -- coding: utf-8--
 import os
 import sys
+import signal
+import time
 
 import __init__
 from tornado import ioloop
@@ -65,6 +67,30 @@ class iApplication(web.Application):
 class MainHandler(WiseHandler):
     def get(self):
         self.render("index.html")
+
+
+class Watcher:   
+    def __init__(self):   
+        self.child = os.fork()   
+        if self.child == 0:   
+            return  
+        else:   
+            self.watch()
+            
+    def watch(self):   
+        try:   
+            os.wait()   
+        except (KeyboardInterrupt, SystemExit):   
+            # I put the capital B in KeyBoardInterrupt so I can   
+            # tell when the Watcher gets the SIGINT
+            print "Server exit at %s." % time.ctime()
+            self.kill()   
+        sys.exit()   
+  
+    def kill(self):   
+        try:   
+            os.kill(self.child, signal.SIGKILL)   
+        except OSError: pass 
     
 
 if __name__ == '__main__':
@@ -72,6 +98,8 @@ if __name__ == '__main__':
         port = int(sys.argv[1])
     except Exception:
         port = 1984
+    
+    Watcher()
     
     # Receive alerts from RabbitMQ that send by Nagios
     if settings.NAGIOS_HANDLE_ENABLED:
@@ -94,9 +122,6 @@ if __name__ == '__main__':
     
     try:
         ioloop.IOLoop.instance().start()
-    except KeyboardInterrupt, e:
+    except (KeyboardInterrupt, SystemExit):
         ioloop.IOLoop.instance().close()
-        for _, session in global_xenserver_conn.items():
-            session.xenapi.event.unregister(["*"])
-            session.xenapi.session.logout()
 
