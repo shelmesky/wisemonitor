@@ -1,3 +1,4 @@
+import time
 import json
 from settings import MOTOR_DB as DB
 
@@ -16,6 +17,7 @@ def nagios_alert_handler(ch, method, header, data):
             msg = {
                 'type': 'physical_device',
                 'message_type': message_type,
+                'created_time': time.ctime(),
                 'message': {
                     'host': message['host'],
                     'service': message['service'] if message['service'] else "",
