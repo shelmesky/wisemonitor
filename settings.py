@@ -28,6 +28,7 @@ APPS = (
     "virtualization",
     "cloudform",
 	"utils",
+    "system"
 )
 
 XEN = (
