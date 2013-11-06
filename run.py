@@ -62,6 +62,8 @@ class iApplication(web.Application):
         
         apps = load_url_handlers()
         handlers.extend(apps)
+        # custom http error handler
+        handlers.append((r"/.*", PageNotFound))
         web.Application.__init__(self, handlers, **settings)
 
 class MainHandler(WiseHandler):
