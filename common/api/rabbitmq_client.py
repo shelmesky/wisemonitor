@@ -38,7 +38,7 @@ class NagiosReceiver(object):
         parameters = pika.ConnectionParameters(virtual_host=self.virtual_host,
                         credentials=pika.PlainCredentials(self.username, self.password),
                         frame_max=self.frame_size,
-                        host=self.mq_server)
+                        host=self.mq_server, heartbeat=True)
         
         self.connection = TornadoConnection(parameters=parameters,
                                             on_open_callback=self.on_connected)
