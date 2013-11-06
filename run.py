@@ -5,6 +5,7 @@ import sys
 import signal
 import time
 import hashlib
+from httplib2 import urlparse
 
 import __init__
 from tornado import ioloop
@@ -89,6 +90,12 @@ class LoginHandler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
     def post(self):
+        next_url = None
+        referer = self.request.headers['Referer']
+        parsed_referer = urlparse.parse_qs(referer)
+        if parsed_referer:
+            next_url = parsed_referer.values()[0][0]
+        
         error = None
         username = self.get_argument("username", "").strip()
         password = self.get_argument("password", "").strip()
@@ -103,7 +110,10 @@ class LoginHandler(WiseHandler):
             password_digest = hashlib.md5(password).hexdigest()
             if user['password'] == password_digest:
                 self.set_secure_cookie("wisemonitor_user", username)
-                self.redirect("/")
+                if next_url:
+                    self.redirect(next_url)
+                else:
+                    self.redirect("/")
             else:
                 error = 1
                 self.render("login.html", error=error)
