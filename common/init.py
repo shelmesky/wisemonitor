@@ -11,13 +11,15 @@ class WiseHandler(web.RequestHandler):
 	
 	def get_error_html(self, status_code, **kwargs):
 		if status_code == 403:
-			pass
+			self.render("403.html")
+		elif status_code == 404:
+			self.render("404.html")
 		elif status_code == 405:
-			pass
+			self.render("405.html")
 		elif status_code == 500:
-			pass
+			self.render("500.html")
 		else:
-			pass
+			self.render("error.html")
 
 
 class PageNotFound(web.RequestHandler):
