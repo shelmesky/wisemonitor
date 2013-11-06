@@ -15,11 +15,13 @@ from common.init import WiseHandler
 from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
 from common.utils import get_chart_colors
+from common.decorator import require_login
 
 
 class Infra_Server_Handler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self):
         cursor = DB.nagios_hosts.find()
             
@@ -53,6 +55,7 @@ class Infra_Server_Handler(WiseHandler):
 class Infra_Server_Services_Handler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, ip):
         cursor = DB.nagios_hosts.find({"host_address": ip})
         yield cursor.fetch_next
@@ -169,6 +172,7 @@ def parse_perfdata(cursor, frequency=1, callback=None):
 class Infra_Server_Chart_Handler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, host, chart_type):
         collection_perfdata = "nagios_host_perfdata"
         collection_hosts = "nagios_hosts"
@@ -216,6 +220,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
 class Infra_Service_Chart_Handler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, host, service, chart_type):
         if not chart_type or not host or not service:
             self.send_error(404)

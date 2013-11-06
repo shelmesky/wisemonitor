@@ -11,6 +11,7 @@ from tornado import gen
 from common.init import WiseHandler
 
 from common.api import CloudStack as cloudstack_api
+from common.decorator import require_login
 
 import settings
 
@@ -29,6 +30,7 @@ class CloudStack_Zone_Handler(WiseHandler):
     """
     @gen.coroutine
     @web.asynchronous
+    @require_login
     def get(self):
         zones = []
         for cs_host in settings.CLOUD_STACKS:
@@ -54,6 +56,7 @@ class CloudStack_Zone_Detail_Handler(WiseHandler):
     """
     @gen.coroutine
     @web.asynchronous
+    @require_login
     def get(self, cs, zone_id):
         client = get_cs_conn(cs)
         if client:
@@ -91,6 +94,7 @@ class CloudStack_Zone_Capacity_Handler(WiseHandler):
     """
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, cs, zone_id):
         client = get_cs_conn(cs)
         capacitys = yield client.listCapacity(zoneid=zone_id, fetchlatest=True)
@@ -118,6 +122,7 @@ class CloudStack_Pod_Handler(WiseHandler):
     """
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, cs, zone_id):
         client = get_cs_conn(cs)
         if client:
@@ -144,6 +149,7 @@ class CloudStack_Cluster_Handler(WiseHandler):
     @cs CloudStack的主机
     @zone_id Zone的ID
     """
+    @require_login
     def get(self, cs, zone_id):
         pass
 
@@ -158,6 +164,7 @@ class CloudStack_Host_Handler(WiseHandler):
     @pod_id Pod的ID
     @cluster_id Cluster的ID
     """
+    @require_login
     def get(self, cs, zone_id, pod_id, cluster_id):
         pass
 
@@ -173,6 +180,7 @@ class CloudStack_VM_Handler(WiseHandler):
     @cluster_id Cluster的ID
     @host_id Host的ID
     """
+    @require_login
     def get(self, cs, zone_id, pod_id, cluster_id, host_id):
         pass
 

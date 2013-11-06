@@ -4,13 +4,17 @@ import os
 import sys
 import signal
 import time
+import hashlib
 
 import __init__
 from tornado import ioloop
+from tornado import gen
+from tornado import web
 
 from common.init import *
 from common.api.loader import load_url_handlers
 from common.api import XenAPI
+from common.decorator import require_login
 
 from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
@@ -20,6 +24,7 @@ from common.alert_handlers.xenserver import xenserver_event_handler
 from logger import logger
 import settings
 from settings import XEN
+from settings import MOTOR_DB as DB
 
 global_xenserver_conn = {}
 
@@ -53,11 +58,13 @@ class iApplication(web.Application):
         }
     
         handlers = [
-            (r"/", MainHandler),
-            (r"/static/(.*)", web.StaticFileHandler, dict(path=settings['static_path'])),
-            (r"/css/(.*)", web.StaticFileHandler, dict(path=settings['css'])),
-            (r"/js/(.*)", web.StaticFileHandler, dict(path=settings['js'])),
-            (r"/img/(.*)", web.StaticFileHandler, dict(path=settings['img'])),
+            (r"^/$", MainHandler),
+            (r"^/login/$", LoginHandler),
+            (r"^/logout/$", LogoutHandler),
+            (r"^/static/(.*)", web.StaticFileHandler, dict(path=settings['static_path'])),
+            (r"^/css/(.*)", web.StaticFileHandler, dict(path=settings['css'])),
+            (r"^/js/(.*)", web.StaticFileHandler, dict(path=settings['js'])),
+            (r"^/img/(.*)", web.StaticFileHandler, dict(path=settings['img'])),
         ]
         
         apps = load_url_handlers()
@@ -66,9 +73,49 @@ class iApplication(web.Application):
         handlers.append((r"/.*", PageNotFound))
         web.Application.__init__(self, handlers, **settings)
 
+
 class MainHandler(WiseHandler):
+    @require_login
     def get(self):
         self.render("index.html")
+
+
+class LoginHandler(WiseHandler):
+    def get(self):
+        if self.get_secure_cookie("wisemonitor_user"):
+            self.redirect("/")
+        self.render("login.html", error=None)
+    
+    @web.asynchronous
+    @gen.coroutine
+    def post(self):
+        error = None
+        username = self.get_argument("username", "").strip()
+        password = self.get_argument("password", "").strip()
+        if username and password:
+            cursor = DB.users.find({"username": username})
+            yield cursor.fetch_next
+            user = cursor.next_object()
+            if not user:
+                error = -1
+                self.render("login.html", error=error)
+                return
+            password_digest = hashlib.md5(password).hexdigest()
+            if user['password'] == password_digest:
+                self.set_secure_cookie("wisemonitor_user", username)
+                self.redirect("/")
+            else:
+                error = 1
+                self.render("login.html", error=error)
+        else:
+            error = 2
+            self.render("login.html", error=error)
+
+
+class LogoutHandler(WiseHandler):
+    def get(self):
+        self.set_secure_cookie("wisemonitor_user", "")
+        self.redirect("/login/")
 
 
 class Watcher:   

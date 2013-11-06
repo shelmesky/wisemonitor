@@ -9,6 +9,7 @@ from tornado import gen
 
 from common.init import *
 from common.utils import get_chart_colors
+from common.decorator import require_login
 
 from xenserver import get_vm_info
 from xenserver import get_xenserver_host
@@ -76,6 +77,7 @@ def parse_perfdata(cursor, callback):
 class XenServer_VMs_Chart_Handler(WiseHandler):
     @web.asynchronous
     @gen.coroutine
+    @require_login
     def get(self, host, uuid, ttype):
         self.uuid = uuid
         self.host = host
@@ -97,6 +99,7 @@ class XenServer_VMs_Chart_Handler(WiseHandler):
 
 
 class XenServer_VM_Perfmon(WiseHandler):
+    @require_login
     def get(self, xen_host, vm_ref):
         session = get_xenserver_conn(xen_host)
         if session != None:
@@ -112,6 +115,7 @@ class XenServer_VM_Perfmon(WiseHandler):
                             data=data, host_address=xen_host,
                             vm_ref=vm_ref, vm_info=vm_info)
     
+    @require_login
     def post(self, xen_host, vm_ref):
         global_period = self.get_argument("global_period", None, strip=True)
         global_period = int(global_period) * 60 if global_period else None
@@ -174,24 +178,28 @@ class XenServer_VM_Perfmon(WiseHandler):
 
 
 class XenServer_Get_Host(WiseHandler):
+    @require_login
     def get(self, xen_host):
         host = get_xenserver_host(xen_host)
         self.render("virtualization/xenserver_host.html", host=host)
 
 
 class XenServer_Get_ALL(WiseHandler):
+    @require_login
     def get(self):
         hosts = get_xenserver_host_all()
         self.render("virtualization/xenserver_all_hosts.html", xenserver_list=hosts)
 
 
 class XenServer_Get_ALL_vms(WiseHandler):
+    @require_login
     def get(self, host):
         vms = get_xenserver_vm_all(host)
         self.render("virtualization/xenserver_all_vms.html", vms=vms, host_address=host)
 
 
 class XenServer_Get_VM_Console(WiseHandler):
+    @require_login
     def get(self, host, vm_ref):
         vm_info = get_vm_info(host, vm_ref)
         self.render("virtualization/xenserver_console.html",
