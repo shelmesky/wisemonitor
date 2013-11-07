@@ -3,6 +3,7 @@ import xml.dom.minidom
 
 
 xml_config_str = "<config>%s</config>"
+xml_config_empty = "<config></config>"
 
 xml_str = """<variable>
 <name value="%s"/>
@@ -14,7 +15,7 @@ xml_str = """<variable>
 
 def generate_perfmon_xml(data):
     global_period = data.get("global_period", None)
-    if not global_period:
+    if not global_period and global_period != 0:
         return False
     
     global_period = data.get("global_period", None)
@@ -57,7 +58,7 @@ def generate_perfmon_xml(data):
 def parse_perfmon_xml(data):
     final_data = []
     
-    if not data:
+    if not data or data == xml_config_empty:
         usage_name = ["cpu_usage", "network_usage", "disk_usage"]
         for name_value in usage_name:
             temp = {}
