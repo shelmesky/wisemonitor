@@ -86,7 +86,9 @@
 										{{ alert['created_time'] }} /
 									{% end %}
 									{{ alert['message']['host'] }} /
-									{{ alert['message']['service'] }} /
+									{% if alert['message']['service'] %}
+										{{ alert['message']['service'] }} /
+									{% end %}
 									{{ alert['message']['output'] }}
 								</div>
 							{% elif alert['message']['return_code'] == 2 %}
@@ -96,7 +98,9 @@
 										{{ alert['created_time'] }} /
 									{% end %}
 									{{ alert['message']['host'] }} /
-									{{ alert['message']['service'] }} /
+									{% if alert['message']['service'] %}
+										{{ alert['message']['service'] }} /
+									{% end %}
 									{{ alert['message']['output'] }}
 								</div>
 							{% end %}
