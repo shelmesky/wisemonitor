@@ -39,8 +39,7 @@ def connect_to_xenserver():
         if host[0] not in global_xenserver_conn:
             try:
                 transport = TimeoutTransport()
-                #session = XenAPI.Session("http://" + host[0], transport)
-                session = XenAPI.Session("http://" + host[0])
+                session = XenAPI.Session("http://" + host[0], transport)
                 session.login_with_password(host[1], host[2])
                 global_xenserver_conn[host[0]] = session
                 logger.info("Connect to XenServer: {0} are success.".format(host[0]))
@@ -176,10 +175,20 @@ if __name__ == '__main__':
                        mq_virtual_host, callback=nagios_alert_handler)
     
     # Receive alerts from XenServer
+    # Connect to XenServer without timeout
     if settings.XENSERVER_HANDLE_ENABLED:
-        for host, session in global_xenserver_conn.items():
-            t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
-            t.start()
+        for host in XEN:
+            if host[0] not in global_xenserver_conn:
+                try:
+                    session = XenAPI.Session("http://" + host[0])
+                    session.login_with_password(host[1], host[2])
+                    global_xenserver_conn[host[0]] = session
+                    logger.info("Connect to XenServer: {0} are success.".format(host[0]))
+                except Exception, e:
+                    logger.exception(e)
+                else:
+                    t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
+                    t.start()
     
     app = iApplication()
     app.listen(port, xheaders=True)
