@@ -178,17 +178,15 @@ if __name__ == '__main__':
     # Connect to XenServer without timeout
     if settings.XENSERVER_HANDLE_ENABLED:
         for host in XEN:
-            if host[0] not in global_xenserver_conn:
-                try:
-                    session = XenAPI.Session("http://" + host[0])
-                    session.login_with_password(host[1], host[2])
-                    global_xenserver_conn[host[0]] = session
-                    logger.info("Connect to XenServer: {0} are success.".format(host[0]))
-                except Exception, e:
-                    logger.exception(e)
-                else:
-                    t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
-                    t.start()
+            try:
+                session = XenAPI.Session("http://" + host[0])
+                session.login_with_password(host[1], host[2])
+                logger.info("Connect to XenServer: {0} are success.".format(host[0]))
+            except Exception, e:
+                logger.exception(e)
+            else:
+                t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
+                t.start()
     
     app = iApplication()
     app.listen(port, xheaders=True)
