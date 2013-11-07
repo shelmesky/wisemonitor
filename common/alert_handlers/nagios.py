@@ -20,7 +20,7 @@ def nagios_alert_handler(ch, method, header, data):
                 'created_time': time.ctime(),
                 'message': {
                     'host': message['host'],
-                    'service': message['service'] if message['service'] else "",
+                    'service': message.get('service', ''),
                     'return_code': message['return_code'],
                     'output': message['output']
                 }
