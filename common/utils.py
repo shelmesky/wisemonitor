@@ -4,6 +4,17 @@ import time
 from datetime import datetime, timedelta
 import settings
 import copy
+import httplib
+import xmlrpclib
+
+
+class TimeoutTransport(xmlrpclib.Transport):
+    timeout = settings.XENSERVER_CONNECT_TIMEOUT
+    def set_timeout(self, timeout):
+        self.timeout = timeout
+    
+    def make_connection(self, host):
+        return httplib.HTTPConnection(host, timeout=self.timeout)
 
 
 def force_print(msg):

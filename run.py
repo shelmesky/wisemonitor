@@ -6,6 +6,8 @@ import signal
 import time
 import hashlib
 from httplib2 import urlparse
+import xmlrpclib
+import httplib
 
 import __init__
 from tornado import ioloop
@@ -16,6 +18,7 @@ from common.init import *
 from common.api.loader import load_url_handlers
 from common.api import XenAPI
 from common.decorator import require_login
+from common.utils import TimeoutTransport
 
 from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
@@ -27,6 +30,7 @@ import settings
 from settings import XEN
 from settings import MOTOR_DB as DB
 
+
 global_xenserver_conn = {}
 
 
@@ -34,13 +38,13 @@ def connect_to_xenserver():
     for host in XEN:
         if host[0] not in global_xenserver_conn:
             try:
-                session = XenAPI.Session("http://" + host[0])
+                transport = TimeoutTransport()
+                session = XenAPI.Session("http://" + host[0], transport)
                 session.login_with_password(host[1], host[2])
                 global_xenserver_conn[host[0]] = session
                 logger.info("Connect to XenServer: {0} are success.".format(host[0]))
             except Exception, e:
-                logger.error(e)
-                raise e
+                logger.exception(e)
 
 if settings.XENSERVER_ENABLED: connect_to_xenserver()
 

@@ -36,6 +36,8 @@ XEN = (
     ("192.2.4.10", "root", "123456",),
 )
 
+XENSERVER_CONNECT_TIMEOUT = 2 #seconds
+
 NOVNC_SERVER_IP = "192.2.3.188"
 NOVNC_SERVER_PORT = 19999
 
@@ -93,6 +95,10 @@ CLOUD_STACKS = (
         "secret_key": "otwkgDSRGauj8OX7EGfwGtWZWIJjpm98UurRE_EAwJmdhvwbcB8tBdTbx4ftmkhM9MOsCLIkILbUsO2KCWFitA"
     },
 )
+
+# set timeout for connect and request with cloudstack client
+CLOUDSTACK_CONNECT_TIMEOUT = 2
+CLOUDSTACK_REQUEST_TIMEOUT = 2
 
 NAGIOS_HANDLE_ENABLED = True
 

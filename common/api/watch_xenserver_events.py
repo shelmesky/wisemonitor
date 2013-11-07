@@ -1,8 +1,11 @@
 import threading
 import motor
 import settings
+import XenAPI
 from common.api.mongo_driver import db_handler
 from common.api.mongo_api import MongoExecuter
+
+from logger import logger
 
 
 class XenServer_Alerts_Watcher(threading.Thread):
@@ -27,10 +30,11 @@ class XenServer_Alerts_Watcher(threading.Thread):
             
             except XenAPI.Failure, e:
                 if e.details <> ["EVENTS_LOST"]:
-                    raise
-                print "some events may be lost"
-                self.session.xenapi.event.unregister(["*"])
-                self.session.xenapi.event.register(["*"])
+                    logger.exception(e)
+                else:
+                    print "some events may be lost"
+                    self.session.xenapi.event.unregister(["*"])
+                    self.session.xenapi.event.register(["*"])
     
     def connect_mongo(self):
         self.mongo_executer = MongoExecuter(db_handler)

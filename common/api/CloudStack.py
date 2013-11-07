@@ -13,6 +13,8 @@ from tornado import ioloop
 from tornado import escape
 from tornado.httpclient import AsyncHTTPClient
 
+import settings
+
 
 def capacity_type_string(type_id):
     return {                                                                                
@@ -55,7 +57,11 @@ class Client(object):
         url = self._sign("%s/client/api?%s" % (
             self.base_url, urllib.urlencode(params)))
         
-        resp = yield _http_client.fetch(url)
+        connect_timeout = settings.CLOUDSTACK_CONNECT_TIMEOUT
+        request_timeout = settings.CLOUDSTACK_REQUEST_TIMEOUT
+        resp = yield _http_client.fetch(url,
+                                connect_timeout=connect_timeout,
+                                request_timeout=request_timeout)
         body = escape.json_decode(resp.body)
         raise gen.Return(body)
     
