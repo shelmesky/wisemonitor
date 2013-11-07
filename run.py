@@ -185,7 +185,7 @@ if __name__ == '__main__':
             except Exception, e:
                 logger.exception(e)
             else:
-                t = XenServer_Alerts_Watcher(host, session, xenserver_event_handler)
+                t = XenServer_Alerts_Watcher(host[0], session, xenserver_event_handler)
                 t.start()
     
     app = iApplication()
