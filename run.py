@@ -39,7 +39,8 @@ def connect_to_xenserver():
         if host[0] not in global_xenserver_conn:
             try:
                 transport = TimeoutTransport()
-                session = XenAPI.Session("http://" + host[0], transport)
+                #session = XenAPI.Session("http://" + host[0], transport)
+                session = XenAPI.Session("http://" + host[0])
                 session.login_with_password(host[1], host[2])
                 global_xenserver_conn[host[0]] = session
                 logger.info("Connect to XenServer: {0} are success.".format(host[0]))

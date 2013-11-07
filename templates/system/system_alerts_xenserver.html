@@ -106,9 +106,9 @@ XenServer事件
 													{{ "%.2f" % (float(alert['message']['trigger_value'])/1024)  }}KB
 											{% elif alert['message_type'] == 'cpu_usage' %}
 												Current:
-													{{ alert['message']['current_value'] }} /
+													{{ float(alert['message']['current_value'])*100 }}% /
 												More than:
-													{{ alert['message']['trigger_value']  }}
+													{{ float(alert['message']['trigger_value'])*100  }}%
 											{% end %}
 										</div>
 									{% end %}

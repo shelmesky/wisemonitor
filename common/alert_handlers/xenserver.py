@@ -27,7 +27,7 @@ def xenserver_event_handler(host, event, session, mongo_executer):
         for item in body.split('\n'):
             name_str = re.search(".*name.*\"(.*)\"", item)
             value_str = re.search("\w+:\s(.*)", item)
-            trigger_value_str = re.search(".*level.*\"(\d+)\"", item)
+            trigger_value_str = re.search(".*level.*\"(.*)\"", item)
             
             if name_str:
                 msg['message_type'] = name_str.groups()[0]
