@@ -1,5 +1,6 @@
 import re
 import time
+from logger import logger
 
 
 def xenserver_event_handler(host, event, session, mongo_executer):
@@ -8,10 +9,14 @@ def xenserver_event_handler(host, event, session, mongo_executer):
         'created_time': time.ctime()
     }
     
-    operation = event['operation']
-    if operation == "add":
+    operation = event.get('operation', None)
+    klass = event.get('class', None)
+    if operation == "add" and klass == "message":
         if "snapshot" in event.keys():
             snapshot = event['snapshot']
+        
+        if snapshot['name'] != "ALARM":
+            return
     
         body = snapshot['body']
         
@@ -24,6 +29,7 @@ def xenserver_event_handler(host, event, session, mongo_executer):
         msg['message']['vm_ref_id'] = vm
         msg['message']['host'] = host
         
+        error_count = 0
         for item in body.split('\n'):
             name_str = re.search(".*name.*\"(.*)\"", item)
             value_str = re.search("\w+:\s(.*)", item)
@@ -31,12 +37,20 @@ def xenserver_event_handler(host, event, session, mongo_executer):
             
             if name_str:
                 msg['message_type'] = name_str.groups()[0]
+                error_count += 1
             
             if value_str:
                 msg['message']['current_value'] = value_str.groups()[0]
+                error_count += 1
                 
             if trigger_value_str:
                 msg['message']['trigger_value'] = trigger_value_str.groups()[0]
+                error_count += 1
+            
         
-        mongo_executer.insert("alerts", msg)
+        if error_count == 3:
+            mongo_executer.insert("alerts", msg)
+        else:
+            logger.error("Error occurred when get event from xenserver:")
+            logger.error(str(event))
 

@@ -42,11 +42,9 @@ def connect_to_xenserver():
                 session = XenAPI.Session("http://" + host[0], transport)
                 session.login_with_password(host[1], host[2])
                 global_xenserver_conn[host[0]] = session
-                logger.info("Connect to XenServer: {0} are success.".format(host[0]))
+                logger.warn("Connect to XenServer: {0} are success(with timeout).".format(host[0]))
             except Exception, e:
                 logger.exception(e)
-
-if settings.XENSERVER_ENABLED: connect_to_xenserver()
 
 
 class iApplication(web.Application):
@@ -164,6 +162,8 @@ if __name__ == '__main__':
     
     Watcher()
     
+    if settings.XENSERVER_ENABLED: connect_to_xenserver()
+    
     # Receive alerts from RabbitMQ that send by Nagios
     if settings.NAGIOS_HANDLE_ENABLED:
         mq_host = settings.MQ_HOST
@@ -181,7 +181,7 @@ if __name__ == '__main__':
             try:
                 session = XenAPI.Session("http://" + host[0])
                 session.login_with_password(host[1], host[2])
-                logger.info("Connect to XenServer: {0} are success.".format(host[0]))
+                logger.warn("Connect to XenServer: {0} are success.".format(host[0]))
             except Exception, e:
                 logger.exception(e)
             else:
