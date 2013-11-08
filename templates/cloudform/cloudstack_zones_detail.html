@@ -194,9 +194,9 @@ CloudStack详情
                         <thead>
                            <tr role="row">
                             <!-- <th class="sorting_asc" rowspan="1" colspan="1" style="width: 15px;">ID</th> -->
+                            <th rowspan="1" colspan="1" style="width: 110px;">ID</th>
                             <th rowspan="1" colspan="1" style="width: 110px;">名称</th>
                             <th rowspan="1" colspan="1" style="width: 110px;">内部名称</th>
-                            <th rowspan="1" colspan="1" style="width: 100px;">主机</th>
                             <th rowspan="1" colspan="1" style="width: 100px;">区域名称</th>
                             <th rowspan="2" colspan="1" style="width: 170px;">状态</th>
                            </tr> 
@@ -205,9 +205,9 @@ CloudStack详情
                         <tbody>
                                 {% for item in data['vms']['listvirtualmachinesresponse']['virtualmachine'] %}
                                 <tr class="odd">
+                                    <td class="center">{{ item['id'] }}</td>
                                     <td class="center">{{ item['name'] }}</td>
                                     <td class="center">{{ item['instancename'] }}</td>
-                                    <td class="center">{{ item['hostname'] }}</td>
                                     <td class="center">{{ item['zonename'] }}</td>
                                     <td class="center">{{ item['state'] }}</td>
                                 </tr>

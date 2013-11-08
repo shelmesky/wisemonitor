@@ -86,11 +86,16 @@ XenServer事件
 								<td>
 									{% for alert in alerts %}
 										<div class="alert alert-error fade in">
-											{% if alert['message_type'] == 'disk_usage' %}
+											<!-- DEBUG data['message_type'] -->
+											{% if not alert.get('message_type', None) %}
+												{{ alert }}
+											{% end %}
+											
+											{% if alert.get('message_type', None) == 'disk_usage' %}
 												磁盘使用率： 
-											{% elif alert['message_type'] == 'network_usage' %}
+											{% elif alert.get('message_type', None) == 'network_usage' %}
 												网络使用率： 
-											{% elif alert['message_type'] == 'cpu_usage' %}
+											{% elif alert.get('message_type', None) == 'cpu_usage' %}
 												CPU使用率： 
 											{% end %}
 											
@@ -98,17 +103,17 @@ XenServer事件
 											{{ alert['message']['host'] }} /
 											{{ alert['message']['vm_name_label'] }} /
 											
-											{% if alert['message_type'] == 'disk_usage' %}
+											{% if alert.get('message_type', None) == 'disk_usage' %}
 												Current:
 													{{ "%.2f" % (float(alert['message']['current_value'])/1024) }}KB /
 												More than:
 													{{ "%.2f" % (float(alert['message']['trigger_value'])/1024)  }}KB
-											{% elif alert['message_type'] == 'network_usage' %}
+											{% elif alert.get('message_type', None) == 'network_usage' %}
 												Current:
 													{{ "%.2f" % (float(alert['message']['current_value'])/1024) }}KB /
 												More than:
 													{{ "%.2f" % (float(alert['message']['trigger_value'])/1024)  }}KB
-											{% elif alert['message_type'] == 'cpu_usage' %}
+											{% elif alert.get('message_type', None) == 'cpu_usage' %}
 												Current:
 													{{ float(alert['message']['current_value'])*100 }}% /
 												More than:
