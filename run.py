@@ -13,6 +13,7 @@ import __init__
 from tornado import ioloop
 from tornado import gen
 from tornado import web
+from tornado.options import options, define
 
 from common.init import *
 from common.api.loader import load_url_handlers
@@ -45,6 +46,8 @@ def connect_to_xenserver():
                 logger.warn("Connect to XenServer: {0} are success(with timeout).".format(host[0]))
             except Exception, e:
                 logger.exception(e)
+
+if settings.XENSERVER_ENABLED: connect_to_xenserver()
 
 
 class iApplication(web.Application):
@@ -162,7 +165,7 @@ if __name__ == '__main__':
     
     Watcher()
     
-    if settings.XENSERVER_ENABLED: connect_to_xenserver()
+    options.parse_command_line()
     
     # Receive alerts from RabbitMQ that send by Nagios
     if settings.NAGIOS_HANDLE_ENABLED:
@@ -187,6 +190,7 @@ if __name__ == '__main__':
             else:
                 t = XenServer_Alerts_Watcher(host[0], session, xenserver_event_handler)
                 t.start()
+                logger.warn("Start XenServer event watcher for %s." % host[0])
     
     app = iApplication()
     app.listen(port, xheaders=True)
