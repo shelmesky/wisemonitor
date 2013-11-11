@@ -17,7 +17,11 @@ class XenServer_Alerts_Watcher(threading.Thread):
         self.connect_mongo()
     
     def run(self):
-        self.session.xenapi.event.register(["*"])
+        try:
+            self.session.xenapi.event.register(["*"])
+        # if we got a SLAVE host
+        except XenAPI.Failure, e:
+            return
         while True:
             try:
                 events = self.session.xenapi.event.next()
