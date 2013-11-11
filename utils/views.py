@@ -29,13 +29,13 @@ class XenServer_Name_To_RefID(WiseHandler):
             self.write(json.dumps(msg))
             return
         
-        ref_id = get_vm_info_by_name(host_ip, vm_name)
-        if ref_id:
+        ret, err = get_vm_info_by_name(host_ip, vm_name)
+        if err != False:
             msg = {
                 'state': 0,
                 'message': 'OK',
                 'data': {
-                    'ref_id': ref_id
+                    'ref_id': ret
                 }
             }
             self.write(json.dumps(msg))
@@ -43,7 +43,7 @@ class XenServer_Name_To_RefID(WiseHandler):
         else:
             msg = {
                 'state': 1,
-                'message': 'error occurred'
+                'message': ret
             }
             self.set_status(500)
             self.write(json.dumps(msg))
