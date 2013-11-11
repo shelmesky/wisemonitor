@@ -1,7 +1,7 @@
 {% extends ../base.html %}
 
 {% block title %}
-CloudStack资源
+WizCloud资源
 {% end %}
 
 {% block extra_head %}
@@ -19,13 +19,13 @@ CloudStack资源
             <a href="#">云平台</a> <span class="divider">/</span>
         </li>
         <li>
-            <a href="/cloudform/cloudstack/">CloudStack</a><span class="divider">/</span>
+            <a href="/cloudform/virtualstack/">WizCloud</a><span class="divider">/</span>
         </li>
         <li>
             <a href="#">{{ data['cs_host'] }}</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="/cloudform/cloudstack/{{ data['cs_host'] }}/{{ data['zone_id'] }}/detail/">{{ data['zone_name'] }}</a><span class="divider">/</span>
+            <a href="/cloudform/virtualstack/{{ data['cs_host'] }}/{{ data['zone_id'] }}/detail/">{{ data['zone_name'] }}</a><span class="divider">/</span>
         </li>
         <li>
             <a href="#">资源使用</a>

@@ -1,7 +1,7 @@
 {% extends ../base.html %}
 
 {% block title %}
-CloudStack平台列表
+WizCloud平台列表
 {% end %}
 
 {% block extra_head %}
@@ -19,7 +19,7 @@ CloudStack平台列表
             <a href="#">云平台</a> <span class="divider">/</span>
         </li>
         <li>
-            <a href="/cloudform/cloudstack/">CloudStack</a>
+            <a href="/cloudform/virtualstack/">WizCloud</a>
         </li>
     </ul>
     
@@ -73,16 +73,16 @@ CloudStack平台列表
                                 {% for zone in host_record['data']['listzonesresponse']['zone'] %}
                                 <tr class="odd">
                                     <td class="center">{{ host_record['cs_host'] }}</td>
-                                    <td class="center"><a href="/cloudform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">{{ zone['name'] }}</a></td>
+                                    <td class="center"><a href="/cloudform/virtualstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">{{ zone['name'] }}</a></td>
                                     <td class="center">{{ zone['allocationstate'] }}</td>
                                     <td class="center">{{ zone['guestcidraddress'] }}</td>
                                     <td class="center">{{ zone['networktype'] }}</td>
 									
 									<td class="center">
-                                        <a class="btn btn-success" href="/cloudform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">
+                                        <a class="btn btn-success" href="/cloudform/virtualstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/detail/">
                                             <i class="icon-zoom-in icon-white"></i>详情
                                         </a>
-                                        <a class="btn btn-success" href="/cloudform/cloudstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/capacity/">
+                                        <a class="btn btn-success" href="/cloudform/virtualstack/{{ host_record['cs_host'] }}/{{ zone['id'] }}/capacity/">
                                             <i class="icon-zoom-in icon-white"></i>资源使用统计
                                         </a>
 									</td>
