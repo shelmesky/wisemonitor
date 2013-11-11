@@ -40,7 +40,7 @@ def get_control_domain(host):
                 return vm_ref
 
 
-def get_vm_info_by_name(host_ip, vm_name):
+def get_vm_ref_by_name(host_ip, vm_name):
     session = global_xenserver_conn.get(host_ip, None)
     if session != None:
         try:
@@ -53,6 +53,28 @@ def get_vm_info_by_name(host_ip, vm_name):
         except Exception, e:
             logger.exception(e)
             return ("Can not get refid for %s" % vm_name, False)
+    else:
+        ret = "Can not find session for %s" % host_ip
+        logger.error(ret)
+        return ret, False
+
+
+def get_vm_uuid_by_name(host_ip, vm_name):
+    session = global_xenserver_conn.get(host_ip, None)
+    if session != None:
+        try:
+            vm_ref = session.xenapi.VM.get_by_name_label(vm_name)
+        except Exception, e:
+            session = global_xenserver_conn.get(e.details[1], None)
+            vm_ref = session.xenapi.VM.get_by_name_label(vm_name)
+            
+        try:
+            vm_record = session.xenapi.VM.get_record(vm_ref[0])
+        except Exception, e:
+            logger.exception(e)
+            return ("Can not get uuid for %s" % vm_name, False)
+        else:
+            return vm_record['uuid'], True
     else:
         ret = "Can not find session for %s" % host_ip
         logger.error(ret)
