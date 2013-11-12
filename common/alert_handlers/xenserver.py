@@ -51,7 +51,7 @@ def xenserver_event_handler(host, event, session, mongo_executer, pipe):
         
         if error_count == 3:
             obj_id = mongo_executer.insert("alerts", msg)
-            os.write(pipe, "xen: " + repr(obj_id))
+            os.write(pipe, "xen:" + str(obj_id))
         else:
             logger.error("Error occurred when get event from xenserver:")
             logger.error(str(event))

@@ -24,16 +24,16 @@ wisemonitor.ajax_post = function(url, data, datatype,
 				 success_callback, error_callback) {
 	
 	if (datatype == undefined) {
-		datatype == 'json';
+		datatype = 'json';
 	}
 	
-	method == "POST";
+	method = "POST";
 	
 	$.ajax({
-		type: method,
 		url: url,
-		data: data,
+		type: method,
 		dataType: datatype,
+		data: data,
 		success: success_callback,
 		error: error_callback
 	})
@@ -47,15 +47,43 @@ wisemonitor.ajax_get = function(url, datatype,
 		datatype == 'json';
 	}
 	
-	method == "GET";
+	method = "GET";
 	
 	$.ajax({
-		type: method,
 		url: url,
+		type: method,
 		dataType: datatype,
 		success: success_callback,
 		error: error_callback
 	})
+}
+
+var updater = {
+    errorSleepTime: 500,
+    cursor: null,
+	
+	success: function success_callback(response) {
+		console.info(response);
+		updater.cursor = response.message_id;
+        updater.errorSleepTime = 500;
+		window.setTimeout(updater.poll, 0);
+	},
+	
+	error: function error_callback(response) {
+        updater.errorSleepTime *= 2;
+        console.log("Poll error; sleeping for", updater.errorSleepTime, "ms");
+		console.log(response)
+        window.setTimeout(updater.poll, updater.errorSleepTime);
+	},
+		
+	poll: function poll_url() {
+		data = {
+			data: "data 123",
+			cursor: updater.cursor
+		};
+		wisemonitor.ajax_post("/system/alerts/physical_device/", data, "json",
+							  updater.success, updater.error);
+	}
 }
 
 // on document ready
@@ -64,6 +92,7 @@ $(function(){
     $("#wisemonitorModal").on('hidden', function() {
         $(this).removeData('modal');  
     });
+	updater.poll();
 });
 
 

@@ -11,7 +11,7 @@ def nagios_alert_handler(ch, method, header, data, pipe):
         return False
     
     def insert_callback(result, err):
-        os.write(pipe, "nagios: " + repr(result))
+        os.write(pipe, "nagios:" + str(result))
     
     message_type = data['message_type']
     if message_type == "service_check" or message_type == "host_check":
