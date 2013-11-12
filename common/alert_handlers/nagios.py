@@ -1,13 +1,17 @@
+import os
 import time
 import json
 from settings import MOTOR_DB as DB
 
 
-def nagios_alert_handler(ch, method, header, data):
+def nagios_alert_handler(ch, method, header, data, pipe):
     try:
         data = json.loads(data)
     except Exception, e:
         return False
+    
+    def insert_callback(result, err):
+        os.write(pipe, "nagios: " + repr(result))
     
     message_type = data['message_type']
     if message_type == "service_check" or message_type == "host_check":
@@ -25,5 +29,5 @@ def nagios_alert_handler(ch, method, header, data):
                     'output': message['output']
                 }
             }
-            DB.alerts.insert(msg)
+            DB.alerts.insert(msg, callback=insert_callback)
 
