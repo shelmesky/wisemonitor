@@ -104,7 +104,11 @@ class XenServer_VM_Perfmon(WiseHandler):
         session = get_xenserver_conn(xen_host)
         if session != None:
             vm_info = get_vm_info(xen_host, vm_ref)
-            record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+            try:
+                record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+            except Exception, e:
+                session = get_xenserver_conn(e.details[1])
+                record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
             try:
                 perfmon = record['other_config']['perfmon']
             except Exception, e:
@@ -158,23 +162,25 @@ class XenServer_VM_Perfmon(WiseHandler):
                 session.xenapi.VM.remove_from_other_config("OpaqueRef:" + vm_ref, "perfmon")
                 session.xenapi.VM.add_to_other_config("OpaqueRef:" + vm_ref, "perfmon", perfmon_xml)
             except Exception, e:
-                raise e
+                session = get_xenserver_conn(e.details[1])
+                session.xenapi.VM.remove_from_other_config("OpaqueRef:" + vm_ref, "perfmon")
+                session.xenapi.VM.add_to_other_config("OpaqueRef:" + vm_ref, "perfmon", perfmon_xml)
+
+            vm_info = get_vm_info(xen_host, vm_ref)
+            record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
+            try:
+                perfmon = record['other_config']['perfmon']
+            except Exception, e:
+                perfmon = None
+            if perfmon:
+                data = parse_perfmon_xml(perfmon)
+                self.render("virtualization/xenserver_vm_perfmon.html",
+                            data=data, host_address=xen_host,
+                            vm_ref=vm_ref, vm_info=vm_info)
             else:
-                vm_info = get_vm_info(xen_host, vm_ref)
-                record = session.xenapi.VM.get_record("OpaqueRef:" + vm_ref)
-                try:
-                    perfmon = record['other_config']['perfmon']
-                except Exception, e:
-                    perfmon = None
-                if perfmon:
-                    data = parse_perfmon_xml(perfmon)
-                    self.render("virtualization/xenserver_vm_perfmon.html",
-                                data=data, host_address=xen_host,
-                                vm_ref=vm_ref, vm_info=vm_info)
-                else:
-                    self.render("virtualization/xenserver_vm_perfmon.html",
-                                data=None, host_address=xen_host,
-                                vm_ref=vm_ref, vm_info=vm_info)
+                self.render("virtualization/xenserver_vm_perfmon.html",
+                            data=None, host_address=xen_host,
+                            vm_ref=vm_ref, vm_info=vm_info)
 
 
 class XenServer_Get_Host(WiseHandler):
