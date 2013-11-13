@@ -1,4 +1,5 @@
 #!--encoding:utf-8--
+import os
 import threading
 from pika.adapters.tornado_connection import TornadoConnection
 import pika
@@ -22,13 +23,14 @@ class NagiosReceiver(object):
         return cls._instance
     
     def __init__(self, mq_server, username, password, virtual_host,
-                 frame_size=131072, callback=None):
+                 frame_size=131072, callback=None, pipe=None):
         self.mq_server = mq_server
         self.username = username
         self.password = password
         self.virtual_host = virtual_host
         self.frame_size = frame_size
         self.callback = callback
+        self.pipe = pipe
         self.connect()
     
     def connect(self):
@@ -69,7 +71,7 @@ class NagiosReceiver(object):
     
     def handle_delivery(self, ch, method, header, body):
         if self.callback:
-            self.callback(ch, method, header, body)
+            self.callback(ch, method, header, body, self.pipe)
 
 
 if __name__ == '__main__':
