@@ -44,6 +44,7 @@ class Physical_Device_Alerts(WiseHandler):
                     break
             
             recent = msg_cache[index + 1:]
+            print "####", len(recent)
             if len(recent) > 0:
                 self.write_data(recent)
             
@@ -64,11 +65,12 @@ class Physical_Device_Alerts(WiseHandler):
     def on_get_data(self, data, error):
         if data:
             msg = {
+                "message_id": str(data["_id"]),
                 "created_time": data["created_time"],
                 "message_tyoe": data["message_type"],
                 "message": data["message"]
             }
-            self.finish(json.dumps(msg))
+            self.finish(json.dumps([msg]))
 
 
 class XenServer_Alerts(WiseHandler):

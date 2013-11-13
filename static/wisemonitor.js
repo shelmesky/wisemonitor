@@ -64,7 +64,7 @@ var updater = {
 	
 	success: function success_callback(response) {
 		console.info(response);
-		updater.cursor = response.message_id;
+		updater.cursor = response[response.length-1].message_id;
         updater.errorSleepTime = 500;
 		window.setTimeout(updater.poll, 0);
 	},
