@@ -2,12 +2,17 @@
 import os
 import json
 
+from logger import logger
 import comet_backend
 
 
 def data_processor(fd, events):
     data = os.read(fd, 4096)
-    source, obj_id = data.split(":")
+    try:
+        source, obj_id = data.split(":")
+    except Exception, e:
+        logger.exception(e)
+        return
     
     if source == "nagios":
         msg = {

@@ -62,28 +62,35 @@ var updater = {
     errorSleepTime: 500,
     cursor: null,
 	
-	success: function success_callback(response) {
-		console.info(response);
-		updater.cursor = response[response.length-1].message_id;
-        updater.errorSleepTime = 500;
-		window.setTimeout(updater.poll, 0);
-	},
-	
-	error: function error_callback(response) {
-        updater.errorSleepTime *= 2;
-        console.log("Poll error; sleeping for", updater.errorSleepTime, "ms");
-		console.log(response)
-        window.setTimeout(updater.poll, updater.errorSleepTime);
-	},
-		
-	poll: function poll_url() {
-		data = {
-			data: "data 123",
-			cursor: updater.cursor
-		};
-		wisemonitor.ajax_post("/system/alerts/physical_device/", data, "json",
-							  updater.success, updater.error);
+    success: function(response) {
+	updater.cursor = response[response.length-1].message_id;
+	console.info("cursor: " + updater.cursor);
+	console.log(response);
+	updater.errorSleepTime = 500;
+	window.setTimeout(updater.poll, 0);
+	for(var i=0; i<response.length; i++) {
+	    updater.showMessage(response[i]); 
 	}
+    },
+    
+    error: function(response) {
+	updater.errorSleepTime *= 2;
+	console.log("Poll error; sleeping for", updater.errorSleepTime, "ms");
+	console.log(response)
+	window.setTimeout(updater.poll, updater.errorSleepTime);
+    },
+	    
+    poll: function() {
+        data = {
+	    cursor: updater.cursor
+	};
+	wisemonitor.ajax_post("/system/alerts/xenserver/", data, "json",
+					      updater.success, updater.error);
+    },
+    
+    showMessage: function(data) {
+	//console.log(data);
+    }
 }
 
 // on document ready
