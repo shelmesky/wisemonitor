@@ -35,7 +35,7 @@ class Physical_Device_Alerts(WiseHandler):
     @web.asynchronous
     def post(self):
         cursor = self.get_argument("cursor", None)
-        if cursor:
+        if cursor != "null":
             index = 0
             msg_cache = comet_backend.manager.get_nagios_msg_cache()
             for i in xrange(len(msg_cache)):
@@ -44,7 +44,6 @@ class Physical_Device_Alerts(WiseHandler):
                     break
             
             recent = msg_cache[index + 1:]
-            print "####", len(recent)
             if len(recent) > 0:
                 self.write_data(recent)
             
