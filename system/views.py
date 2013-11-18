@@ -4,6 +4,7 @@ import os
 import sys
 import hashlib
 import json
+import uuid
 
 import motor
 from tornado import web
@@ -29,6 +30,11 @@ class Physical_Device_Alerts(WiseHandler):
         
         alerts.reverse()
         
+        # add page id for every client
+        page_id = str(uuid.uuid4())
+        if not self.get_secure_cookie("page_id", None) :
+            self.set_secure_cookie("page_id", page_id)
+        
         self.render("system/system_alerts_physical_device.html", alerts=alerts)
     
     @require_login
@@ -46,9 +52,10 @@ class Physical_Device_Alerts(WiseHandler):
             recent = msg_cache[index + 1:]
             if len(recent) > 0:
                 self.write_data(recent)
-            
-        user_cookie = self.get_secure_cookie("wisemonitor_user")
-        user_md5 = hashlib.md5(user_cookie).hexdigest()
+        
+        # use page id for every client to set the callback
+        user_page_id = self.get_secure_cookie("page_id")
+        user_md5 = hashlib.md5(user_page_id).hexdigest()
         comet_backend.nagios_waiters[user_md5] = self.on_new_message
     
     def on_new_message(self, message):
