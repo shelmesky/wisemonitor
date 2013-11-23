@@ -10,9 +10,6 @@ def nagios_alert_handler(ch, method, header, data, pipe):
     except Exception, e:
         return False
     
-    def insert_callback(result, err):
-        os.write(pipe, "nagios:" + str(result))
-    
     message_type = data['message_type']
     if message_type == "service_check" or message_type == "host_check":
         message = data['data']
@@ -29,5 +26,11 @@ def nagios_alert_handler(ch, method, header, data, pipe):
                     'output': message['output']
                 }
             }
+            
+            def insert_callback(result, err):
+                # motor will add "_id" to the original data
+                msg.pop("_id")
+                os.write(pipe, "nagios^" + str(result) + "^" + json.dumps(msg))
+                
             DB.alerts.insert(msg, callback=insert_callback)
 

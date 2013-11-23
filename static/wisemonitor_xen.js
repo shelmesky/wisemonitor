@@ -88,8 +88,34 @@ var updater = {
 					      updater.success, updater.error);
     },
     
-    showMessage: function(data) {
-	//console.log(data);
+    showMessage: function(content) {
+	data = content.message;
+	var alert_area = $("#xenserver-alert");
+	
+	if (data.message_type == "cpu_usage") {
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "CPU使用率: " + data.created_time + " / " + data.message.host + " / ";
+	}
+	if (data.message_type == "disk_usage") {
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "磁盘使用率: "  + data.created_time + " / " + data.message.host + " / ";
+	}
+	if (data.message_type == "network_usage") {
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "网络使用率: "  + data.created_time + " / " + data.message.host + " / ";
+	}
+	msg += data.message.vm_name_label + " / ";
+	msg += "Curren: " + data.message.current_value + " / ";
+	msg += "More than: " + data.message.trigger_value;
+	msg += "<i class='icon-bell' style='float: right'></i>";
+	msg += "</div>";
+	
+	alert_area.prepend(msg);
+	
+	var new_alert_area = $("#" + content.message_id);
+	new_alert_area.show(500);
+	
+	var alert_counter = $("#alert_counter").html();
+	var alert_counter_number = parseInt(alert_counter, 10);
+	alert_counter_number += 1;
+	$("#alert_counter").html(alert_counter_number);
     }
 }
 

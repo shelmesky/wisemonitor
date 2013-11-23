@@ -53,7 +53,7 @@ XenServer事件
                         </div>
                     </div>
 					
-					<div class="span6">
+					<div class="span3">
 					<div class="btn-toobar">
 						<div class="btn-group" style="display: inline-block">
 							<a class="btn btn-success" href="/system/alerts/physical_device/">物理设备</a>
@@ -72,8 +72,11 @@ XenServer事件
 						-->
 					</div>
 					</div>
+					<div class="span1" style="display: inline-block;">
+						+ <span class="label label-warning" id="alert_counter">0</span>
+					</div>
                     
-                    <div class="span4"> <label>
+                    <div class="span4 pull-right"> <label>
                             搜索：
                             <input type="text">
                         </label> 
@@ -84,7 +87,7 @@ XenServer事件
                     <table class="table table-striped table-bordered bootstrap-datatable" id="">
 						<tbody>
 							<tr>
-								<td>
+								<td id="xenserver-alert">
 									{% for alert in alerts %}
 										<div class="alert alert-error fade in">
 											<!-- DEBUG data['message_type'] -->

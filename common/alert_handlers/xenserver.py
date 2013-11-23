@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import json
 from logger import logger
 
 
@@ -51,7 +52,8 @@ def xenserver_event_handler(host, event, session, mongo_executer, pipe):
         
         if error_count == 3:
             obj_id = mongo_executer.insert("alerts", msg)
-            os.write(pipe, "xen:" + str(obj_id))
+            msg.pop("_id")
+            os.write(pipe, "xen^" + str(obj_id) + "^" + json.dumps(msg))
         else:
             logger.error("Error occurred when get event from xenserver:")
             logger.error(str(event))

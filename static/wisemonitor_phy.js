@@ -64,6 +64,8 @@ var updater = {
 	
     success: function(response) {
 	updater.cursor = response[response.length-1].message_id;
+	console.info("cursor: " + updater.cursor);
+	console.log(response);
 	updater.errorSleepTime = 500;
 	window.setTimeout(updater.poll, 0);
 	for(var i=0; i<response.length; i++) {
@@ -86,13 +88,14 @@ var updater = {
 					      updater.success, updater.error);
     },
     
-    showMessage: function(data) {
+    showMessage: function(content) {
+	data = content.message
 	var alert_area = $("#physical-device-alert");
 	if (data.message.return_code == 1) {
 	    var msg = "<div class='alert alert-error fade in hide'>" + "警告：" + data.created_time +  " / " + data.message.host + " / ";
 	}
 	if (data.message.return_code == 2) {
-	    var msg = "<div class='alert alert-error fade in hide' id='"+ data.message_id + "'>" + "严重：" + data.created_time +  " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "严重：" + data.created_time +  " / " + data.message.host + " / ";
 	}
 	if (data.message.service != "") {
 	    msg += data.message.service + " / ";
@@ -102,7 +105,7 @@ var updater = {
 	msg += "</div>";
 	alert_area.prepend(msg);
 	
-	var new_alert_area = $("#" + data.message_id);
+	var new_alert_area = $("#" + content.message_id);
 	new_alert_area.show(300);
 	
 	var alert_counter = $("#alert_counter").html();
