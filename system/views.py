@@ -55,6 +55,7 @@ class Physical_Device_Alerts(WiseHandler):
             if len(recent) > 0:
                 logger.info("Got recent message in nagios.")
                 self.one_new_message(recent)
+                return
         
         # use page id for every client to set the callback
         user_page_id = self.get_secure_cookie("page_id")
@@ -106,6 +107,7 @@ class XenServer_Alerts(WiseHandler):
             if len(recent) > 0:
                 logger.info("Got recent message in xenserver.")
                 self.on_new_message(recent)
+                return
         
         # use page id for every client to set the callback
         user_page_id = self.get_secure_cookie("page_id")
