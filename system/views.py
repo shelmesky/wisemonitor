@@ -53,7 +53,7 @@ class Physical_Device_Alerts(WiseHandler):
             
             recent = msg_cache[index + 1:]
             if len(recent) > 0:
-                logger.info("Got recent message in nagios.")
+                logger.info("Got recent alerts for nagios.")
                 self.one_new_message(recent)
                 return
         
@@ -105,7 +105,7 @@ class XenServer_Alerts(WiseHandler):
             
             recent = msg_cache[index + 1:]
             if len(recent) > 0:
-                logger.info("Got recent message in xenserver.")
+                logger.info("Got recent alerts for xenserver.")
                 self.on_new_message(recent)
                 return
         
