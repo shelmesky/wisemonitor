@@ -114,10 +114,10 @@ class XenServer_VM_Perfmon(WiseHandler):
             except Exception, e:
                 perfmon = None
                 
-            data = parse_perfmon_xml(perfmon)
+            data, err = parse_perfmon_xml(perfmon)
             self.render("virtualization/xenserver_vm_perfmon.html",
                             data=data, host_address=xen_host,
-                            vm_ref=vm_ref, vm_info=vm_info)
+                            vm_ref=vm_ref, vm_info=vm_info, updated="")
     
     @require_login
     def post(self, xen_host, vm_ref):
@@ -172,15 +172,16 @@ class XenServer_VM_Perfmon(WiseHandler):
                 perfmon = record['other_config']['perfmon']
             except Exception, e:
                 perfmon = None
-            if perfmon:
-                data = parse_perfmon_xml(perfmon)
+                
+            data, err = parse_perfmon_xml(perfmon)
+            if not err:
                 self.render("virtualization/xenserver_vm_perfmon.html",
                             data=data, host_address=xen_host,
-                            vm_ref=vm_ref, vm_info=vm_info)
+                            vm_ref=vm_ref, vm_info=vm_info, updated="ok")
             else:
                 self.render("virtualization/xenserver_vm_perfmon.html",
-                            data=None, host_address=xen_host,
-                            vm_ref=vm_ref, vm_info=vm_info)
+                            data=data, host_address=xen_host,
+                            vm_ref=vm_ref, vm_info=vm_info, updated="failed")
 
 
 class XenServer_Get_Host(WiseHandler):

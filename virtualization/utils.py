@@ -68,7 +68,7 @@ def parse_perfmon_xml(data):
             temp['alarm_auto_inhibit_period'] = 0
             final_data.append(temp)
         
-        return final_data
+        return final_data, True
     
     doc = xml.dom.minidom.parseString(data)
     for node in doc.getElementsByTagName("variable"):
@@ -91,7 +91,7 @@ def parse_perfmon_xml(data):
         temp['alarm_trigger_period'] = period_value
         temp['alarm_auto_inhibit_period'] = inhibit_period_value
         final_data.append(temp)
-    return final_data
+    return final_data, False
 
 
 if __name__ == '__main__':

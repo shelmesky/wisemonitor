@@ -56,8 +56,34 @@
                 <div class="row-fluid">
                     <div class="span6" style="display: inline">
 						{% if data %}
+						{% if updated == "ok" %}
+							<div class="alert alert-block" style="width: 469px;">
+								<a href="#" class="close" data-dismiss="alert">&times;</a>
+								<h4 class="alert-heading">成功</h4>
+								<p>更新虚拟机 {{ vm_info['name_label'] }} 报警设置成功!</p>
+							</div>
+						{% elif updated == "failed" %}
+							<div class="alert alert-error" style="width: 469px;">
+								<a href="#" class="close" data-dismiss="alert">&times;</a>
+								<h4 class="alert-heading">错误</h4>
+								<p>更新虚拟机 {{ vm_info['name_label'] }} 报警设置失败!</p>
+							</div>
+						{% end %}
 						<form action="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/perfmon/" method="post">
-							<p>报警重复周期&nbsp;&nbsp;<input type="text" name="global_period" value="{{ int(data[0]['alarm_auto_inhibit_period'])/60 }}"> 分钟</p>
+							<div class="well well-small" style="width: 100%">
+							     <table>
+								<tbody>
+								<tr>
+									<td style="float: left; margin-right: 20px;">
+										报警重复周期&nbsp;&nbsp;
+									</td>
+									<td style="margin-left: 20px;">
+										<input style="margin-left:18px" type="text" name="global_period" value="{{ int(data[0]['alarm_auto_inhibit_period'])/60 }}"> 分钟
+									</td>
+								</tr>
+								</tbody>
+							     </table>
+							</div>
 							{% for item in data %}
 								<div class="well well-small" style="width: 100%;">
 									{% if item['name'] == "cpu_usage" %}
