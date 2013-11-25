@@ -109,6 +109,8 @@ MQ_VIRTUAL_HOST = "/"
 
 XENSERVER_HANDLE_ENABLED = True
 
+API_SERVER_LOG = "api_server.log"
+
 try:
     from local_conf import *
 except Exception, e:
