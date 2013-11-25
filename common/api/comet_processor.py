@@ -7,6 +7,8 @@ import comet_backend
 
 
 def data_processor(fd, events):
+    # TODO: 多个数据都从管道发送，会引起粘包
+    # 需要用简单的协议封装
     content = os.read(fd, 4096)
     try:
         source, obj_id, data = content.split("^")
