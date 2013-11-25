@@ -17,6 +17,8 @@ from common.utils import get_one_week_ago, get_one_year_ago
 from common.utils import get_chart_colors
 from common.decorator import require_login
 
+from utils import physical_perdata_to_excel
+
 
 class Infra_Server_Handler(WiseHandler):
     @web.asynchronous
@@ -174,6 +176,9 @@ class Infra_Server_Chart_Handler(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self, host, chart_type):
+        self.host = host
+        self.chart_type = chart_type
+        
         collection_perfdata = "nagios_host_perfdata"
         collection_hosts = "nagios_hosts"
         
@@ -213,8 +218,20 @@ class Infra_Server_Chart_Handler(WiseHandler):
             pass
         
     def on_parse_finished(self, data):
-        self.render("infrastracture/server_chart.html", host=self.host,
-                    chart_type=self.chart_type, data=data)
+        download_excel = self.get_argument("excel", None)
+        if download_excel == "yes":
+            file_name = self.host + "-" + self.chart_type + ".xls"
+            excel_data = physical_perdata_to_excel(data)
+            user_agent = self.request.headers['User-Agent']
+            if "MSIE" in user_agent:
+                self.add_header("Content-Type", "application/vnd.ms-excel")
+            else:
+                self.add_header("Content-Type", "application/ms-excel")
+            self.add_header("Content-Disposition", "attachment; filename=%s" % file_name)
+            self.write(excel_data)
+        else:
+            self.render("infrastracture/server_chart.html", host=self.host,
+                        chart_type=self.chart_type, data=data)
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
@@ -222,6 +239,9 @@ class Infra_Service_Chart_Handler(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self, host, service, chart_type):
+        self.host = host
+        self.chart_type = chart_type
+        
         if not chart_type or not host or not service:
             self.send_error(404)
         
@@ -258,7 +278,19 @@ class Infra_Service_Chart_Handler(WiseHandler):
             pass
         
     def on_parse_finished(self, data):
-        self.render("infrastracture/service_chart.html", host_address=self.host_address,
-                    service_name=self.service_name, chart_type=self.chart_type,
-                    service_object_id=self.service_object_id, data=data)
+        download_excel = self.get_argument("excel", None)
+        if download_excel == "yes":
+            file_name = self.host + "-" + self.service_name + "-" + self.chart_type + ".xls"
+            excel_data = physical_perdata_to_excel(data)
+            user_agent = self.request.headers['User-Agent']
+            if "MSIE" in user_agent:
+                self.add_header("Content-Type", "application/vnd.ms-excel")
+            else:
+                self.add_header("Content-Type", "application/ms-excel")
+            self.add_header("Content-Disposition", "attachment; filename=%s" % file_name)
+            self.write(excel_data)
+        else:
+            self.render("infrastracture/service_chart.html", host_address=self.host_address,
+                        service_name=self.service_name, chart_type=self.chart_type,
+                        service_object_id=self.service_object_id, data=data)
 

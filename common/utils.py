@@ -8,6 +8,18 @@ import httplib
 import xmlrpclib
 
 
+def time_stamp_to_string(time_stamp, f=None):
+    if not isinstance(time_stamp, float) \
+            and not isinstance(time_stamp, int):
+        try:
+            time_stamp = float(time_stamp)
+        except Exception:
+            raise RuntimeError("Need float or int or string arugument.")
+    if not f:
+        f = '%Y-%m-%d %H:%M:%S'
+    return time.strftime(f, time.localtime(time_stamp))
+
+
 class TimeoutTransport(xmlrpclib.Transport):
     timeout = settings.XENSERVER_CONNECT_TIMEOUT
     def set_timeout(self, timeout):
