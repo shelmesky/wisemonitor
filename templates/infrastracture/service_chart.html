@@ -46,6 +46,9 @@
                 <div class="row-fluid">
 					
 						{% if not data %}无数据{% end %}
+						<div style="float: right">
+							<a href="?excel=yes"><button type="button" class="btn btn-primary">导出数据</button></a>
+						</div>
 						{% for key, value in data.items() %}
 						<script type="text/javascript">
 						$(function() {
