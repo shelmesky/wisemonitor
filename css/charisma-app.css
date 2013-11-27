@@ -354,12 +354,12 @@ width:166px;
 }
 .brand img{
 float:left;
-height:20px;
-width:20px;
+width:100px;
 margin-right:5px;
 }
 .brand span{
 float:left;
+margin-left: 10px;
 }
 @media (max-width: 979px){
 .sidebar-nav{
