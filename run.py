@@ -25,8 +25,6 @@ from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
 from common.api.watch_xenserver_events import XenServer_Alerts_Watcher
 from common.alert_handlers.xenserver import xenserver_event_handler
-from common.api.pipe import make_pipe
-from common.api.comet_processor import data_processor
 
 from logger import logger
 import settings
@@ -169,9 +167,6 @@ if __name__ == '__main__':
     
     options.parse_command_line()
     
-    # make pipe for nagios and xenserver
-    nagios_read, nagios_write, xen_read, xen_write = make_pipe()
-    
     # Receive alerts from RabbitMQ that send by Nagios
     if settings.NAGIOS_HANDLE_ENABLED:
         mq_host = settings.MQ_HOST
@@ -180,7 +175,7 @@ if __name__ == '__main__':
         mq_virtual_host = settings.MQ_VIRTUAL_HOST
         
         rabbitmq_client.NagiosReceiver(mq_host, mq_username, mq_password,
-                       mq_virtual_host, callback=nagios_alert_handler, pipe=nagios_write)
+                       mq_virtual_host, callback=nagios_alert_handler)
     
     # Receive alerts from XenServer
     # Connect to XenServer without timeout
@@ -193,18 +188,15 @@ if __name__ == '__main__':
             except Exception, e:
                 logger.exception(e)
             else:
-                t = XenServer_Alerts_Watcher(host[0], session, xenserver_event_handler, xen_write)
+                t = XenServer_Alerts_Watcher(host[0], session, xenserver_event_handler)
                 t.start()
                 logger.warn("Start XenServer event watcher for %s." % host[0])
     
     app = iApplication()
     app.listen(port, xheaders=True)
     
-    ioloop = ioloop.IOLoop.instance()
-    ioloop.add_handler(nagios_read, data_processor, ioloop.READ)
-    ioloop.add_handler(xen_read, data_processor, ioloop.READ)
-    
     try:
+        ioloop = ioloop.IOLoop.instance()
         ioloop.start()
     except (KeyboardInterrupt, SystemExit):
         ioloop.close()

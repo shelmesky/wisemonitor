@@ -1,11 +1,18 @@
+#!--encoding:utf-8--
+
 import os
 import re
 import time
 import json
+from tornado import ioloop
+
 from logger import logger
+from common import binproto
+from common.api import pipe
+from common.api.comet_processor import Reader
 
 
-def xenserver_event_handler(host, event, session, mongo_executer, pipe):
+def xenserver_event_handler(host, event, session, mongo_executer):
     msg = {
         'type': 'xenserver',
         'created_time': time.ctime()
@@ -53,7 +60,27 @@ def xenserver_event_handler(host, event, session, mongo_executer, pipe):
         if error_count == 3:
             obj_id = mongo_executer.insert("alerts", msg)
             msg.pop("_id")
-            os.write(pipe, "xen^" + str(obj_id) + "^" + json.dumps(msg))
+            
+            source = "xen"
+            obj_id = str(obj_id)
+            body = json.dumps(msg)
+            body_length = len(body)
+            # 管道中发送的数据，使用简单的协议封装
+            data = binproto.pack(source, obj_id, body_length)
+            if data:
+                xen_read, xen_write = pipe.make_xen_pipe()
+                
+                os.write(xen_write, data)
+                logger.info("*" * 100)
+                logger.info("Send xenserver head: (%s, %s, %s)" % (source, obj_id, body_length))
+                
+                os.write(xen_write, body)
+                logger.info("Send xenserver body: ")
+                logger.info(body)
+                
+                reader = Reader()
+                io_loop = ioloop.IOLoop.instance()
+                io_loop.add_handler(xen_read, reader.data_processor, io_loop.READ)
         else:
             logger.error("Error occurred when get event from xenserver:")
             logger.error(str(event))

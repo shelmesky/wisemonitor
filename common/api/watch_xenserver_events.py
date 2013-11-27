@@ -9,12 +9,11 @@ from logger import logger
 
 
 class XenServer_Alerts_Watcher(threading.Thread):
-    def __init__(self, host, session, callback=None, pipe=None):
+    def __init__(self, host, session, callback=None):
         super(XenServer_Alerts_Watcher, self).__init__()
         self.host = host
         self.callback = callback
         self.session = session
-        self.pipe = pipe
         self.connect_mongo()
     
     def run(self):
@@ -31,7 +30,7 @@ class XenServer_Alerts_Watcher(threading.Thread):
                     if event['class'] != 'message': continue
                     if self.callback:
                         self.callback(self.host, event,
-                                      self.session, self.mongo_executer, self.pipe)
+                                      self.session, self.mongo_executer)
             
             except XenAPI.Failure, e:
                 if e.details <> ["EVENTS_LOST"]:

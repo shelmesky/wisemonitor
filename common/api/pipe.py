@@ -5,11 +5,11 @@ import fcntl
 from tornado import ioloop
 
 
-def make_pipe():
+def make_nagios_pipe():
     """
     创建两个匿名管道
     设置为非阻塞，使用tornado的ioloop监测其读写事件
-    用户发送从nagios/xenserver接收到的报警到主线程
+    用户发送从nagios接收到的报警到主线程
     """
     nagios_read_fd, nagios_write_fd = os.pipe()
     
@@ -19,6 +19,13 @@ def make_pipe():
     flags = fcntl.fcntl(nagios_write_fd, fcntl.F_GETFL)
     fcntl.fcntl(nagios_write_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
     
+    return nagios_read_fd, nagios_write_fd
+    
+    
+def make_xen_pipe():
+    """
+    用户发送从xenserver接收到的报警到主线程
+    """
     xen_read_fd, xen_write_fd = os.pipe()
     
     flags = fcntl.fcntl(xen_read_fd, fcntl.F_GETFL)
@@ -27,7 +34,7 @@ def make_pipe():
     flags = fcntl.fcntl(xen_write_fd, fcntl.F_GETFL)
     fcntl.fcntl(xen_write_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
     
-    return nagios_read_fd, nagios_write_fd, xen_read_fd, xen_write_fd
+    return xen_read_fd, xen_write_fd
 
 
 if __name__ == '__main__':
@@ -35,7 +42,8 @@ if __name__ == '__main__':
     def nagios_read_handler(fd, events):
         print os.read(fd, 1024)
     
-    nagios_read, nagios_write, xen_read, xen_write = make_pipe()
+    nagios_read, nagios_write = make_nagios_pipe()
+    xen_read, xen_write = make_xen_pipe()
         
     ioloop = ioloop.IOLoop().instance()
     ioloop.add_handler(nagios_read, nagios_read_handler, ioloop.READ)
