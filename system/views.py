@@ -54,7 +54,7 @@ class Physical_Device_Alerts(WiseHandler):
             recent = msg_cache[index + 1:]
             if len(recent) > 0:
                 logger.info("Got recent alerts for nagios.")
-                self.one_new_message(recent)
+                self.on_new_message(recent)
                 return
         
         # use page id for every client to set the callback
