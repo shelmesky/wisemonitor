@@ -56,7 +56,7 @@ def nagios_alert_handler(ch, method, header, data):
                     logger.info("Send nagios body: ")
                     logger.info(body)
                     
-                    reader = Reader()
+                    reader = Reader(nagios_read, nagios_write)
                     io_loop = ioloop.IOLoop.instance()
                     io_loop.add_handler(nagios_read, reader.data_processor, io_loop.READ)
                 

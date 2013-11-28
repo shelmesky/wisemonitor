@@ -11,13 +11,15 @@ from logger import logger
 
 
 class Reader(object):
-    def __init__(self):
+    def __init__(self, read_fd, write_fd):
         self.ioloop = IOLoop.instance()
         self.head = None
         self.body = None
         self.source = None
         self.obj_id = None
         self.body_length = None
+        self.read_fd = read_fd
+        self.write_fd = write_fd
     
     def read_head(self):
         # 管道中发送的数据，使用简单的协议封装
@@ -44,7 +46,7 @@ class Reader(object):
         else:
             logger.error("Error occurred while read head, close the pipe.")
             self.ioloop.remove_handler(self.fd)
-            os.close(self.fd)
+            self.close_fd()
     
     def read_body(self):
         try:
@@ -61,7 +63,7 @@ class Reader(object):
             else:
                 logger.error("Error occurred while read body, close the pipe.")
                 self.ioloop.remove_handler(self.fd)
-                os.close(fd)
+                self.close_fd()
 
     def data_processor(self, fd, events):
         logger.info("*" * 100)
@@ -93,6 +95,10 @@ class Reader(object):
                 callback(msg)
             comet_backend.manager.xenserver_empty_waiters()
         
-        logger.info("Remove and Close fd: %s" % self.fd)
+        logger.info("Remove and Close [read fd: %s] [write fd: %s] " % (self.read_fd, self.write_fd))
         self.ioloop.remove_handler(self.fd)
-        os.close(self.fd)
+        self.close_fd()
+    
+    def close_fd(self):
+        os.close(self.read_fd)
+        os.close(self.write_fd)

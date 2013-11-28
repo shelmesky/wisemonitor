@@ -78,7 +78,7 @@ def xenserver_event_handler(host, event, session, mongo_executer):
                 logger.info("Send xenserver body: ")
                 logger.info(body)
                 
-                reader = Reader()
+                reader = Reader(xen_read, xen_write)
                 io_loop = ioloop.IOLoop.instance()
                 io_loop.add_handler(xen_read, reader.data_processor, io_loop.READ)
         else:
