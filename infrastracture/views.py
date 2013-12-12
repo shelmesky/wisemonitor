@@ -16,7 +16,7 @@ from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
 from common.utils import get_chart_colors
 from common.decorator import require_login
-from fields_in_chinese import  convert_unit
+from fields_in_chinese import convert_field
 
 from utils import physical_perdata_to_excel
 
@@ -151,6 +151,7 @@ def parse_perfdata(cursor, frequency=1, callback=None):
                     field = field.replace("/", "_")
                 data = item['data'][0]
                 
+                
                 # 如果记录中已经存在字段的'别名'
                 if "field_alias" in item:
                     fields_data[field]['field_alias'] = item['field_alias']
@@ -160,8 +161,6 @@ def parse_perfdata(cursor, frequency=1, callback=None):
                     unit = item['unit']
                 else:
                     unit = re.match(r".*\d(.*)", data).groups()[0]
-                # 将unit翻译为中文
-                unit = convert_unit(unit)
                 fields_data[field]['unit'] = str(unit)
                 
                 # 替换数据中的'单位'字符串为空格
@@ -234,7 +233,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
             self.write(excel_data)
         else:
             self.render("infrastracture/server_chart.html", host=self.host,
-                        chart_type=self.chart_type, data=data)
+                        chart_type=self.chart_type, data=data, convert_field=convert_field)
     
     
 class Infra_Service_Chart_Handler(WiseHandler):
@@ -295,5 +294,5 @@ class Infra_Service_Chart_Handler(WiseHandler):
         else:
             self.render("infrastracture/service_chart.html", host_address=self.host_address,
                         service_name=self.service_name, chart_type=self.chart_type,
-                        service_object_id=self.service_object_id, data=data)
+                        service_object_id=self.service_object_id, data=data, convert_field=convert_field)
 

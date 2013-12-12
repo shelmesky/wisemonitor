@@ -21,6 +21,7 @@ from xenserver import get_xenserver_conn
 from utils import parse_perfmon_xml
 from utils import generate_perfmon_xml
 from logger import logger
+from fields_in_chinese import convert_field
 
 import settings
 from settings import MOTOR_DB as DB
@@ -94,7 +95,7 @@ class XenServer_VMs_Chart_Handler(WiseHandler):
         vm_name = vm_record['name_label']
         
         self.render("virtualization/xenserver_vm_chart.html",
-                    data=data, xenserver_address=self.host,
+                    data=data, xenserver_address=self.host, convert_field=convert_field,
                     vm_uuid=self.uuid, chart_type=self.ttype, vm_name=vm_name)
 
 
