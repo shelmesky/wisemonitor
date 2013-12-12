@@ -16,6 +16,7 @@ from common.utils import get_four_hours_ago, get_one_day_ago
 from common.utils import get_one_week_ago, get_one_year_ago
 from common.utils import get_chart_colors
 from common.decorator import require_login
+from fields_in_chinese import  convert_unit
 
 from utils import physical_perdata_to_excel
 
@@ -159,6 +160,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
                     unit = item['unit']
                 else:
                     unit = re.match(r".*\d(.*)", data).groups()[0]
+                # 将unit翻译为中文
+                unit = convert_unit(unit)
                 fields_data[field]['unit'] = str(unit)
                 
                 # 替换数据中的'单位'字符串为空格
