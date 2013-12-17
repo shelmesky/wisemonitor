@@ -40,17 +40,18 @@ class Infra_Server_Handler(WiseHandler):
             cursor_one = DB.nagios_host_status.find({"object_id": host['object_id']})
             yield cursor_one.fetch_next
             host_status = cursor_one.next_object()
-            temp['id'] = i
-            temp['_id'] = str(host_object_id)
-            temp['host_name'] = host['host_name']
-            temp['host_address'] = host['host_address']
-            temp['notification_period'] = host['host_notification_period']
-            temp['state'] = host_status['state'] if host_status['state'] else 0
-            temp['return_code'] = host_status['return_code'] if host_status['return_code'] else 0
-            temp['last_update'] = host_status['last_update']
-            temp['output'] = host_status['output']
-            i += 1
-            ret['objects'].append(temp)
+            if host_status:
+                temp['id'] = i
+                temp['_id'] = str(host_object_id)
+                temp['host_name'] = host['host_name']
+                temp['host_address'] = host['host_address']
+                temp['notification_period'] = host['host_notification_period']
+                temp['state'] = host_status['state'] if host_status['state'] else 0
+                temp['return_code'] = host_status['return_code'] if host_status['return_code'] else 0
+                temp['last_update'] = host_status['last_update']
+                temp['output'] = host_status['output']
+                i += 1
+                ret['objects'].append(temp)
             
         ret['objects'].sort(key=lambda x: x['_id'])
         self.render("infrastracture/server.html", server_list=ret['objects'])
