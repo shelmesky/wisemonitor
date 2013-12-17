@@ -58,12 +58,16 @@ def add_host(**kwargs):
     host_name = kwargs.get("host_name", "")
     alias = kwargs.get("alias", "")
     address = kwargs.get("address", "")
+    use = kwargs.get("use", "")
     
     if not address or not host_name:
         return False, RuntimeError("address or host_name is empty.")
     
     if not alias:
         alias = host_name
+    
+    if not use:
+        use = "generic-host"
     
     if get_host_by_address(address):
         return False, RuntimeError("address is duplicate!.")
@@ -75,7 +79,7 @@ def add_host(**kwargs):
     new_host.host_name = host_name
     new_host.alias = alias
     new_host.address = address
-    new_host.use = "generic-host"
+    new_host.use = use
     
     new_host.save()
     return True, None

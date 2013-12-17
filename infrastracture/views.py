@@ -17,6 +17,7 @@ from common.utils import get_one_week_ago, get_one_year_ago
 from common.utils import get_chart_colors
 from common.decorator import require_login
 from fields_in_chinese import convert_field
+from common.api import nagios
 
 from utils import physical_perdata_to_excel
 
@@ -296,3 +297,37 @@ class Infra_Service_Chart_Handler(WiseHandler):
                         service_name=self.service_name, chart_type=self.chart_type,
                         service_object_id=self.service_object_id, data=data, convert_field=convert_field)
 
+
+class Infra_AddServer_Handler(WiseHandler):
+    @require_login
+    def get(self):
+        return self.render("infrastracture/add_server.html", updated=None)
+    
+    @require_login
+    def post(self):
+        host_name = self.get_argument("host_name", "").strip()
+        alias = self.get_argument("alias", "").strip()
+        address = self.get_argument("address", "").strip()
+        use = self.get_argument("use", "").strip()
+        
+        if host_name and alias and address and use:
+            result, err = nagios.add_host(
+                host_name = host_name,
+                alias = alias,
+                address = address,
+                use = use
+            )
+            if result != True:
+                return self.render("infrastracture/add_server.html",
+                                   updated="failed", new_server=host_name)
+                raise err
+            
+            result, err = nagios.restart_nagios_process()
+            if result != True:
+                return self.render("infrastracture/add_server.html",
+                                   updated="failed", new_server=host_name)
+                raise err
+            
+            return self.render("infrastracture/add_server.html",
+                               updated="ok", new_server=host_name)
+    
