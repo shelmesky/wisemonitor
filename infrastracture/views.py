@@ -45,8 +45,8 @@ class Infra_Server_Handler(WiseHandler):
             temp['host_name'] = host['host_name']
             temp['host_address'] = host['host_address']
             temp['notification_period'] = host['host_notification_period']
-            temp['state'] = host_status['state']
-            temp['return_code'] = host_status['return_code']
+            temp['state'] = host_status['state'] if host_status['state'] else 0
+            temp['return_code'] = host_status['return_code'] if host_status['return_code'] else 0
             temp['last_update'] = host_status['last_update']
             temp['output'] = host_status['output']
             i += 1
