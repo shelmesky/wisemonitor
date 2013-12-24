@@ -26,7 +26,6 @@ def get_all_commands():
 get_all_commands()
 
 
-
 def get_host_by_host_name(host_name):
     Model.cfg_file = NAGIOS_MAIN_CONF
     Model.Parsers.config().parse()
@@ -108,6 +107,66 @@ def delete_host_by_host_address(address):
         result, err = delete_host(host)
         return result, err
     return False, RuntimeError("can not find host by address.")
+
+
+def get_service(address, service_desc=None):
+    Model.cfg_file = NAGIOS_MAIN_CONF
+    Model.Parsers.config().parse()
+    
+    host = get_host_by_address(address)
+    if host:
+        host_name = host.host_name
+        if address and service_desc==None:
+            service = Model.Service.objects.filter(host_name=host_name)
+            if service:
+                return service
+        if address and service_desc:
+            service = Model.Service.objects.filter(host_name=host_name,
+                                                   service_description=service_desc)
+            if service:
+                return service
+
+
+def add_service(**kwargs):
+    """
+        增加主机的服务
+        @address @service_description @check_command
+        以上为必要参数
+    """
+    if os.getuid() != 0:
+        return False, RuntimeError("need root privileges.")
+    
+    address = kwargs.get("address", "")
+    service_description = kwargs.get("service_description", "")
+    use = kwargs.get("use", "")
+    check_command = kwargs.get("check_command", "")
+    filename = kwargs.get("filename", "")
+    
+    if not use:
+        use = "generic-service"
+    
+    host = get_host_by_address(address)
+    if not host:
+        return False, RuntimeError("can not find any host.")
+    
+    if not filename:
+        filename = host.get_filename()
+    
+    if not service_description or not check_command:
+        return False, RuntimeError("missed argument.")
+
+    new_service = Model.Service(filename=filename)
+    new_service.service_description = service_description
+    new_service.use = use
+    new_service.check_command = check_command
+    new_service.host_name = host.host_name
+    new_service.save()
+    
+    _, err = restart_nagios_process()
+    if err != None:
+        raise err
+    
+    return True, None
 
 
 def restart_nagios_process():
