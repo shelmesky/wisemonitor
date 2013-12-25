@@ -233,11 +233,11 @@ def restart_nagios_process():
                 break
     except Exception, e:
         return False, RuntimeError("can not get PID for nagios3")
+    else:
+        kill_hup = "kill -HUP %s" % nagios3_pid
+        process = subprocess.Popen(kill_hup, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        process.wait()
+        if process.returncode != 0:
+            return False, RuntimeError("can not restart nagios3")
     
-    kill_hup = "kill -HUP %s" % nagios3_pid
-    process = subprocess.Popen(kill_hup, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    process.wait()
-    if process.returncode != 0:
-        return False, RuntimeError("can not restart nagios3")
-
-    return True, None
+        return True, None
