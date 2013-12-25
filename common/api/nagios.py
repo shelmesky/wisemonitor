@@ -27,6 +27,11 @@ get_all_commands()
 
 
 def get_host_by_host_name(host_name):
+    """
+    通过主机名查找主机
+    @host_name主机名
+    正常返回一个主机对象
+    """
     Model.cfg_file = NAGIOS_MAIN_CONF
     Model.Parsers.config().parse()
     if host_name:
@@ -39,6 +44,11 @@ def get_host_by_host_name(host_name):
 
 
 def get_host_by_address(address):
+    """
+    通过IP地址查找主机
+    @address主机IP地址
+    正常返回一个主机对象
+    """
     Model.cfg_file = NAGIOS_MAIN_CONF
     Model.Parsers.config().parse()
     if address:
@@ -51,6 +61,13 @@ def get_host_by_address(address):
 
 
 def add_host(**kwargs):
+    """
+    增加一个nagios主机，增加后重启nagios进程
+    @host_name 主机名
+    @alias 主机的别名
+    @address 主机的IP地址
+    @use 主机使用的模板，如不指定，默认使用generic-host
+    """
     if os.getuid() != 0:
         return False, RuntimeError("need root privileges.")
     
@@ -81,10 +98,15 @@ def add_host(**kwargs):
     new_host.use = use
     
     new_host.save()
+    restart_nagios_process()
     return True, None
 
 
 def delete_host(host_object):
+    """
+    删除主机对象
+    应该由delete_host_by_xxx函数调用
+    """
     try:
         host_object.delete()
     except Exception, e:
@@ -94,6 +116,9 @@ def delete_host(host_object):
 
 
 def delete_host_by_host_name(host_name):
+    """
+    根据主机名删除主机
+    """
     host = get_host_by_host_name(host_name)
     if host:
         result, err = delete_host(host)
@@ -102,6 +127,9 @@ def delete_host_by_host_name(host_name):
 
 
 def delete_host_by_host_address(address):
+    """
+    根据主机IP地址删除主机
+    """
     host = get_host_by_address(address)
     if host:
         result, err = delete_host(host)
@@ -110,6 +138,13 @@ def delete_host_by_host_address(address):
 
 
 def get_service(address, service_desc=None):
+    """
+    根据主机IP地址获取主机的服务
+    如指定了service_desc，则获取相应的服务
+    address 主机的IP地址
+    service_desc 服务的描述
+    正常返回一个服务对象
+    """
     Model.cfg_file = NAGIOS_MAIN_CONF
     Model.Parsers.config().parse()
     
@@ -129,9 +164,11 @@ def get_service(address, service_desc=None):
 
 def add_service(**kwargs):
     """
-        增加主机的服务
-        @address @service_description @check_command
-        以上为必要参数
+    为主机增加服务，增加配置文件后，重启nagios进程
+    @address 主机IP地址
+    @service_description 服务的描述
+    @check_command 要执行的检测命令
+    @filename 主机的配置文件名
     """
     if os.getuid() != 0:
         return False, RuntimeError("need root privileges.")
@@ -170,6 +207,11 @@ def add_service(**kwargs):
 
 
 def restart_nagios_process():
+    """
+    重启nagios进程
+    根据nagios3stats命令获得nagios3主进程PID
+    发送HUP信号给nagios3主进程
+    """
     if os.getuid() != 0:
         return False, RuntimeError("need root privileges.")
     if not os.path.exists(NAGIOS_STATS_BIN):
