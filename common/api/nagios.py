@@ -98,7 +98,6 @@ def add_host(**kwargs):
     new_host.use = use
     
     new_host.save()
-    restart_nagios_process()
     return True, None
 
 

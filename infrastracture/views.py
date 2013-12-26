@@ -20,6 +20,7 @@ from fields_in_chinese import convert_field
 from common.api import nagios
 
 from utils import physical_perdata_to_excel
+from logger import logger
 
 
 class Infra_Server_Handler(WiseHandler):
@@ -319,15 +320,21 @@ class Infra_AddServer_Handler(WiseHandler):
                 use = use
             )
             if result != True:
+                try:
+                    raise err
+                except Exception, e:
+                    logger.exception(e)
                 return self.render("infrastracture/add_server.html",
                                    updated="failed", new_server=host_name)
-                raise err
             
             result, err = nagios.restart_nagios_process()
             if result != True:
+                try:
+                    raise err
+                except Exception, e:
+                    logger.exception(e)
                 return self.render("infrastracture/add_server.html",
                                    updated="failed", new_server=host_name)
-                raise err
             
             return self.render("infrastracture/add_server.html",
                                updated="ok", new_server=host_name)
