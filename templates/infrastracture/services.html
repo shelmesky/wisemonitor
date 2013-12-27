@@ -89,6 +89,8 @@
 											<span class="label label-warning">警告</span>
 										{% elif service['return_code'] == 2 %}
 											<span class="label label-important">错误</span>
+										{% elif service['return_code'] == 3 %}
+											<span class="label label-inverse">未知</span>
 										{% end %}
 									</td>
                                     <td class="center">{{ service['output'] }}</td>
