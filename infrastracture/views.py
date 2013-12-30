@@ -317,13 +317,15 @@ class Infra_AddServer_Handler(WiseHandler):
         alias = self.get_argument("alias", "").strip()
         address = self.get_argument("address", "").strip()
         use = self.get_argument("use", "").strip()
+        _snmp_supported = self.get_argument("snmp_supported", "").strip()
         
         if host_name and alias and address and use:
             result, err = nagios.add_host(
                 host_name = host_name,
                 alias = alias,
                 address = address,
-                use = use
+                use = use,
+                _snmp_supported = _snmp_supported
             )
             if result != True:
                 try:

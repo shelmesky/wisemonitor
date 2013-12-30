@@ -60,7 +60,7 @@ def get_host_by_address(address):
     return False
 
 
-def add_host(**kwargs):
+def add_host(host_name=None, alias=None, address=None, use=None, **kwargs):
     """
     增加一个nagios主机，增加后重启nagios进程
     @host_name 主机名
@@ -70,11 +70,6 @@ def add_host(**kwargs):
     """
     if os.getuid() != 0:
         return False, RuntimeError("need root privileges.")
-    
-    host_name = kwargs.get("host_name", "")
-    alias = kwargs.get("alias", "")
-    address = kwargs.get("address", "")
-    use = kwargs.get("use", "")
     
     if not address or not host_name:
         return False, RuntimeError("address or host_name is empty.")
@@ -91,7 +86,7 @@ def add_host(**kwargs):
     if host_name and address:
         filename = NAGIOS_CONF_DIR + address + "_" + host_name + ".cfg"
         
-    new_host = Model.Host(filename=filename)
+    new_host = Model.Host(filename=filename, **kwargs)
     new_host.host_name = host_name
     new_host.alias = alias
     new_host.address = address
@@ -161,7 +156,7 @@ def get_service(address, service_desc=None):
                 return service
 
 
-def add_service(**kwargs):
+def add_service(address=None, service_description=None, use=None, check_command=None, filename=None, **kwargs):
     """
     为主机增加服务，增加配置文件后，重启nagios进程
     @address 主机IP地址
@@ -171,12 +166,6 @@ def add_service(**kwargs):
     """
     if os.getuid() != 0:
         return False, RuntimeError("need root privileges.")
-    
-    address = kwargs.get("address", "")
-    service_description = kwargs.get("service_description", "")
-    use = kwargs.get("use", "")
-    check_command = kwargs.get("check_command", "")
-    filename = kwargs.get("filename", "")
     
     if not use:
         use = "generic-service"
@@ -191,7 +180,7 @@ def add_service(**kwargs):
     if not service_description or not check_command:
         return False, RuntimeError("missed argument.")
 
-    new_service = Model.Service(filename=filename)
+    new_service = Model.Service(filename=filename, **kwargs)
     new_service.service_description = service_description
     new_service.use = use
     new_service.check_command = check_command
