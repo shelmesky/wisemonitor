@@ -111,6 +111,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
            field = item['field']
            if "/" in field:
                field = field.replace("/", "_")
+           if "'" in field:
+               field = field.replace("'", "")
            fields.append(field)
         break
     
@@ -123,6 +125,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
     for field in fields:
         if "/" in field:
             field = field.replace("/", "_")
+        if "'" in field:
+            field = field.replace("'", "")
         fields_data[str(field)] = {}
         fields_data[str(field)]['data'] = []
         fields_data[str(field)]['color'] = colors.pop()
@@ -136,7 +140,7 @@ def parse_perfdata(cursor, frequency=1, callback=None):
     
     for i in xrange(0, data_length, frequency):
         start = i
-        if start >0:
+        if start >0 and frequency>1:
             start = start - 1
         end = i + frequency
         
@@ -152,6 +156,8 @@ def parse_perfdata(cursor, frequency=1, callback=None):
                 field = str(item['field'])
                 if "/" in field:
                     field = field.replace("/", "_")
+                if "'" in field:
+                    field = field.replace("'", "")
                 data = item['data'][0]
                 
                 
@@ -198,7 +204,7 @@ class Infra_Server_Chart_Handler(WiseHandler):
             frequency = 1
         elif chart_type == "24h":
             ago = get_one_day_ago()
-            frequency = 4
+            frequency = 1
         elif chart_type == "1w":
             ago = get_one_week_ago()
             frequency = 12
@@ -263,7 +269,7 @@ class Infra_Service_Chart_Handler(WiseHandler):
             frequency = 1
         elif chart_type == "24h":
             ago = get_one_day_ago()
-            frequency = 4
+            frequency = 1
         elif chart_type == "1w":
             ago = get_one_week_ago()
             frequency = 12
