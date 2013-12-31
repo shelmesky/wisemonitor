@@ -394,3 +394,21 @@ class Infra_AddCommonService_Handler(WiseHandler):
     def get(self, host_ip):
         return self.render("infrastracture/add_service_common.html", updated=None)
 
+
+class Infra_SNMP_Handler(WiseHandler):
+    @require_login
+    def post(self, host_ip):
+        snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
+        if snmp_supported:
+            interface_index = self.get_argument("index", "").strip()
+            interface_name = self.get_argument("name", "").strip()
+            interface_speed, interface_status = snmp.get_int_status(host_ip, community,
+                                                                    interface_index=int(interface_index))
+            if interface_speed or interface_status:
+                msg = {
+                    "interface_name": interface_name,
+                    "speed": int(interface_speed),
+                    "status": int(interface_status)
+                }
+                self.write(json.dumps(msg))
+

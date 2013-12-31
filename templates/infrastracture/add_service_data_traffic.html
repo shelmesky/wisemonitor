@@ -7,11 +7,29 @@
 {% block extra_head %}
 	<script type="text/javascript">
 		$(document).ready(function(){
+			var success_func = function(data) {
+				var interface_name = data.interface_name;
+				var speed = data.speed;
+				var status = data.status;
+				var html = "接口: " + interface_name + "速度: " + speed + "状态: " + status;
+				$("#int_status").html(html);
+				$("#interface_status").show();
+			}
+			
 			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+			
 			$("#interface_index").change(function() {
 				var interface_index = $("#interface_index option:selected").val();
+				var interface_name = $("#interface_index option:selected").html();
 				if (interface_index != "") {
-					console.log(interface_index);
+					var data = {"index": interface_index, "name": interface_name};
+					var type = "json";
+					$.post(
+						"/infra/snmp/{{ host_ip }}/",
+						data,
+						success_func,
+						type
+					)
 				}
 			});
 		});
