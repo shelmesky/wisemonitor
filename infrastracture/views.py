@@ -18,6 +18,7 @@ from common.utils import get_chart_colors
 from common.decorator import require_login
 from fields_in_chinese import convert_field
 from common.api import nagios
+from common.api import snmp
 
 from utils import physical_perdata_to_excel
 from logger import logger
@@ -360,4 +361,36 @@ class Infra_AddServer_Handler(WiseHandler):
         else:
             return self.render("infrastracture/add_server.html",
                                updated="failed", new_server=host_name)
+
+
+class Infra_AddDataTrafficService_Handler(WiseHandler):
+    @require_login
+    def get(self, host_ip):
+        all_interface = None
+        snmp_supported, community = self.check_snmp_supported(host_ip)
+        if snmp_supported:
+            all_interface = self.get_all_interface(host_ip, community)
+        return self.render("infrastracture/add_service_data_traffic.html",
+                           updated=None, host_ip=host_ip,
+                           all_interface=all_interface,
+                           snmp_supported=snmp_supported)
     
+    @require_login
+    def post(self, host_ip):
+        pass
+    
+    def check_snmp_supported(self, host_ip):
+        snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
+        self.community = community
+        return snmp_supported, community
+
+    def get_all_interface(self, host_ip, community):
+        all_interface = snmp.get_all_interface(host_ip, community)
+        return all_interface
+
+
+class Infra_AddCommonService_Handler(WiseHandler):
+    @require_login
+    def get(self, host_ip):
+        return self.render("infrastracture/add_service_common.html", updated=None)
+

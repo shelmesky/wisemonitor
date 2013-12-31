@@ -229,3 +229,17 @@ def restart_nagios_process():
             return False, RuntimeError("can not restart nagios3")
     
         return True, None
+
+
+def check_if_snmp_supported(host_ip):
+    """
+    检查主机是否预先设置了SNMP支持
+    """
+    host = get_host_by_address(host_ip)
+    if host:
+        supported = host.get_attribute('_snmp_supported')
+        if supported == '1':
+            community = host.get_attribute('_snmp_community')
+            if community:
+                return True, community
+    return False, None

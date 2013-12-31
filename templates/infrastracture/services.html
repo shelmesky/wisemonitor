@@ -38,7 +38,7 @@
             
             <div class="box-content">
                 <div class="row-fluid">
-                    <div class="span6">
+                    <div class="span5">
                         <div id="DataTables_Table_0_wrapper" class="dataTables_length">
                             <label>
                                 <select size="1" name="page_size">
@@ -52,11 +52,24 @@
                         </div>
                     </div>
                     
-                    <div class="span6"> <label>
+                    <div class="span4"> <label>
                             搜索：
                             <input type="text">
                         </label> 
                     </div>
+		    
+		    <div style="float: right; padding-right: 90px;">
+			<div class="btn-group">
+				<button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+					增加
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a href="/infra/server/{{ host_ip }}/add/common/">普通服务</a></li>
+					<li><a href="/infra/server/{{ host_ip }}/add/traffic/">流量服务</a></li>
+				</ul>
+			</div>
+		    </div>
                     
                     <table class="table table-striped table-bordered bootstrap-datatable" id="">
                         <thead>
