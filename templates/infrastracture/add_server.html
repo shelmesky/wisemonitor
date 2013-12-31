@@ -8,6 +8,14 @@
 	<script type="text/javascript">
 		$(document).ready(function(){
 			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+			$("#snmp_supported").change(function() {
+				var snmp_supported = $("#snmp_supported option:selected").val();
+				if (snmp_supported == 1) {
+					$("#snmp_comm").show();
+				} else if (snmp_supported == 0) {
+					$("#snmp_comm").hide();
+				}
+			});
 		});
 	</script>
 	
@@ -130,10 +138,25 @@
                                                    支持SNMP
                                            </td>
                                            <td style="margin-left: 20px;">
-                                                   <select style="margin-left: 10px" name="snmp_supported">
+                                                   <select style="margin-left: 10px" name="snmp_supported" id="snmp_supported">
                                                         <option value="0">不支持</option>
                                                         <option value="1">支持</option>
                                                    </select>
+                                           </td>
+                                   </tr>
+                                   </tbody>
+                                </table>
+			    </div>
+			    
+                            <div id="snmp_comm" class="well well-small hide" style="width: 100%">
+                                <table>
+                                   <tbody>
+                                   <tr>
+                                           <td style="float: left; margin-right: 18px;">
+                                                Community
+                                           </td>
+                                           <td style="margin-left: 20px;">
+                                                   <input style="margin-left: 10px" type="text" name="snmp_community">
                                            </td>
                                    </tr>
                                    </tbody>

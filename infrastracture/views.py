@@ -317,7 +317,18 @@ class Infra_AddServer_Handler(WiseHandler):
         alias = self.get_argument("alias", "").strip()
         address = self.get_argument("address", "").strip()
         use = self.get_argument("use", "").strip()
+        
         _snmp_supported = self.get_argument("snmp_supported", "").strip()
+        _snmp_community = self.get_argument("snmp_community", "").strip()
+        if _snmp_supported and not _snmp_community:
+            return self.render("infrastracture/add_server.html",
+                               updated="failed", new_server=host_name)
+        
+        kwargs = {
+            '_snmp_supported': _snmp_supported
+        }
+        if _snmp_community:
+            kwargs['_snmp_community'] = _snmp_community
         
         if host_name and alias and address and use:
             result, err = nagios.add_host(
@@ -325,7 +336,7 @@ class Infra_AddServer_Handler(WiseHandler):
                 alias = alias,
                 address = address,
                 use = use,
-                _snmp_supported = _snmp_supported
+                **kwargs
             )
             if result != True:
                 try:
@@ -346,4 +357,7 @@ class Infra_AddServer_Handler(WiseHandler):
             
             return self.render("infrastracture/add_server.html",
                                updated="ok", new_server=host_name)
+        else:
+            return self.render("infrastracture/add_server.html",
+                               updated="failed", new_server=host_name)
     
