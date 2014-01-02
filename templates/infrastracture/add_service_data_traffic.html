@@ -8,12 +8,23 @@
 	<script type="text/javascript">
 		$(document).ready(function(){
 			var success_func = function(data) {
+				var status;
 				var interface_name = data.interface_name;
 				var speed = data.speed;
-				var status = data.status;
-				var html = "接口: " + interface_name + "速度: " + speed + "状态: " + status;
+				speed = speed / (1000*1000);
+				var int_status = data.status;
+				if (int_status == 1) {
+					status = "<span style='color: green;'>UP";
+				}
+				if (int_status == 2) {
+					status = "<span style='color: red;'>DOWN";
+				}
+				var html = "端口: " + interface_name + "&nbsp;&nbsp; 速度: " + speed + "M &nbsp;&nbsp;" + "状态: " + status;
 				$("#int_status").html(html);
 				$("#interface_status").show();
+				if (int_status != 2) {
+					$("#warn-and-crit").show();
+				}
 			}
 			
 			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
@@ -126,11 +137,11 @@
 					<table>
 					   <tbody>
 					   <tr>
-						   <td style="float: left; margin-right: 18px;">
+						   <td style="float: left; margin-right: 20px;">
 							选择端口
 						   </td>
 						   <td style="margin-left: 20px;">
-							   <select style="margin-left: 10px" name="interface_index" id="interface_index">
+							   <select style="margin-left: 20px" name="interface_index" id="interface_index">
 								<option value="" selected>选择端口</option>
 								{% for interface in all_interface %}
 									<option value="{{ interface['index'] }}">{{ interface['name'] }}</option>
@@ -152,6 +163,68 @@
 					   </tr>
 					   </tbody>
 					</table>
+				    </div>
+				    
+				    <div class="hide" id="warn-and-crit">
+					<div class="well well-small" style="width: 100%">
+					    <table>
+					       <tbody>
+					       <tr>
+						       <td style="float: left; margin-right: 20px;">
+							       IN警告阀值(%)&nbsp;&nbsp;
+						       </td>
+						       <td style="float: left; margin-right: 30px;">
+							       <input type="number" min="5" max="100" step="5" value="75" name="in_warn" />
+						       </td>
+					       </tr>
+					       </tbody>
+					    </table>
+					</div>
+					
+					<div class="well well-small" style="width: 100%">
+					    <table>
+					       <tbody>
+					       <tr>
+						       <td style="float: left; margin-right: 20px;">
+							       OUT警告阀值(%)&nbsp;&nbsp;
+						       </td>
+						       <td style="float: left; margin-right: 30px;">
+							       <input type="number" min="5" max="100" step="5" value="75" name="out_warn" />
+						       </td>
+					       </tr>
+					       </tbody>
+					    </table>
+					</div>
+					
+					<div class="well well-small" style="width: 100%">
+					    <table>
+					       <tbody>
+					       <tr>
+						       <td style="float: left; margin-right: 20px;">
+							       IN严重阀值(%)&nbsp;&nbsp;
+						       </td>
+						       <td style="float: left; margin-right: 30px;">
+							       <input type="number" min="5" max="100" step="5" value="75" name="in_crit" />
+						       </td>
+					       </tr>
+					       </tbody>
+					    </table>
+					</div>
+					
+					<div class="well well-small" style="width: 100%">
+					    <table>
+					       <tbody>
+					       <tr>
+						       <td style="float: left; margin-right: 20px;">
+							       OUT严重阀值(%)&nbsp;&nbsp;
+						       </td>
+						       <td style="float: left; margin-right: 30px;">
+							       <input type="number" min="5" max="100" step="5" value="75" name="out_crit" />
+						       </td>
+					       </tr>
+					       </tbody>
+					    </table>
+					</div>
 				    </div>
 				    
 				    <input class="btn btn-large btn-primary" type="submit" value="保存">

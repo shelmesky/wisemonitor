@@ -1,10 +1,14 @@
 #!/usr/bin/env python
+#!--encoding:utf-8--
 
 from pysnmp.smi import builder, view, error
 from pysnmp.entity.rfc3413.oneliner import cmdgen
 
 
 def get_all_interface(host, community):
+    """
+    获取某主机上的所有端口
+    """
     all_interfaces = []
     gen = cmdgen.CommandGenerator()
     
@@ -31,9 +35,12 @@ def get_all_interface(host, community):
 
 
 def get_int_status(host, community, interface_name=None, interface_index=None):
+    """
+    根据端口名称或端口index获取端口的速度和状态
+    """
     gen = cmdgen.CommandGenerator()
     
-    if not interface_index:
+    if interface_name and not interface_index:
         if_descr_oid = cmdgen.MibVariable('IF-MIB', 'ifDescr')
         
         error_indication, error_status, error_index, var_binds = gen.nextCmd(
@@ -57,6 +64,19 @@ def get_int_status(host, community, interface_name=None, interface_index=None):
         
         interface_oid_tuple = interface.asTuple()
         interface_index = interface_oid_tuple[-1]
+    
+    if interface_index and not interface_name:
+        if_descr_oid = cmdgen.MibVariable('IF-MIB', 'ifDescr', interface_index)
+        
+        error_indication, error_status, error_index, var_binds = gen.getCmd(
+            cmdgen.CommunityData(community),
+            cmdgen.UdpTransportTarget((host, 161)),
+            if_descr_oid,
+        )
+        interface_name = None
+        if not error_indication:
+            for var in var_binds:
+                    interface_name = var[1]
     
     if_oid_speed = cmdgen.MibVariable('IF-MIB', 'ifSpeed', interface_index)
     if_oid_status = cmdgen.MibVariable('IF-MIB', 'ifOperStatus', interface_index)
@@ -87,7 +107,7 @@ def get_int_status(host, community, interface_name=None, interface_index=None):
     if not status:
         return None, None
     
-    return speed, status
+    return speed, status, interface_name, interface_index
 
     
 if __name__ == '__main__':

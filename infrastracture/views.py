@@ -377,14 +377,33 @@ class Infra_AddDataTrafficService_Handler(WiseHandler):
     
     @require_login
     def post(self, host_ip):
-        pass
+        use = self.get_argument("use", "").strip()
+        interface_index = self.get_argument("interface_index", "").strip()
+        in_warn = self.get_argument("in_warn", "").strip()
+        out_warn = self.get_argument("out_warn", "").strip()
+        in_crit = self.get_argument("in_crit", "").strip()
+        out_crit = self.get_argument("out_crit", "").strip()
+        
+        snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
+        if snmp_supported:
+            speed, status, name, index = snmp.get_int_status(host, community,
+                                                             interface_index=interface_index)
+            if speed or status:
+                pass
     
     def check_snmp_supported(self, host_ip):
+        """
+        检查nagios配置文件中，主机是否支持SNMP
+        如果支持返回它的SNMP Community
+        """
         snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
         self.community = community
         return snmp_supported, community
 
     def get_all_interface(self, host_ip, community):
+        """
+        获取某台主机上所有的端口
+        """
         all_interface = snmp.get_all_interface(host_ip, community)
         return all_interface
 
@@ -398,11 +417,14 @@ class Infra_AddCommonService_Handler(WiseHandler):
 class Infra_SNMP_Handler(WiseHandler):
     @require_login
     def post(self, host_ip):
+        """
+        根据端口index，查询端口的速度和状态
+        """
         snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
         if snmp_supported:
             interface_index = self.get_argument("index", "").strip()
             interface_name = self.get_argument("name", "").strip()
-            interface_speed, interface_status = snmp.get_int_status(host_ip, community,
+            interface_speed, interface_status, _, _ = snmp.get_int_status(host_ip, community,
                                                                     interface_index=int(interface_index))
             if interface_speed or interface_status:
                 msg = {
