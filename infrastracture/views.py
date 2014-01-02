@@ -8,6 +8,7 @@ import bson
 from tornado import web
 from tornado import gen
 from settings import MOTOR_DB as DB
+from settings import NAGIOS_CHECK_SNMP_INT_COMMAND
 
 import motor
 
@@ -371,12 +372,13 @@ class Infra_AddDataTrafficService_Handler(WiseHandler):
         if snmp_supported:
             all_interface = self.get_all_interface(host_ip, community)
         return self.render("infrastracture/add_service_data_traffic.html",
-                           updated=None, host_ip=host_ip,
+                           error=None, host_ip=host_ip,
                            all_interface=all_interface,
                            snmp_supported=snmp_supported)
     
     @require_login
     def post(self, host_ip):
+        error = None
         use = self.get_argument("use", "").strip()
         interface_index = self.get_argument("interface_index", "").strip()
         in_warn = self.get_argument("in_warn", "").strip()
@@ -385,12 +387,74 @@ class Infra_AddDataTrafficService_Handler(WiseHandler):
         out_crit = self.get_argument("out_crit", "").strip()
         
         snmp_supported, community = nagios.check_if_snmp_supported(host_ip)
-        if snmp_supported:
-            speed, status, name, index = snmp.get_int_status(host, community,
+        if not snmp_supported:
+            error = "failed"
+            logger.error("host %s does not support SNMP!" % host_ip)
+            all_interface = self.get_all_interface(host_ip, community)
+            return self.render("infrastracture/add_service_data_traffic.html",
+                               error=error, host_ip=host_ip,
+                               snmp_supported=False,
+                               all_interface=all_interface)
+            
+        try:
+            speed, status, name, index = snmp.get_int_status(host_ip, community,
                                                              interface_index=interface_index)
+        except Exception, e:
+            logger.exception(e)
+            error = "failed"
+            return self.render("infrastracture/add_service_data_traffic.html",
+                               error=None, host_ip=host_ip)
+        else:
             if speed or status:
-                pass
-    
+                address = host_ip
+                service_description = name
+                use = use
+                
+                snmp_int_command = NAGIOS_CHECK_SNMP_INT_COMMAND
+                interface_name = name
+                
+                in_warn_speed = (speed/1000) * (int(in_warn)/100.0)
+                out_warn_speed = (speed/1000) * (int(out_warn)/100.0)
+                in_crit_speed = (speed/1000) * (int(in_crit)/100.0)
+                out_crit_speed = (speed/1000) * (int(out_crit)/100.0)
+                
+                check_command = "%s!%s!'^%s$'" % (snmp_int_command, community, interface_name)
+                check_command_warn_and_crit = "!%s!%s!%s!%s!%s" % (
+                    in_warn_speed,
+                    out_warn_speed,
+                    in_crit_speed,
+                    out_crit_speed,
+                    60,
+                )
+                check_command += check_command_warn_and_crit
+                
+                ret, err = nagios.add_service(
+                    address=address,
+                    service_description = service_description,
+                    use=use,
+                    check_command=check_command
+                )
+                if ret != True:
+                    try:
+                        raise err
+                    except Exception, e:
+                        logger.exception(e)
+                        error = "failed"
+                        all_interface = self.get_all_interface(host_ip, community)
+                        return self.render("infrastracture/add_service_data_traffic.html",
+                                   error="failed", host_ip=host_ip,
+                                   snmp_supported=snmp_supported,
+                                   all_interface=all_interface,
+                                   service_name=service_description)
+                
+                all_interface = self.get_all_interface(host_ip, community)
+                return self.render("infrastracture/add_service_data_traffic.html",
+                               error="ok", host_ip=host_ip,
+                               all_interface=all_interface,
+                               snmp_supported=snmp_supported,
+                               service_name=service_description)
+
+
     def check_snmp_supported(self, host_ip):
         """
         检查nagios配置文件中，主机是否支持SNMP
@@ -424,13 +488,18 @@ class Infra_SNMP_Handler(WiseHandler):
         if snmp_supported:
             interface_index = self.get_argument("index", "").strip()
             interface_name = self.get_argument("name", "").strip()
-            interface_speed, interface_status, _, _ = snmp.get_int_status(host_ip, community,
-                                                                    interface_index=int(interface_index))
-            if interface_speed or interface_status:
-                msg = {
-                    "interface_name": interface_name,
-                    "speed": int(interface_speed),
-                    "status": int(interface_status)
-                }
-                self.write(json.dumps(msg))
+            interface_name = interface_name.split(" ")[0]
+            try:
+                interface_speed, interface_status, _, _ = snmp.get_int_status(host_ip, community,
+                                                                        interface_index=int(interface_index))
+            except Exception, e:
+                logger.error("Get interface %s status failed!" % interface_name)
+            else:
+                if interface_speed or interface_status:
+                    msg = {
+                        "interface_name": interface_name,
+                        "speed": int(interface_speed),
+                        "status": int(interface_status)
+                    }
+                    self.write(json.dumps(msg))
 

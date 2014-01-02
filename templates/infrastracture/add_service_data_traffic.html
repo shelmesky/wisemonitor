@@ -86,22 +86,22 @@
             <div class="box-content">
                 <div class="row-fluid">
                     <div class="span6" style="display: inline">
+			<form action="" method="post">
+			    {% if error == "ok" %}
+				<div class="alert alert-block" style="width: 469px;">
+					<a href="#" class="close" data-dismiss="alert">&times;</a>
+					<h4 class="alert-heading">成功</h4>
+					<p>增加服务 {{ service_name }}成功!</p>
+				</div>
+			    {% elif error == "failed" %}
+				<div class="alert alert-error" style="width: 469px;">
+					<a href="#" class="close" data-dismiss="alert">&times;</a>
+					<h4 class="alert-heading">错误</h4>
+					<p>增加服务 {{ service_name }} 失败!</p>
+				</div>
+			    {% end %}
+
 			{% if snmp_supported %}
-				<form action="" method="post">
-				    {% if updated == "ok" %}
-					<div class="alert alert-block" style="width: 469px;">
-						<a href="#" class="close" data-dismiss="alert">&times;</a>
-						<h4 class="alert-heading">成功</h4>
-						<p>增加服务器 {{ new_service }}成功!</p>
-					</div>
-				    {% elif updated == "failed" %}
-					<div class="alert alert-error" style="width: 469px;">
-						<a href="#" class="close" data-dismiss="alert">&times;</a>
-						<h4 class="alert-heading">错误</h4>
-						<p>增加服务器 {{ new_service }} 失败!</p>
-					</div>
-				    {% end %}
-	
 				    <div class="well well-small" style="width: 100%">
 					<table>
 					   <tbody>
@@ -127,7 +127,7 @@
 						   </td>
 						   <td style="margin-left: 20px;">
 							   <select style="margin-left: 10px" name="use">
-								<option value="generic-host">generic-service</option>
+								<option value="generic-service">generic-service</option>
 							   </select>
 						   </td>
 					   </tr>
@@ -183,7 +183,7 @@
 							       IN警告阀值(%)&nbsp;&nbsp;
 						       </td>
 						       <td style="float: left; margin-right: 30px;">
-							       <input type="number" min="5" max="100" step="5" value="75" name="in_warn" />
+							       <input type="number" min="5" max="100" step="5" value="50" name="in_warn" />
 						       </td>
 					       </tr>
 					       </tbody>
@@ -198,7 +198,7 @@
 							       OUT警告阀值(%)&nbsp;&nbsp;
 						       </td>
 						       <td style="float: left; margin-right: 30px;">
-							       <input type="number" min="5" max="100" step="5" value="75" name="out_warn" />
+							       <input type="number" min="5" max="100" step="5" value="50" name="out_warn" />
 						       </td>
 					       </tr>
 					       </tbody>
