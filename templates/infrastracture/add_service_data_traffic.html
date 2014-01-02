@@ -22,8 +22,10 @@
 				var html = "端口: " + interface_name + "&nbsp;&nbsp; 速度: " + speed + "M &nbsp;&nbsp;" + "状态: " + status;
 				$("#int_status").html(html);
 				$("#interface_status").show();
-				if (int_status != 2) {
+				if (int_status == 1) {
 					$("#warn-and-crit").show();
+				} else if (int_status == 2) {
+					$("#warn-and-crit").hide();
 				}
 			}
 			
@@ -144,7 +146,14 @@
 							   <select style="margin-left: 20px" name="interface_index" id="interface_index">
 								<option value="" selected>选择端口</option>
 								{% for interface in all_interface %}
-									<option value="{{ interface['index'] }}">{{ interface['name'] }}</option>
+									<option value="{{ interface['index'] }}">
+										{{ interface['name'] }} &nbsp;/&nbsp;
+										{% if interface['status'] == 2 %}
+											DOWN
+										{% elif interface['status'] == 1%}
+											UP
+										{% end %}
+									</option>
 								{% end %}
 							   </select>
 						   </td>

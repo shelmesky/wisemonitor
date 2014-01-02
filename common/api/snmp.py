@@ -14,6 +14,7 @@ def get_all_interface(host, community):
     
     if_descr_oid = cmdgen.MibVariable('IF-MIB', 'ifDescr')
     
+    # 获取所有的端口描述
     error_indication, error_status, error_index, var_binds = gen.nextCmd(
         cmdgen.CommunityData(community),
         cmdgen.UdpTransportTarget((host, 161)),
@@ -30,6 +31,27 @@ def get_all_interface(host, community):
                 temp['index'] = key[-1]
                 temp['name'] = str(value)
                 all_interfaces.append(temp)
+
+    if_status_oid = cmdgen.MibVariable('IF-MIB', 'ifOperStatus')
+    
+    # 获取所有的端口状态
+    error_indication, error_status, error_index, var_binds = gen.nextCmd(
+        cmdgen.CommunityData(community),
+        cmdgen.UdpTransportTarget((host, 161)),
+        if_status_oid,
+    )
+    
+    all_interfaces_status = {}
+    if not error_indication:
+        for var in var_binds:
+            for i in var:
+                key = i[0].asTuple()
+                value = i[1]
+                all_interfaces_status[key[-1]] = int(value)
+    
+    for interface in all_interfaces:
+        if interface['index'] in all_interfaces_status:
+            interface['status'] = all_interfaces_status[interface['index']]
     
     return all_interfaces
 
