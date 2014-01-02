@@ -111,6 +111,9 @@ XENSERVER_HANDLE_ENABLED = True
 
 API_SERVER_LOG = "api_server.log"
 
+# Check SNMP Interface command in Nagios
+NAGIOS_CHECK_SNMP_INT_COMMAND = "check_snmp_int_v2"
+
 try:
     from local_conf import *
 except Exception, e:
