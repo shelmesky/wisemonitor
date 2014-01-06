@@ -8,6 +8,20 @@
 	<script type="text/javascript">
 		$(document).ready(function(){
 			$("#alerts_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+			
+			var limit = "{{ limit }}";
+			var page_size = $("#page_size option");
+			for (var i=0; i<page_size.length; i++) {
+				if (page_size[i].value == limit) {
+					page_size[i].selected = true;
+				}
+			}
+			
+			$("#page_size").change(function() {
+				var page_size_selected = $("#page_size option:selected");
+				var page_size_val = page_size_selected.val();
+				window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val;
+			});
 		});
 	</script>
 <script src="/static/wisemonitor_phy.js"></script>
@@ -42,11 +56,11 @@
                     <div class="span2">
                         <div id="DataTables_Table_0_wrapper" class="dataTables_length">
                             <label>
-                                <select size="1" name="page_size">
+                                <select size="1" name="page_size" id="page_size">
                                     <option value="10" selected="selected">10</option>
-                                    <option value="25">25</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
                                     <option value="50">50</option>
-                                    <option value="25">25</option>
                                 </select>
                                  每页数量
                             </label>

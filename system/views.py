@@ -23,8 +23,16 @@ class Physical_Device_Alerts(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self):
+        limit = self.get_argument("limit", "")
+        if limit:
+            try:
+                limit = int(limit)
+            except:
+                limit = 10
+        else:
+            limit = 10
         alerts = []
-        cursor = DB.alerts.find({"type": "physical_device"})
+        cursor = DB.alerts.find({"type": "physical_device"}).limit(limit)
         
         while(yield cursor.fetch_next):
             alert = cursor.next_object()
@@ -37,7 +45,7 @@ class Physical_Device_Alerts(WiseHandler):
         if not self.get_secure_cookie("page_id", None) :
             self.set_secure_cookie("page_id", page_id)
         
-        self.render("system/system_alerts_physical_device.html", alerts=alerts)
+        self.render("system/system_alerts_physical_device.html", alerts=alerts, limit=limit)
     
     @require_login
     @web.asynchronous
