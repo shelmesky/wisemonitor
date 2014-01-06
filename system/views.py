@@ -74,6 +74,7 @@ class Physical_Device_Alerts(WiseHandler):
             comet_backend.nagios_waiters[user_md5] = self.on_new_message
             
         elif post_from == "form":
+            #TODO: 无法使用motor查询，否则无法使用self.finish
             keyword = self.get_argument("search_keyword", "").strip()
     
     def on_new_message(self, data):
