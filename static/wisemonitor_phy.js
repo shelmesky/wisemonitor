@@ -82,7 +82,8 @@ var updater = {
 	    
     poll: function() {
         data = {
-	    cursor: updater.cursor
+	    cursor: updater.cursor,
+	    post_from: "ajax"
 	};
 	wisemonitor.ajax_post("/system/alerts/physical_device/", data, "json",
 					      updater.success, updater.error);
