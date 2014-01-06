@@ -74,7 +74,7 @@ class Physical_Device_Alerts(WiseHandler):
             comet_backend.nagios_waiters[user_md5] = self.on_new_message
             
         elif post_from == "form":
-            pass
+            keyword = self.get_argument("search_keyword", "").strip()
     
     def on_new_message(self, data):
         if data:
@@ -82,6 +82,9 @@ class Physical_Device_Alerts(WiseHandler):
                 self.finish(json.dumps([data]))
             else:
                 self.finish(json.dumps(data))
+    
+    def on_find_finish(self, alerts, limit):
+        self.render("system/system_alerts_physical_device.html", alerts=alerts, limit=limit)
     
 
 class XenServer_Alerts(WiseHandler):
