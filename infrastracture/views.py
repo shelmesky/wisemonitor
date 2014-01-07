@@ -432,7 +432,8 @@ class Infra_AddDataTrafficService_Handler(WiseHandler):
                     address=address,
                     service_description = service_description,
                     use=use,
-                    check_command=check_command
+                    check_command=check_command,
+                    normal_check_interval=1
                 )
                 if ret != True:
                     try:
