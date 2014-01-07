@@ -93,9 +93,9 @@
                     <div class="span4 pull-right" style="display: inline"> <label>
                             搜索：
 			    <form action="" method="get" style="display: inline">
-	                            <input type="text" name="keyword">
+	                            <input type="text" name="keyword" class="typeahead" data-provide="typeahead" data-items="3" data-source='["@warn", "@critical", "@unknow"]'>
 			    </form>
-			<a class="icon-question-sign" href="#" data-rel="tooltip" title="@warn 普通警告<br />@critical 严重警告"></a>
+			<a class="icon-question-sign" href="#" data-rel="tooltip" title="@warn 普通警告<br />@critical 严重警告<br />@unknow 未知警告"></a>
                         </label>
                     </div>
                     

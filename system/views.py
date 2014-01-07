@@ -35,6 +35,10 @@ class Physical_Device_Alerts(WiseHandler):
             limit = 10
         alerts = []
         
+        cond = {
+            "type": "physical_device",
+        }
+        
         if keyword:
             if not keyword.startswith("@"):
                 cond = {
@@ -56,6 +60,11 @@ class Physical_Device_Alerts(WiseHandler):
                     cond = {
                         "type": "physical_device",
                         "message.return_code": 2
+                    }
+                elif keyword == "unknow":
+                    cond = {
+                        "type": "physical_device",
+                        "message.return_code": 3
                     }
         else:
                 cond = {
