@@ -5,6 +5,7 @@ import sys
 import hashlib
 import json
 import uuid
+import re
 
 import motor
 from tornado import web
@@ -23,6 +24,7 @@ class Physical_Device_Alerts(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self):
+        keyword = self.get_argument("keyword", "").strip()
         limit = self.get_argument("limit", "")
         if limit:
             try:
@@ -32,7 +34,35 @@ class Physical_Device_Alerts(WiseHandler):
         else:
             limit = 10
         alerts = []
-        cursor = DB.alerts.find({"type": "physical_device"}).limit(limit)
+        
+        if keyword:
+            if not keyword.startswith("@"):
+                cond = {
+                    "type": "physical_device",
+                    "$or": [
+                        {"message.host": re.compile(".*%s.*" % keyword)},
+                        {"message.output": re.compile(".*%s.*" % keyword)},
+                        {"message.service": re.compile(".*%s.*" % keyword)}
+                    ]
+                }
+            else:
+                keyword = keyword[1:]
+                if keyword == "warn":
+                    cond = {
+                        "type": "physical_device",
+                        "message.return_code": 1
+                    }
+                elif keyword == "critical":
+                    cond = {
+                        "type": "physical_device",
+                        "message.return_code": 2
+                    }
+        else:
+                cond = {
+                    "type": "physical_device",
+                }
+            
+        cursor = DB.alerts.find(cond).limit(limit)
         
         while(yield cursor.fetch_next):
             alert = cursor.next_object()
@@ -72,11 +102,7 @@ class Physical_Device_Alerts(WiseHandler):
             user_page_id = self.get_secure_cookie("page_id")
             user_md5 = hashlib.md5(user_page_id).hexdigest()
             comet_backend.nagios_waiters[user_md5] = self.on_new_message
-            
-        elif post_from == "form":
-            #TODO: 无法使用motor查询，否则无法使用self.finish
-            keyword = self.get_argument("search_keyword", "").strip()
-    
+        
     def on_new_message(self, data):
         if data:
             if not isinstance(data, list):
