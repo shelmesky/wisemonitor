@@ -145,7 +145,32 @@
 						</td>
 						</tr>
 						</tbody>
-					</table>
+						</table>
+			<div class="pagination pagination-centered">
+				<ul>
+					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page=0{% if keyword %}&keyword={{ keyword }}{% end %}">First</a></li>
+					
+					{% if current_page == min_pages %}
+						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Prev</a></li>
+					{% else %}
+						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ prev_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Prev</a></li>
+					{% end %}
+					
+					{% for i in real_pages %}
+						<li {% if i == current_page %}class="active"{% end %}>
+							<a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ i }}{% if keyword %}&keyword={{ keyword }}{% end %}">{{ i }}</a>
+						</li>
+					{% end %}
+					
+					{% if current_page == max_pages %}
+						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Next</a></li>
+					{% else %}
+						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ next_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Next</a></li>
+					{% end %}
+					
+					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ max_pages }}{% if keyword %}&keyword={{ keyword }}{% end %}">End</a></li>
+				</ul>
+			</div>
                 </div>
             </div>
         </div>
