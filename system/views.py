@@ -52,6 +52,7 @@ class Physical_Device_Alerts(WiseHandler):
         
         origin_keyword = None
         if keyword:
+            origin_keyword = keyword
             if not keyword.startswith("@"):
                 cond = {
                     "type": "physical_device",
@@ -62,7 +63,6 @@ class Physical_Device_Alerts(WiseHandler):
                     ]
                 }
             else:
-                origin_keyword = keyword
                 keyword = keyword[1:]
                 if keyword == "warn":
                     cond = {
