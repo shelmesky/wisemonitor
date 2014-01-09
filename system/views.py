@@ -36,6 +36,9 @@ class Physical_Device_Alerts(WiseHandler):
                 page = 0
         else:
             page = 0
+            
+        if page == -1:
+            page = 0
         
         if limit:
             try:
@@ -198,6 +201,9 @@ class XenServer_Alerts(WiseHandler):
             except:
                 page = 0
         else:
+            page = 0
+        
+        if page == -1:
             page = 0
         
         if limit:
