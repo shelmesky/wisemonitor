@@ -175,11 +175,105 @@ class Infra_Server_Services_Handler(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self, ip):
+        keyword = self.get_argument("keyword", "").strip()
+        limit = self.get_argument("limit", "")
+        page = self.get_argument("page", "")
+        
+        if page:
+            try:
+                page = int(page)
+            except:
+                page = 0
+        else:
+            page = 0
+            
+        if page == -1:
+            page = 0
+        
+        if limit:
+            try:
+                limit = int(limit)
+            except:
+                limit = 5
+        else:
+            limit = 5
+        
+        cond = None
+        origin_keyword = None
+        if keyword:
+            origin_keyword = keyword
+            if not keyword.startswith("@"):
+                cond = {
+                    "$or": [
+                        {"output": re.compile(".*%s.*" % keyword)},
+                        {"service": re.compile(".*%s.*" % keyword)},
+                    ]
+                }
+            else:
+                keyword = keyword[1:]
+                if keyword == "warn":
+                    cond = {
+                        "return_code": 1
+                    }
+                elif keyword == "critical":
+                    cond = {
+                        "return_code": 2
+                    }
+                elif keyword == "unknow":
+                    cond = {
+                        "return_code": 3
+                    }
+        
         cursor = DB.nagios_hosts.find({"host_address": ip})
         yield cursor.fetch_next
         host = cursor.next_object()
         
-        cursor_one = DB.nagios_service_status.find({"host": host['host_name']})
+        if cond:
+            cond["host"] = host["host_name"]
+            cursor_one = DB.nagios_service_status.find(cond)
+        else:
+            cursor_one = DB.nagios_service_status.find({"host": host["host_name"]})
+            
+        # 开始分页
+        record_count = yield motor.Op(cursor_one.count)
+        cursor_one = cursor_one.skip(page * limit).limit(limit)
+        
+        # 一次最多显示几页
+        max_per_page = 10
+        
+        max_pages = record_count / limit
+        if record_count % limit != 0:
+            max_pages += 1
+        
+        # 存储当前显示的页数
+        page_elements = []
+        start = 0
+        end = 0
+        
+        # 如果总页数大于10，则默认显示到第10页结束
+        # 否则直接显示总页数
+        if max_pages >= max_per_page:
+            end = max_per_page
+        else:
+            end = max_pages
+        
+        if page >= max_per_page:
+            current_ten_page = page / max_per_page
+            start = current_ten_page * max_per_page
+            end = start + max_per_page
+            
+            if end > max_pages:
+                remain_page_nums = max_pages % max_per_page
+                if remain_page_nums > 0:
+                    end = start + remain_page_nums
+        
+        for i in range(start, end):
+            page_elements.append(i)
+        
+        current_page = page
+        prev_page = current_page - 1
+        next_page = current_page + 1
+        # 分页结束
             
         ret = dict()
         ret['objects'] = list()
@@ -203,7 +297,15 @@ class Infra_Server_Services_Handler(WiseHandler):
             ret['objects'].append(temp)
             
         ret['objects'].sort(key=lambda x: x['_id'])
-        self.render("infrastracture/services.html", services_list=ret['objects'], host_ip=ip)
+        self.render("infrastracture/services.html",
+                    services_list=ret['objects'], host_ip=ip,
+                    limit=limit, keyword=origin_keyword,
+                    real_pages=page_elements,
+                    max_pages=max_pages-1,
+                    min_pages=0,
+                    current_page=current_page,
+                    prev_page=prev_page,
+                    next_page=next_page)
 
 
 @gen.coroutine

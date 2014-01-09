@@ -5,11 +5,25 @@
 {% end %}
 
 {% block extra_head %}
-	<script type="text/javascript">
-		$(document).ready(function(){
-			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		
+		var limit = "{{ limit }}";
+		var page_size = $("#page_size option");
+		for (var i=0; i<page_size.length; i++) {
+			if (page_size[i].value == limit) {
+				page_size[i].selected = true;
+			}
+		}
+		
+		$("#page_size").change(function() {
+			var page_size_selected = $("#page_size option:selected");
+			var page_size_val = page_size_selected.val();
+			window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val;
 		});
-	</script>
+	});
+</script>
 {% end %}
 
 {% block main_content %}
@@ -38,25 +52,30 @@
             
             <div class="box-content">
                 <div class="row-fluid">
-                    <div class="span5">
+                    <div class="span6">
                         <div id="DataTables_Table_0_wrapper" class="dataTables_length">
                             <label>
-                                <select size="1" name="page_size">
-                                    <option value="10" selected="selected">10</option>
-                                    <option value="25">25</option>
+                                <select size="1" name="page_size" id="page_size">
+                                    <option value="5" selected="selected">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
                                     <option value="50">50</option>
-                                    <option value="25">25</option>
                                 </select>
                                  每页数量
                             </label>
                         </div>
                     </div>
                     
-                    <div class="span4"> <label>
+                    <div class="span4" style="display: inline"> <label>
                             搜索：
-                            <input type="text">
-                        </label> 
+			    <form action="" method="get" style="display: inline">
+	                            <input type="text" name="keyword" class="typeahead" data-provide="typeahead" data-items="3" data-source='["@warn", "@critical", "@unknow"]'>
+			    </form>
+			<a class="icon-question-sign" href="#" data-rel="tooltip" title="@warn 警告<br />@critical 严重<br />@unknow 未知"></a>
+                        </label>
                     </div>
+		    
 		    
 		    <div style="float: right; padding-right: 90px;">
 			<div class="btn-group">
@@ -141,6 +160,32 @@
                             
                         </tbody>
                     </table>
+		    
+		    <div class="pagination pagination-centered">
+				<ul>
+					<li><a href="/infra/server/{{ host_ip }}/?limit={{ limit }}&page=0{% if keyword %}&keyword={{ keyword }}{% end %}">First</a></li>
+					
+					{% if current_page == min_pages %}
+						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Prev</a></li>
+					{% else %}
+						<li><a href="/infra/server/{{ host_ip }}/?limit={{ limit }}&page={{ prev_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Prev</a></li>
+					{% end %}
+					
+					{% for i in real_pages %}
+						<li {% if i == current_page %}class="active"{% end %}>
+							<a href="/infra/server/{{ host_ip }}/?limit={{ limit }}&page={{ i }}{% if keyword %}&keyword={{ keyword }}{% end %}">{{ i }}</a>
+						</li>
+					{% end %}
+					
+					{% if current_page == max_pages %}
+						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Next</a></li>
+					{% else %}
+						<li><a href="/infra/server/{{ host_ip }}/?limit={{ limit }}&page={{ next_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Next</a></li>
+					{% end %}
+					
+					<li><a href="/infra/server/{{ host_ip }}/?limit={{ limit }}&page={{ max_pages }}{% if keyword %}&keyword={{ keyword }}{% end %}">End</a></li>
+				</ul>
+		    </div>
                 </div>
             </div>
         </div>
