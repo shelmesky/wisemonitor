@@ -30,8 +30,59 @@ class Infra_Server_Handler(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self):
-        cursor = DB.nagios_hosts.find()
+        keyword = self.get_argument("keyword", "").strip()
+        limit = self.get_argument("limit", "")
+        page = self.get_argument("page", "")
+        
+        if page:
+            try:
+                page = int(page)
+            except:
+                page = 0
+        else:
+            page = 0
             
+        if page == -1:
+            page = 0
+        
+        if limit:
+            try:
+                limit = int(limit)
+            except:
+                limit = 5
+        else:
+            limit = 5
+        
+        host_cond = None
+        host_status_cond = None
+        
+        origin_keyword = None
+        if keyword:
+            origin_keyword = keyword
+            if not keyword.startswith("@"):
+                host_cond = {
+                    "$or": [
+                        {"host_name": re.compile(".*%s.*" % keyword)},
+                        {"host_address": re.compile(".*%s.*" % keyword)},
+                    ]
+                }
+            else:
+                keyword = keyword[1:]
+                if keyword == "warn":
+                    host_status_cond = {
+                        "return_code": 1
+                    }
+                elif keyword == "critical":
+                    host_status_cond = {
+                        "return_code": 2
+                    }
+                elif keyword == "unknow":
+                    host_status_cond = {
+                        "return_code": 3
+                    }
+        
+        cursor = DB.nagios_hosts.find(host_cond)
+        
         ret = dict()
         ret['objects'] = list()
         i = 1
@@ -40,7 +91,11 @@ class Infra_Server_Handler(WiseHandler):
             host = cursor.next_object()
             temp = dict()
             host_object_id = host['object_id']
-            cursor_one = DB.nagios_host_status.find({"object_id": host['object_id']})
+            if host_status_cond:
+                host_status_cond["object_id"] = host['object_id']
+                cursor_one = DB.nagios_host_status.find(host_status_cond)
+            else:
+                cursor_one = DB.nagios_host_status.find({"object_id": host['object_id']})
             yield cursor_one.fetch_next
             host_status = cursor_one.next_object()
             if host_status:
@@ -57,7 +112,62 @@ class Infra_Server_Handler(WiseHandler):
                 ret['objects'].append(temp)
             
         ret['objects'].sort(key=lambda x: x['_id'])
-        self.render("infrastracture/server.html", server_list=ret['objects'])
+        
+        # 因为使用了多次查询, 不能按照传统思路使用skip和limit函数
+        # 所以这里直接从list中获取slice
+        server_list_origin = ret['objects']
+        server_list = server_list_origin[page*limit : (page*limit) + limit]
+        
+        # server_list_origin是最终查询到的记录集
+        # 而不是上面查询主机的结果
+        record_count = len(server_list_origin)
+        
+        # 一次最多显示几页
+        max_per_page = 3
+        
+        max_pages = record_count / limit
+        if record_count % limit != 0:
+            max_pages += 1
+        
+        # 存储当前显示的页数
+        page_elements = []
+        start = 0
+        end = 0
+        
+        # 如果总页数大于10，则默认显示到第10页结束
+        # 否则直接显示总页数
+        if max_pages >= max_per_page:
+            end = max_per_page
+        else:
+            end = max_pages
+        
+        if page >= max_per_page:
+            current_ten_page = page / max_per_page
+            start = current_ten_page * max_per_page
+            end = start + max_per_page
+            
+            if end > max_pages:
+                remain_page_nums = max_pages % max_per_page
+                if remain_page_nums > 0:
+                    end = start + remain_page_nums
+        
+        for i in range(start, end):
+            page_elements.append(i)
+        
+        current_page = page
+        prev_page = current_page - 1
+        next_page = current_page + 1
+        # 分页结束
+        
+        self.render("infrastracture/server.html",
+                    server_list=server_list,
+                    limit=limit, keyword=origin_keyword,
+                    real_pages=page_elements,
+                    max_pages=max_pages-1,
+                    min_pages=0,
+                    current_page=current_page,
+                    prev_page=prev_page,
+                    next_page=next_page)
 
 
 class Infra_Server_Services_Handler(WiseHandler):
@@ -322,7 +432,7 @@ class Infra_AddServer_Handler(WiseHandler):
         
         _snmp_supported = self.get_argument("snmp_supported", "").strip()
         _snmp_community = self.get_argument("snmp_community", "").strip()
-        if _snmp_supported and not _snmp_community:
+        if _snmp_supported == '1' and not _snmp_community:
             return self.render("infrastracture/add_server.html",
                                updated="failed", new_server=host_name)
         
