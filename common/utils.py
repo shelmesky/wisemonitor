@@ -20,6 +20,15 @@ def time_stamp_to_string(time_stamp, f=None):
     return time.strftime(f, time.localtime(time_stamp))
 
 
+def time_string_to_stamp(time_string, f=None):
+    if not isinstance(time_string, str) \
+            and not isinstance(time_string, unicode):
+        raise RuntimeError("Need string arugument.")
+    if not f:
+        f = '%Y-%m-%d %H:%M:%S'
+    return time.mktime(time.strptime(time_string, f))
+
+
 class TimeoutTransport(xmlrpclib.Transport):
     timeout = settings.XENSERVER_CONNECT_TIMEOUT
     def set_timeout(self, timeout):
