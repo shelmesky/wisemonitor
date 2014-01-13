@@ -16,3 +16,7 @@ body {
    width: 500px;
    height: 500px;
 }
+
+input {
+    vertical-align: text-bottom;
+}

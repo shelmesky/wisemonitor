@@ -1,0 +1,30 @@
+﻿<html>
+<head>
+    <title></title>
+    <link type="text/css" href="http://code.jquery.com/ui/1.9.1/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+
+    <link href="jQuery-Timepicker-Addon/jquery-ui-timepicker-addon.css" type="text/css" />
+    <link href="jQuery-Timepicker-Addon/demos.css" rel="stylesheet" type="text/css" />
+
+    <script src="http://code.jquery.com/jquery-1.8.2.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.9.1/jquery-ui.min.js"></script>
+    <script src="jQuery-Timepicker-Addon/jquery-ui-timepicker-addon.js" type="text/javascript"></script>
+
+    <!--中文-->
+    <script src="js/jquery.ui.datepicker-zh-CN.js.js" type="text/javascript" charset="gb2312"></script>
+    <script src="js/jquery-ui-timepicker-zh-CN.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        jQuery(function () {
+            // 时间设置
+            jQuery('#time').datetimepicker({
+                timeFormat: "HH:mm:ss",
+                dateFormat: "yy-mm-dd"
+            });
+
+        });
+    </script>
+</head>
+<body>
+    <input id="time" type="text" />
+</body>
+</html>
