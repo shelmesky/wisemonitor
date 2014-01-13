@@ -14,9 +14,11 @@ from common.api.comet_processor import Reader
 
 
 def xenserver_event_handler(host, event, session, mongo_executer):
+    t = datetime.datetime.now()
+    t = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
     msg = {
         'type': 'xenserver',
-        'created_time': datetime.datetime.now()
+        'created_time': t
     }
     
     operation = event.get('operation', None)

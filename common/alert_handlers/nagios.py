@@ -25,10 +25,12 @@ def nagios_alert_handler(ch, method, header, data):
         message = data['data']
         return_code = message['return_code']
         if return_code != 0:
+            t = datetime.datetime.now()
+            t = datetime.datetime(t.year, t.month, t.day, t.hour, t.minute, t.second)
             msg = {
                 'type': 'physical_device',
                 'message_type': message_type,
-                'created_time': datetime.datetime.now(),
+                'created_time': t,
                 'message': {
                     'host': message['host'],
                     'service': message.get('service', ''),
