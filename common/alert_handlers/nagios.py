@@ -4,12 +4,14 @@ import os
 import time
 import json
 from tornado import ioloop
+import datetime
 
 from settings import MOTOR_DB as DB
 from logger import logger
 from common import binproto
 from common.api import pipe
 from common.api.comet_processor import Reader
+from common import utils
 
 
 def nagios_alert_handler(ch, method, header, data):
@@ -26,7 +28,7 @@ def nagios_alert_handler(ch, method, header, data):
             msg = {
                 'type': 'physical_device',
                 'message_type': message_type,
-                'created_time': time.ctime(),
+                'created_time': datetime.datetime.now(),
                 'message': {
                     'host': message['host'],
                     'service': message.get('service', ''),
@@ -38,6 +40,7 @@ def nagios_alert_handler(ch, method, header, data):
             def insert_callback(result, err):
                 # motor will add "_id" to the original data
                 msg.pop("_id")
+                msg["created_time"] = utils.time_stamp_to_string(time.time())
                 
                 source = "nagios"
                 obj_id = str(result)

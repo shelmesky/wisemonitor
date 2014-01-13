@@ -4,6 +4,7 @@ import os
 import re
 import time
 import json
+import datetime
 from tornado import ioloop
 
 from logger import logger
@@ -15,7 +16,7 @@ from common.api.comet_processor import Reader
 def xenserver_event_handler(host, event, session, mongo_executer):
     msg = {
         'type': 'xenserver',
-        'created_time': time.ctime()
+        'created_time': datetime.datetime.now()
     }
     
     operation = event.get('operation', None)
@@ -60,6 +61,7 @@ def xenserver_event_handler(host, event, session, mongo_executer):
         if error_count == 3:
             obj_id = mongo_executer.insert("alerts", msg)
             msg.pop("_id")
+            msg["created_time"] = utils.time_stamp_to_string(time.time())
             
             source = "xen"
             obj_id = str(obj_id)
