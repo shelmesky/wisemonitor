@@ -7,6 +7,7 @@ import json
 import uuid
 import re
 import functools
+import datetime
 
 import motor
 from tornado import web
@@ -17,6 +18,7 @@ from settings import MOTOR_DB as DB
 from common.init import WiseHandler
 from common.decorator import require_login
 from common.api import comet_backend
+from common import utils
 from logger import logger
 
 
@@ -29,6 +31,27 @@ class Physical_Device_Alerts(WiseHandler):
         limit = self.get_argument("limit", "")
         page = self.get_argument("page", "")
         
+        start_time = self.get_argument("start_time", "")
+        end_time = self.get_argument("end_time", "")
+        start_time_stamp = end_time_stamp = None
+        start_time_cond = end_time_cond = None
+        
+        if start_time:
+            try:
+                start_time_stamp = int(utils.time_string_to_stamp(start_time, f="%Y%m%d%H%M%S"))
+            except:
+                pass
+            else:
+                start_time_cond = datetime.datetime.fromtimestamp(start_time_stamp)
+                
+        if end_time:
+            try:
+                end_time_stamp = int(utils.time_string_to_stamp(end_time, f="%Y%m%d%H%M%S"))
+            except:
+                pass
+            else:
+                end_time_cond = datetime.datetime.fromtimestamp(end_time_stamp)
+            
         if page:
             try:
                 page = int(page)
@@ -62,7 +85,8 @@ class Physical_Device_Alerts(WiseHandler):
                     "$or": [
                         {"message.host": re.compile(".*%s.*" % keyword)},
                         {"message.output": re.compile(".*%s.*" % keyword)},
-                        {"message.service": re.compile(".*%s.*" % keyword)}
+                        {"message.service": re.compile(".*%s.*" % keyword)},
+                        {"created_time": {"$gte": start_time_cond, "$lt": end_time_cond}}
                     ]
                 }
             else:

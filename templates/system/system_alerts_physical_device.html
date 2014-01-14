@@ -6,6 +6,22 @@
 
 {% block extra_head %}
 	<script type="text/javascript">
+		Date.prototype.Format = function (fmt) { //author: meizz 
+			var o = {
+				"M+": this.getMonth() + 1, //月份 
+			        "d+": this.getDate(), //日 
+			        "h+": this.getHours(), //小时 
+			        "m+": this.getMinutes(), //分 
+			        "s+": this.getSeconds(), //秒 
+			        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+			        "S": this.getMilliseconds() //毫秒 
+			    };
+			    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+			    for (var k in o)
+				    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+			    return fmt;
+		}
+		
 		$(document).ready(function(){
 			$("#alerts_menu").attr({"class": "active", "style": "margin-left: -2px;"});
 			
@@ -21,6 +37,14 @@
 				var page_size_selected = $("#page_size option:selected");
 				var page_size_val = page_size_selected.val();
 				window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val;
+			});
+			
+			$("#time_query_button").click(function() {
+				var start_time = $("#start_time").val();
+				var end_time = $("#end_time").val();
+				var start_time_formated = new Date(start_time).Format("yyyyMMddhhmmss")
+				var end_time_formated = new Date(end_time).Format("yyyyMMddhhmmss")
+				window.location.href = document.location.origin + document.location.pathname + "?start_time=" + start_time_formated + "&?end_time=" + end_time_formated;
 			});
 			
 			jQuery('#start_time').datetimepicker({
@@ -109,9 +133,9 @@
                 <div class="row-fluid">
 		    <form action="" method="get" class="form-inline">
 	                    <div class="span8" style="vertical-align: middle;">
-				<input id="start_time" type="text" placeholder="开始时间" /> ~
-				<input id="end_time" type="text" placeholder="结束时间" />
-				<button class="btn btn-primary">查询</button>
+				<input id="start_time" type="text" placeholder="开始时间" name="start_time" /> ~
+				<input id="end_time" type="text" placeholder="结束时间" name="end_time" />
+				<a id="time_query_button" class="btn btn-primary">查询</a>
 			    </div>
 		    </form>
 		</div>
