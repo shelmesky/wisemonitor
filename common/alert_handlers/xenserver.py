@@ -11,6 +11,7 @@ from logger import logger
 from common import binproto
 from common.api import pipe
 from common.api.comet_processor import Reader
+from common import utils
 
 
 def xenserver_event_handler(host, event, session, mongo_executer):

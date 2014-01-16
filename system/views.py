@@ -51,7 +51,7 @@ class Physical_Device_Alerts(WiseHandler):
                 pass
             else:
                 end_time_cond = datetime.datetime.fromtimestamp(end_time_stamp)
-            
+        
         if page:
             try:
                 page = int(page)
@@ -72,9 +72,15 @@ class Physical_Device_Alerts(WiseHandler):
             limit = 10
         alerts = []
         
-        cond = {
-            "type": "physical_device",
-        }
+        if start_time_cond and end_time_cond:
+            cond = {
+                "type": "physical_device",
+                "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
+            }
+        else:
+            cond = {
+                "type": "physical_device",
+            }
         
         origin_keyword = None
         if keyword:
@@ -86,30 +92,29 @@ class Physical_Device_Alerts(WiseHandler):
                         {"message.host": re.compile(".*%s.*" % keyword)},
                         {"message.output": re.compile(".*%s.*" % keyword)},
                         {"message.service": re.compile(".*%s.*" % keyword)},
-                        {"created_time": {"$gte": start_time_cond, "$lt": end_time_cond}}
-                    ]
+                    ],
+                    "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                 }
             else:
                 keyword = keyword[1:]
                 if keyword == "warn":
                     cond = {
                         "type": "physical_device",
-                        "message.return_code": 1
+                        "message.return_code": 1,
+                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
                 elif keyword == "critical":
                     cond = {
                         "type": "physical_device",
-                        "message.return_code": 2
+                        "message.return_code": 2,
+                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
                 elif keyword == "unknow":
                     cond = {
                         "type": "physical_device",
-                        "message.return_code": 3
+                        "message.return_code": 3,
+                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
-        else:
-                cond = {
-                    "type": "physical_device",
-                }
             
         # 分页开始
         cursor = DB.alerts.find(cond)
@@ -171,7 +176,9 @@ class Physical_Device_Alerts(WiseHandler):
                     min_pages=0,
                     current_page=current_page,
                     prev_page=prev_page,
-                    next_page=next_page)
+                    next_page=next_page,
+                    start_time=start_time,
+                    end_time=end_time)
     
     @require_login
     @web.asynchronous

@@ -44,7 +44,7 @@
 				var end_time = $("#end_time").val();
 				var start_time_formated = new Date(start_time).Format("yyyyMMddhhmmss")
 				var end_time_formated = new Date(end_time).Format("yyyyMMddhhmmss")
-				window.location.href = document.location.origin + document.location.pathname + "?start_time=" + start_time_formated + "&?end_time=" + end_time_formated;
+				window.location.href = document.location.origin + document.location.pathname + "?start_time=" + start_time_formated + "&end_time=" + end_time_formated;
 			});
 			
 			jQuery('#start_time').datetimepicker({
@@ -191,27 +191,27 @@
 						</table>
 			<div class="pagination pagination-centered">
 				<ul>
-					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page=0{% if keyword %}&keyword={{ keyword }}{% end %}">First</a></li>
+					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page=0{% if keyword %}&keyword={{ keyword }}{% end %}{% if start_time %}&start_time={{ start_time }}{% end %}{% if end_time %}&end_time={{ end_time }}{% end %}">First</a></li>
 					
 					{% if current_page == min_pages %}
 						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Prev</a></li>
 					{% else %}
-						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ prev_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Prev</a></li>
+						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ prev_page }}{% if keyword %}&keyword={{ keyword }}{% end %}{% if start_time %}&start_time={{ start_time }}{% end %}{% if end_time %}&end_time={{ end_time }}{% end %}">Prev</a></li>
 					{% end %}
 					
 					{% for i in real_pages %}
 						<li {% if i == current_page %}class="active"{% end %}>
-							<a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ i }}{% if keyword %}&keyword={{ keyword }}{% end %}">{{ i }}</a>
+							<a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ i }}{% if keyword %}&keyword={{ keyword }}{% end %}{% if start_time %}&start_time={{ start_time }}{% end %}{% if end_time %}&end_time={{ end_time }}{% end %}">{{ i }}</a>
 						</li>
 					{% end %}
 					
 					{% if current_page == max_pages %}
 						<li><a href="#" style="color: gray; pointer-events: none; cursor: default;">Next</a></li>
 					{% else %}
-						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ next_page }}{% if keyword %}&keyword={{ keyword }}{% end %}">Next</a></li>
+						<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ next_page }}{% if keyword %}&keyword={{ keyword }}{% end %}{% if start_time %}&start_time={{ start_time }}{% end %}{% if end_time %}&end_time={{ end_time }}{% end %}">Next</a></li>
 					{% end %}
 					
-					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ max_pages }}{% if keyword %}&keyword={{ keyword }}{% end %}">End</a></li>
+					<li><a href="/system/alerts/physical_device/?limit={{ limit }}&page={{ max_pages }}{% if keyword %}&keyword={{ keyword }}{% end %}{% if start_time %}&start_time={{ start_time }}{% end %}{% if end_time %}&end_time={{ end_time }}{% end %}">End</a></li>
 				</ul>
 			</div>
 		</div>
