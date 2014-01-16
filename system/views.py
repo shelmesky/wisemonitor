@@ -72,15 +72,9 @@ class Physical_Device_Alerts(WiseHandler):
             limit = 10
         alerts = []
         
-        if start_time_cond and end_time_cond:
-            cond = {
-                "type": "physical_device",
-                "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
-            }
-        else:
-            cond = {
-                "type": "physical_device",
-            }
+        cond = {
+            "type": "physical_device",
+        }
         
         origin_keyword = None
         if keyword:
@@ -93,7 +87,6 @@ class Physical_Device_Alerts(WiseHandler):
                         {"message.output": re.compile(".*%s.*" % keyword)},
                         {"message.service": re.compile(".*%s.*" % keyword)},
                     ],
-                    "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                 }
             else:
                 keyword = keyword[1:]
@@ -101,20 +94,20 @@ class Physical_Device_Alerts(WiseHandler):
                     cond = {
                         "type": "physical_device",
                         "message.return_code": 1,
-                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
                 elif keyword == "critical":
                     cond = {
                         "type": "physical_device",
                         "message.return_code": 2,
-                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
                 elif keyword == "unknow":
                     cond = {
                         "type": "physical_device",
                         "message.return_code": 3,
-                        "created_time": {"$gte": start_time_cond, "$lte": end_time_cond},
                     }
+                    
+        if start_time_cond and end_time_cond:
+            cond.setdefault("created_time", {"$gte": start_time_cond, "$lte": end_time_cond})
             
         # 分页开始
         cursor = DB.alerts.find(cond)
@@ -178,7 +171,10 @@ class Physical_Device_Alerts(WiseHandler):
                     prev_page=prev_page,
                     next_page=next_page,
                     start_time=start_time,
-                    end_time=end_time)
+                    end_time=end_time,
+                    start_time_js=start_time_cond.strftime("%Y/%m/%d %H:%M:%S") if start_time_cond else None,
+                    end_time_js=end_time_cond.strftime("%Y/%m/%d %H:%M:%S") if end_time_cond else None)
+    
     
     @require_login
     @web.asynchronous

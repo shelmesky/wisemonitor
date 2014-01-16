@@ -49,14 +49,23 @@
 			
 			jQuery('#start_time').datetimepicker({
 			        timeFormat: "HH:mm:ss",
-				dateFormat: "yy-mm-dd"
+				dateFormat: "yy-mm-dd",
 			});
+			
+			var start_time_js = "{{ start_time_js }}";
+			if (start_time_js != "None") {
+				$('#start_time').datetimepicker('setDate', new Date(start_time_js));
+			};
 			
 			jQuery('#end_time').datetimepicker({
 			        timeFormat: "HH:mm:ss",
 				dateFormat: "yy-mm-dd"
 			});
-
+			
+			var end_time_js = "{{ end_time_js }}";
+			if (end_time_js != "None") {
+				$('#end_time').datetimepicker('setDate', new Date(end_time_js));
+			};
 		});
 	</script>
 <script src="/static/wisemonitor_phy.js"></script>
