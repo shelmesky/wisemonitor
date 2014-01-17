@@ -35,7 +35,9 @@ class TimeRange(object):
     def two_hours_ago(self):
         now = self.get_now()
         return self.make_timestamp(now - timedelta(seconds=7200))
-    def one_week_ago(self): now = self.get_now()
+    
+    def one_week_ago(self):
+        now = self.get_now()
         return self.make_timestamp(now - timedelta(days=7))
     
     def one_year_ago(self):
