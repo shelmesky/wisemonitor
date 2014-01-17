@@ -30,19 +30,19 @@ class TimeRange(object):
     
     def ten_minutes_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now + timedelta(seconds=7))
+        return self.make_timestamp(now - timedelta(seconds=7))
     
     def two_hours_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now + timedelta(seconds=7200))
+        return self.make_timestamp(now - timedelta(seconds=7200))
     
     def one_week_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now + timedelta(days=7))
+        return self.make_timestamp(now - timedelta(days=7))
     
     def one_year_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now + timedelta(days=365))
+        return self.make_timestamp(now - timedelta(days=365))
     
     def make_timestamp(self, t):
         return int(time.mktime(t.timetuple()))
@@ -107,10 +107,10 @@ class XenserverManager(object):
         while 1:
             for xen_host in self.all_hosts():
                 tr = TimeRange()
-                two_hours_ago = tr.two_hours_ago()
+                one_year_ago = tr.one_year_ago()
                 session_id = self.get_session_id(xen_host[0])
                 url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
-                url_formated = url_origin % (xen_host[0], session_id, two_hours_ago)
+                url_formated = url_origin % (xen_host[0], session_id, one_year_ago)
                 item = "1y", url_formated
                 self.queue.put(item)
             gevent.sleep(86400)
