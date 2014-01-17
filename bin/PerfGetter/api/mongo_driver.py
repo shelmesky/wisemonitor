@@ -25,7 +25,6 @@ class MongoDBDriver(object):
         except Exception, e:
             logger.exception(e)
             raise
-        logger.debug("Connecto to mongodb %s" % self.mongo_uri)
     
     def close(self):
         self.connection.close()
