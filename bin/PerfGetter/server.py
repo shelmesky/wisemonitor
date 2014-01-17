@@ -35,9 +35,7 @@ class TimeRange(object):
     def two_hours_ago(self):
         now = self.get_now()
         return self.make_timestamp(now - timedelta(seconds=7200))
-    
-    def one_week_ago(self):
-        now = self.get_now()
+    def one_week_ago(self): now = self.get_now()
         return self.make_timestamp(now - timedelta(days=7))
     
     def one_year_ago(self):
@@ -81,38 +79,47 @@ class XenserverManager(object):
     
     def make_2h_perf_url(self):
         while 1:
-            for xen_host in self.all_hosts():
-                tr = TimeRange()
-                two_hours_ago = tr.two_hours_ago()
-                session_id = self.get_session_id(xen_host[0])
-                url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
-                url_formated = url_origin % (xen_host[0], session_id, two_hours_ago)
-                item = "2h", url_formated
-                self.queue.put(item)
+            try:
+                for xen_host in self.all_hosts():
+                    tr = TimeRange()
+                    two_hours_ago = tr.two_hours_ago()
+                    session_id = self.get_session_id(xen_host[0])
+                    url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
+                    url_formated = url_origin % (xen_host[0], session_id, two_hours_ago)
+                    item = "2h", url_formated
+                    self.queue.put(item)
+            except Exception, e:
+                logger.exception(e)
             gevent.sleep(60)
             
     def make_1w_perf_url(self):
         while 1:
-            for xen_host in self.all_hosts():
-                tr = TimeRange()
-                one_week_ago = tr.one_week_ago()
-                session_id = self.get_session_id(xen_host[0])
-                url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
-                url_formated = url_origin % (xen_host[0], session_id, one_week_ago)
-                item = "1w", url_formated
-                self.queue.put(item)
+            try:
+                for xen_host in self.all_hosts():
+                    tr = TimeRange()
+                    one_week_ago = tr.one_week_ago()
+                    session_id = self.get_session_id(xen_host[0])
+                    url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
+                    url_formated = url_origin % (xen_host[0], session_id, one_week_ago)
+                    item = "1w", url_formated
+                    self.queue.put(item)
+            except Exception, e:
+                logger.exception(e)
             gevent.sleep(3600)
         
     def make_1y_perf_url(self):
         while 1:
-            for xen_host in self.all_hosts():
-                tr = TimeRange()
-                one_year_ago = tr.one_year_ago()
-                session_id = self.get_session_id(xen_host[0])
-                url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
-                url_formated = url_origin % (xen_host[0], session_id, one_year_ago)
-                item = "1y", url_formated
-                self.queue.put(item)
+            try:
+                for xen_host in self.all_hosts():
+                    tr = TimeRange()
+                    one_year_ago = tr.one_year_ago()
+                    session_id = self.get_session_id(xen_host[0])
+                    url_origin = "http://%s/rrd_updates?session_id=%s&start=%s&cf=AVERAGE"
+                    url_formated = url_origin % (xen_host[0], session_id, one_year_ago)
+                    item = "1y", url_formated
+                    self.queue.put(item)
+            except Exception, e:
+                logger.exception(e)
             gevent.sleep(86400)
 
 
@@ -127,11 +134,13 @@ def spawner(queue):
 
 
 if __name__ == '__main__':
+    #TODO: 设置监视greenlet
     q = queue.Queue()
     xen_manager = XenserverManager(q)
     gevent.spawn(xen_manager.make_10m_perf_url)
     gevent.spawn(xen_manager.make_2h_perf_url)
     gevent.spawn(xen_manager.make_1w_perf_url)
     gevent.spawn(xen_manager.make_1y_perf_url)
-    gevent.spawn(spawner, q).run()
+    g_spawner = gevent.spawn(spawner, q)
+    g_spawner.run()
     
