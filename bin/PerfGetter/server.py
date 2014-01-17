@@ -30,7 +30,7 @@ class TimeRange(object):
     
     def ten_minutes_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now - timedelta(seconds=7))
+        return self.make_timestamp(now - timedelta(seconds=5))
     
     def two_hours_ago(self):
         now = self.get_now()
