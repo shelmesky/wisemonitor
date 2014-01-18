@@ -10,15 +10,18 @@ import xmlrpclib
 import time
 from datetime import datetime
 from datetime import timedelta
+import urllib
 
 import gevent
 from gevent import queue
+from gevent import Timeout
 
 from api.mongo_api import MongoExecuter
 from api.mongo_driver import db_handler
 import XenAPI
 import settings
 from logger import logger
+from convert import converter
 
 
 class TimeRange(object):
@@ -125,8 +128,25 @@ class XenserverManager(object):
             gevent.sleep(86400)
 
 
+def process(data):
+    pass
+
+
 def http_getter(url):
-    print url
+    action_type = url[0]
+    url = url[1]
+    try:
+        with Timeout(1.0):
+            result = urllib.urlopen(url)
+            if result.code != 200:
+                logger.error("Error in get data: HTTP CODE %d" % result.code)
+                return
+            data = result.read()
+            logger.info("action: %s, got data %dKB" % (action_type, len(data)/1024.0))
+            result = converter(data)
+            process(result)
+    except Exception, e:
+        logger.exception(e)
 
 
 def spawner(queue):
