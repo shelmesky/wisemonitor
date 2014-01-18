@@ -133,6 +133,10 @@ def process(data):
 
 
 def http_getter(url):
+	"""
+	在1.0内获取GET URL的数据，否则超时
+	使用Timeout类，否则是socket的默认超时
+	"""
     action_type = url[0]
     url = url[1]
     try:
