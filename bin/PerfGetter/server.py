@@ -11,6 +11,8 @@ import time
 from datetime import datetime
 from datetime import timedelta
 import urllib
+import threading
+from Queue import Queue
 
 import gevent
 from gevent import queue
@@ -22,6 +24,25 @@ import XenAPI
 import settings
 from logger import logger
 from convert import converter
+
+
+gs = []
+thread_queue = Queue()
+global_xenserver_conn = {}
+
+
+def connect_to_xenserver():
+    for host in settings.XEN:
+        with Timeout(1.0):
+            try:
+                proxy = xmlrpclib.ServerProxy("http://" + host[0])
+                result = proxy.session.login_with_password(host[1], host[2])
+                session_id = result['Value']
+                global_xenserver_conn[host[0]] = session_id
+            except Exception, e:
+                logger.exception(e)
+                
+connect_to_xenserver()
 
 
 class TimeRange(object):
@@ -60,12 +81,8 @@ class XenserverManager(object):
             yield xen_host[0], xen_host[1], xen_host[2]
     
     def get_session_id(self, host):
-        for xen_host in settings.XEN:
-                if xen_host[0] == host:
-                    proxy = xmlrpclib.ServerProxy("http://" + xen_host[0])
-                    result = proxy.session.login_with_password(xen_host[1], xen_host[2])
-                    session_id = result['Value']
-                    return session_id
+        session_id = global_xenserver_conn.get(host, None)
+        return session_id
     
     def make_10m_perf_url(self):
         while 1:
@@ -128,8 +145,14 @@ class XenserverManager(object):
             gevent.sleep(86400)
 
 
-def process(data):
-    pass
+def process():
+    while 1:
+        item = thread_queue.get()
+        if item == "quit":
+            logger.debug("Server exit...")
+            return
+        else:
+            logger.info("got item")
 
 
 def http_getter(url):
@@ -140,15 +163,19 @@ def http_getter(url):
     action_type = url[0]
     url = url[1]
     try:
-        with Timeout(1.0):
+        with Timeout(10.0):
             result = urllib.urlopen(url)
+            if result.code == 401:
+                logger.error("Maybe the session has expired.")
+                connect_to_xenserver()
+                return
             if result.code != 200:
-                logger.error("Error in get data: HTTP CODE %d" % result.code)
+                logger.error("Error in get data: HTTP %d" % result.code)
                 return
             data = result.read()
             logger.info("action: %s, got data %dKB" % (action_type, len(data)/1024.0))
             result = converter(data)
-            process(result)
+            thread_queue.put(result)
     except Exception, e:
         logger.exception(e)
 
@@ -156,17 +183,29 @@ def http_getter(url):
 def spawner(queue):
     while 1:
         item = queue.get()
-        gevent.spawn(http_getter, item)
+        if item == "quite":
+            return
+        else:
+            gs.append(gevent.spawn(http_getter, item))
 
 
 if __name__ == '__main__':
     #TODO: 设置监视greenlet
+    process_thread = threading.Thread(target=process, args=())
+    process_thread.start()
+    
     q = queue.Queue()
     xen_manager = XenserverManager(q)
-    gevent.spawn(xen_manager.make_10m_perf_url)
-    gevent.spawn(xen_manager.make_2h_perf_url)
-    gevent.spawn(xen_manager.make_1w_perf_url)
-    gevent.spawn(xen_manager.make_1y_perf_url)
+    gs.append(gevent.spawn(xen_manager.make_10m_perf_url))
+    gs.append(gevent.spawn(xen_manager.make_2h_perf_url))
+    gs.append(gevent.spawn(xen_manager.make_1w_perf_url))
+    gs.append(gevent.spawn(xen_manager.make_1y_perf_url))
     g_spawner = gevent.spawn(spawner, q)
-    g_spawner.run()
+    gs.append(g_spawner)
+    try:
+        g_spawner.run()
+    except KeyboardInterrupt:
+        thread_queue.put("quit")
+        q.put("quit")
+        gevent.killall(gs, block=False, timeout=3)
     
