@@ -1,6 +1,4 @@
 #!/usr/bin/python
-from gevent import monkey
-monkey.patch_all()
 
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError

@@ -2,7 +2,7 @@
 #!--encoding:utf-8--
 
 from gevent import monkey
-monkey.patch_all()
+monkey.patch_all(thread=False)
 
 import os
 import sys
@@ -192,6 +192,7 @@ def spawner(queue):
 if __name__ == '__main__':
     #TODO: 设置监视greenlet
     process_thread = threading.Thread(target=process, args=())
+    process_thread.daemon = False
     process_thread.start()
     
     q = queue.Queue()
@@ -204,6 +205,7 @@ if __name__ == '__main__':
     gs.append(g_spawner)
     try:
         g_spawner.run()
+        pass
     except KeyboardInterrupt:
         thread_queue.put("quit")
         q.put("quit")

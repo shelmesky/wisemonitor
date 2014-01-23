@@ -1,9 +1,6 @@
 #!/usr/bin/python
 # --encoding:utf-8--
 
-from gevent import monkey
-monkey.patch_all()
-
 import pymongo
 import settings
 from logger import logger
