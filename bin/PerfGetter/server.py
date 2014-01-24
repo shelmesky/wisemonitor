@@ -17,6 +17,9 @@ from Queue import Queue
 import gevent
 from gevent import queue
 from gevent import Timeout
+from gevent import hub
+from gevent import signal as gsignal
+import signal
 
 from api.mongo_api import MongoExecuter
 from api.mongo_driver import db_handler
@@ -149,7 +152,7 @@ def process():
     while 1:
         item = thread_queue.get()
         if item == "quit":
-            logger.debug("Server exit...")
+            logger.error("exit data process thread ...")
             return
         else:
             logger.info("got item")
@@ -157,7 +160,7 @@ def process():
 
 def http_getter(url):
     """
-        在1.0内获取GET URL的数据，否则超时
+        在1.0秒内获取GET URL的数据，否则超时
         使用Timeout类，否则是socket的默认超时
     """
     action_type = url[0]
@@ -174,7 +177,10 @@ def http_getter(url):
                 return
             data = result.read()
             logger.info("action: %s, got data %dKB" % (action_type, len(data)/1024.0))
-            result = converter(data)
+            try:
+                result = converter(data)
+            except KeyboardInterrupt:
+                return
             thread_queue.put(result)
     except Exception, e:
         logger.exception(e)
@@ -182,20 +188,34 @@ def http_getter(url):
 
 def spawner(queue):
     while 1:
-        item = queue.get()
-        if item == "quite":
+        try:
+            item = queue.get()
+        except hub.LoopExit:
+            logger.error("exit getter spawner...")
             return
-        else:
-            gs.append(gevent.spawn(http_getter, item))
+        queue.task_done()
+        gs.append(gevent.spawn(http_getter, item))
 
 
 if __name__ == '__main__':
     #TODO: 设置监视greenlet
+    q = queue.JoinableQueue()
+    
+    def server_exit():
+        thread_queue.put("quit")
+        q.join()
+        gevent.killall(gs, block=False)
+        
+    gevent.killall(gs, block=True)
+    gsignal(signal.SIGALRM, lambda: None)
+    gsignal(signal.SIGHUP, lambda: None)
+    gsignal(signal.SIGINT, server_exit)
+    gsignal(signal.SIGTERM, server_exit)
+    
     process_thread = threading.Thread(target=process, args=())
-    process_thread.daemon = False
+    process_thread.daemon = True
     process_thread.start()
     
-    q = queue.Queue()
     xen_manager = XenserverManager(q)
     gs.append(gevent.spawn(xen_manager.make_10m_perf_url))
     gs.append(gevent.spawn(xen_manager.make_2h_perf_url))
@@ -205,9 +225,6 @@ if __name__ == '__main__':
     gs.append(g_spawner)
     try:
         g_spawner.run()
-        pass
     except KeyboardInterrupt:
-        thread_queue.put("quit")
-        q.put("quit")
-        gevent.killall(gs, block=False, timeout=3)
+        server_exit()
     
