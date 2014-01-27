@@ -207,8 +207,8 @@ if __name__ == '__main__':
         gevent.killall(gs, block=False)
         
     gevent.killall(gs, block=True)
-    gsignal(signal.SIGALRM, lambda: None)
-    gsignal(signal.SIGHUP, lambda: None)
+    gsignal(signal.SIGALRM, signal.SIG_IGN)
+    gsignal(signal.SIGHUP, signal.SIG_IGN)
     gsignal(signal.SIGINT, server_exit)
     gsignal(signal.SIGTERM, server_exit)
     
