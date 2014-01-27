@@ -200,6 +200,6 @@ def converter(arg):
 			ret.append(get_vm_data(obj, uuid))
 	except Exception, e:
 		print e
-		return [[], ""]
-	return [ret, json.dumps(ret)]
+		return []
+	return ret
 

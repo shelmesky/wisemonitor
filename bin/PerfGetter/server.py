@@ -21,12 +21,10 @@ from gevent import hub
 from gevent import signal as gsignal
 import signal
 
-from api.mongo_api import MongoExecuter
-from api.mongo_driver import db_handler
 import XenAPI
 import settings
 from logger import logger
-from convert import converter
+from process import process
 
 
 gs = []
@@ -50,6 +48,7 @@ connect_to_xenserver()
 
 class TimeRange(object):
     def __init__(self):
+        self.delay = 5
         pass
     
     def get_now(self):
@@ -57,7 +56,7 @@ class TimeRange(object):
     
     def ten_minutes_ago(self):
         now = self.get_now()
-        return self.make_timestamp(now - timedelta(seconds=5))
+        return self.make_timestamp(now - timedelta(seconds=600))
     
     def two_hours_ago(self):
         now = self.get_now()
@@ -148,16 +147,6 @@ class XenserverManager(object):
             gevent.sleep(86400)
 
 
-def process():
-    while 1:
-        item = thread_queue.get()
-        if item == "quit":
-            logger.error("exit data process thread ...")
-            return
-        else:
-            logger.info("got item")
-
-
 def http_getter(url):
     """
         在1.0秒内获取GET URL的数据，否则超时
@@ -178,10 +167,9 @@ def http_getter(url):
             data = result.read()
             logger.info("action: %s, got data %dKB" % (action_type, len(data)/1024.0))
             try:
-                result = converter(data)
+                thread_queue.put((action_type, data))
             except KeyboardInterrupt:
                 return
-            thread_queue.put(result)
     except Exception, e:
         logger.exception(e)
 
@@ -202,8 +190,8 @@ if __name__ == '__main__':
     q = queue.JoinableQueue()
     
     def server_exit():
-        thread_queue.put("quit")
         q.join()
+        thread_queue.put((None, "quit"))
         gevent.killall(gs, block=False)
         
     gevent.killall(gs, block=True)
@@ -212,7 +200,7 @@ if __name__ == '__main__':
     gsignal(signal.SIGINT, server_exit)
     gsignal(signal.SIGTERM, server_exit)
     
-    process_thread = threading.Thread(target=process, args=())
+    process_thread = threading.Thread(target=process, args=(thread_queue, ))
     process_thread.daemon = True
     process_thread.start()
     
