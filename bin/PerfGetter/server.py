@@ -2,7 +2,7 @@
 #!--encoding:utf-8--
 
 from gevent import monkey
-monkey.patch_all(thread=False)
+monkey.patch_all()
 
 import os
 import sys
@@ -28,7 +28,7 @@ from process import process
 
 
 gs = []
-thread_queue = Queue()
+thread_queue = queue.JoinableQueue()
 global_xenserver_conn = {}
 
 
@@ -190,19 +190,14 @@ if __name__ == '__main__':
     q = queue.JoinableQueue()
     
     def server_exit():
-        q.join()
-        thread_queue.put((None, "quit"))
         gevent.killall(gs, block=False)
         
-    gevent.killall(gs, block=True)
     gsignal(signal.SIGALRM, signal.SIG_IGN)
     gsignal(signal.SIGHUP, signal.SIG_IGN)
     gsignal(signal.SIGINT, server_exit)
     gsignal(signal.SIGTERM, server_exit)
     
-    process_thread = threading.Thread(target=process, args=(thread_queue, ))
-    process_thread.daemon = True
-    process_thread.start()
+    gs.append(gevent.spawn(process, thread_queue))
     
     xen_manager = XenserverManager(q)
     gs.append(gevent.spawn(xen_manager.make_10m_perf_url))

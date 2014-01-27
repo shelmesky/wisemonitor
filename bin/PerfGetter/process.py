@@ -1,5 +1,7 @@
 import time
 
+from gevent import hub
+
 from convert import converter
 from logger import logger
 
@@ -13,13 +15,12 @@ def process(thread_queue):
     while 1:
         try:
             action_type, data = thread_queue.get()
-            if data == "quit":
-                return
             item = converter(data)
-        except KeyboardInterrupt:
+        except hub.LoopExit:
             print "process exit..."
             return
         
+        thread_queue.task_done()
         logger.info("got item")
         
         for vm in item:

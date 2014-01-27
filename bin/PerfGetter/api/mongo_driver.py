@@ -18,7 +18,8 @@ class MongoDBDriver(object):
         try:
             self.connection = pymongo.MongoClient(host=self.mongo_uri,
                                                 max_pool_size=self.conn_pool_size,
-                                                connectTimeoutMS=self.conn_timeout)
+                                                connectTimeoutMS=self.conn_timeout,
+                                                use_greenlets=True)
         except Exception, e:
             logger.exception(e)
             raise
