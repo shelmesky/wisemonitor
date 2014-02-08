@@ -197,7 +197,7 @@ XenServer事件
 											{% end %}
 											
 											{{ alert['created_time'] }} /
-											{{ alert['message']['host'] }} /
+											<a href="/xenserver/hosts/{{ alert['message']['host'] }}/">{{ alert['message']['host'] }}</a> /
 											{{ alert['message']['vm_name_label'] }} /
 											
 											{% if alert.get('message_type', None) == 'disk_usage' %}
