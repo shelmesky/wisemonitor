@@ -224,7 +224,7 @@ class Infra_Server_Services_Handler(WiseHandler):
                         "return_code": 3
                     }
         
-        cursor = DB.nagios_hosts.find({"host_address": ip})
+        cursor = DB.nagios_hosts.find({"host_name": ip})
         yield cursor.fetch_next
         host = cursor.next_object()
         
