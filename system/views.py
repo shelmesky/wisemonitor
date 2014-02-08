@@ -222,6 +222,27 @@ class XenServer_Alerts(WiseHandler):
         limit = self.get_argument("limit", "")
         page = self.get_argument("page", "")
         
+        start_time = self.get_argument("start_time", "")
+        end_time = self.get_argument("end_time", "")
+        start_time_stamp = end_time_stamp = None
+        start_time_cond = end_time_cond = None
+        
+        if start_time:
+            try:
+                start_time_stamp = int(utils.time_string_to_stamp(start_time, f="%Y%m%d%H%M%S"))
+            except:
+                pass
+            else:
+                start_time_cond = datetime.datetime.fromtimestamp(start_time_stamp)
+                
+        if end_time:
+            try:
+                end_time_stamp = int(utils.time_string_to_stamp(end_time, f="%Y%m%d%H%M%S"))
+            except:
+                pass
+            else:
+                end_time_cond = datetime.datetime.fromtimestamp(end_time_stamp)
+        
         if page:
             try:
                 page = int(page)
@@ -278,6 +299,9 @@ class XenServer_Alerts(WiseHandler):
                 cond = {
                     "type": "xenserver",
                 }
+                
+        if start_time_cond and end_time_cond:
+            cond.setdefault("created_time", {"$gte": start_time_cond, "$lte": end_time_cond})
             
         # 分页开始
         cursor = DB.alerts.find(cond)
@@ -339,7 +363,11 @@ class XenServer_Alerts(WiseHandler):
                     min_pages=0,
                     current_page=current_page,
                     prev_page=prev_page,
-                    next_page=next_page)
+                    next_page=next_page,
+                    start_time=start_time,
+                    end_time=end_time,
+                    start_time_js=start_time_cond.strftime("%Y/%m/%d %H:%M:%S") if start_time_cond else None,
+                    end_time_js=end_time_cond.strftime("%Y/%m/%d %H:%M:%S") if end_time_cond else None)
     
     @require_login
     @web.asynchronous
