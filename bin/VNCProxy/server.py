@@ -22,6 +22,8 @@
 Websocket proxy that is compatible with Openstack Nova.
 Leverages websockify by Joel Martin
 '''
+from gevent import monkey
+monkey.patch_all()
 
 import socket
 import sys

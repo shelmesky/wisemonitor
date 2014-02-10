@@ -93,13 +93,13 @@ var updater = {
 	var alert_area = $("#xenserver-alert");
 	
 	if (data.message_type == "cpu_usage") {
-	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "CPU使用率: " + data.created_time + " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "CPU使用率: " + data.created_time + " / " +  "<a href='/xenserver/hosts/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message_type == "disk_usage") {
-	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "磁盘使用率: "  + data.created_time + " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "磁盘使用率: " + data.created_time + " / " +  "<a href='/xenserver/hosts/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message_type == "network_usage") {
-	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "网络使用率: "  + data.created_time + " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "网络使用率: " + data.created_time + " / " +  "<a href='/xenserver/hosts/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	msg += data.message.vm_name_label + " / ";
 	msg += "Curren: " + data.message.current_value + " / ";

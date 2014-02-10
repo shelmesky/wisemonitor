@@ -2,8 +2,6 @@
 #! encoding: utf-8
 import SocketServer
 import gevent
-from gevent import monkey
-monkey.patch_all()
 
 '''
 Python WebSocket library with support for "wss://" encryption.

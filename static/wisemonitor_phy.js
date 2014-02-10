@@ -93,13 +93,13 @@ var updater = {
 	data = content.message
 	var alert_area = $("#physical-device-alert");
 	if (data.message.return_code == 1) {
-	    var msg = "<div class='alert alert-info fade in hide' id='"+ content.message_id + "'>" + "警告：" + data.created_time +  " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-info fade in hide' id='"+ content.message_id + "'>" + "警告：" + data.created_time +  " / " + "<a href='/infra/server/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message.return_code == 2) {
-	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "严重：" + data.created_time +  " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "严重：" + data.created_time +  " / " + "<a href='/infra/server/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message.return_code == 3) {
-	    var msg = "<div class='alert alert-block fade in hide' id='"+ content.message_id + "'>" + "未知：" + data.created_time +  " / " + data.message.host + " / ";
+	    var msg = "<div class='alert alert-block fade in hide' id='"+ content.message_id + "'>" + "未知：" + data.created_time +  " / " + "<a href='/infra/server/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message.service != "") {
 	    msg += data.message.service + " / ";

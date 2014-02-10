@@ -162,7 +162,7 @@
 									{% if alert.get('created_time') %}
 										{{ alert['created_time'] }} /
 									{% end %}
-									{{ alert['message']['host'] }} /
+									<a href="/infra/server/{{ alert['message']['host'] }}/">{{ alert['message']['host'] }}</a> /
 									{% if alert['message']['service'] %}
 										{{ alert['message']['service'] }} /
 									{% end %}
@@ -174,7 +174,7 @@
 									{% if alert.get('created_time') %}
 										{{ alert['created_time'] }} /
 									{% end %}
-									{{ alert['message']['host'] }} /
+									<a href="/infra/server/{{ alert['message']['host'] }}/">{{ alert['message']['host'] }}</a> /
 									{% if alert['message']['service'] %}
 										{{ alert['message']['service'] }} /
 									{% end %}
@@ -186,7 +186,7 @@
 									{% if alert.get('created_time') %}
 										{{ alert['created_time'] }} /
 									{% end %}
-									{{ alert['message']['host'] }} /
+									<a href="/infra/server/{{ alert['message']['host'] }}/">{{ alert['message']['host'] }}</a> /
 									{% if alert['message']['service'] %}
 										{{ alert['message']['service'] }} /
 									{% end %}
