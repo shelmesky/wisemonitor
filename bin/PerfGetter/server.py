@@ -13,6 +13,7 @@ from datetime import timedelta
 import urllib
 import threading
 from Queue import Queue
+from urlparse import urlparse
 
 import gevent
 from gevent import queue
@@ -165,12 +166,13 @@ def http_getter(url):
                 logger.error("Error in get data: HTTP %d" % result.code)
                 return
             data = result.read()
-            logger.info("action: %s, got data %dKB" % (action_type, len(data)/1024.0))
+            logger.info("host: %s, action: %s, got data %dKB" % (urlparse(url).netloc, action_type, len(data)/1024.0))
             try:
                 thread_queue.put((action_type, data))
             except KeyboardInterrupt:
                 return
     except Exception, e:
+        logger.error("host: %s, action: %s" % (urlparse(url).netloc, action_type))
         logger.exception(e)
 
 

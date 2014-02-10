@@ -21,7 +21,6 @@ def process(thread_queue):
             return
         
         thread_queue.task_done()
-        logger.info("got item")
         
         for vm in item:
             data = vm['data']
