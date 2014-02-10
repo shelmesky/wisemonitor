@@ -176,6 +176,7 @@ if __name__ == '__main__':
         
         rabbitmq_client.NagiosReceiver(mq_host, mq_username, mq_password,
                        mq_virtual_host, callback=nagios_alert_handler)
+        logger.info("Start Nagios Watcher OK.")
     
     # Receive alerts from XenServer
     # Connect to XenServer without timeout
@@ -191,9 +192,11 @@ if __name__ == '__main__':
                 t = XenServer_Alerts_Watcher(host[0], session, xenserver_event_handler)
                 t.start()
                 logger.warn("Start XenServer event watcher for %s." % host[0])
+        logger.info("Start XenServer Watcher OK.")
     
     app = iApplication()
     app.listen(port, xheaders=True)
+    logger.info("Start server OK.")
     
     try:
         ioloop = ioloop.IOLoop.instance()
