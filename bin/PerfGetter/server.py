@@ -158,10 +158,6 @@ def http_getter(url):
     try:
         with Timeout(10.0):
             result = urllib.urlopen(url)
-            if result.code == 401:
-                logger.error("Maybe the session has expired.")
-                connect_to_xenserver()
-                return
             if result.code != 200:
                 logger.error("Error in get data: HTTP %d" % result.code)
                 return
@@ -174,6 +170,8 @@ def http_getter(url):
     except Exception, e:
         logger.error("host: %s, action: %s" % (urlparse(url).netloc, action_type))
         logger.exception(e)
+        logger.error("Maybe the session has expired.")
+        connect_to_xenserver()
 
 
 def spawner(queue):
