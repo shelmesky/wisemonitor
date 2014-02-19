@@ -4,6 +4,8 @@
 from pysnmp.smi import builder, view, error
 from pysnmp.entity.rfc3413.oneliner import cmdgen
 
+from logger import logger
+
 
 def get_all_interface(host, community):
     """
@@ -82,7 +84,8 @@ def get_int_status(host, community, interface_name=None, interface_index=None):
                         break
                     
         if not interface:
-            return None, None
+            logger.error("can not get interface for [%s %s %s]" % (host, community, interface_index))
+            return None
         
         interface_oid_tuple = interface.asTuple()
         interface_index = interface_oid_tuple[-1]
@@ -114,7 +117,8 @@ def get_int_status(host, community, interface_name=None, interface_index=None):
                 speed = var[1]
 
     if not speed:
-        return None, None
+        logger.error("can not get speed for [%s %s %s]" % (host, community, interface_index))
+        return None
     
     error_indication, error_status, error_index, var_binds = gen.getCmd(
         cmdgen.CommunityData(community),
@@ -127,7 +131,8 @@ def get_int_status(host, community, interface_name=None, interface_index=None):
                 status = var[1]
 
     if not status:
-        return None, None
+        logger.error("can not get status for [%s %s %s]" % (host, community, interface_index))
+        return None
     
     return speed, status, interface_name, interface_index
 
