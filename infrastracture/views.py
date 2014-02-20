@@ -5,7 +5,7 @@ import json
 import re
 import bson
 
-from tornado import web
+from tornado import web 
 from tornado import gen
 from settings import MOTOR_DB as DB
 from settings import NAGIOS_CHECK_SNMP_INT_COMMAND
@@ -703,10 +703,26 @@ class Infra_SNMP_Handler(WiseHandler):
             interface_name = self.get_argument("name", "").strip()
             interface_name = interface_name.split(" ")[0]
             try:
-                interface_speed, interface_status, _, _ = snmp.get_int_status(host_ip, community,
+                ret = snmp.get_int_status(host_ip, community,
                                                                         interface_index=int(interface_index))
+                if ret != None:
+                    interface_speed, interface_status, _, _ = ret
+                else:
+                    msg = {
+                        "interface_name": interface_name,
+                        "speed": 0,
+                        "status": 2 
+                    }
+                    self.write(json.dumps(msg))
+                    return
             except Exception, e:
                 logger.error("Get interface %s status failed!" % interface_name)
+                msg = {
+                    "interface_name": interface_name,
+                    "speed": 0,
+                    "status": 2 
+                }
+                self.write(json.dumps(msg))
             else:
                 if interface_speed or interface_status:
                     msg = {
