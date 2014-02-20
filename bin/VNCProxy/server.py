@@ -167,7 +167,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
 def run_server():
     host = settings.LISTEN_HOST
     port = settings.LISTEN_PORT
-    server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True)
+    server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True, record="record.dat")
     server.start_server()
 
 

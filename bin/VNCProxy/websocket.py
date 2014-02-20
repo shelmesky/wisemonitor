@@ -2,6 +2,8 @@
 #! encoding: utf-8
 import SocketServer
 import gevent
+import struct
+import sys
 
 '''
 Python WebSocket library with support for "wss://" encryption.
@@ -466,9 +468,14 @@ Sec-WebSocket-Accept: %s\r
                     encbuf, lenhead, lentail = self.encode_hixie(buf)
 
                 if self.rec:
-                    self.rec.write("%s,\n" %
-                            repr("{%s{" % tdelta
-                                + encbuf[lenhead:len(encbuf)-lentail]))
+                    reload(sys)
+                    sys.setdefaultencoding("utf-8")
+                    head_struct = "<iII"
+                    buf = encbuf[lenhead:len(encbuf)-lentail]
+                    buf_len = len(buf)
+                    head = struct.pack(head_struct, 0, tdelta, buf_len)
+                    self.rec.write(head)
+                    self.rec.write(buf)
 
                 attached_object.send_parts.append(encbuf)
 
@@ -554,8 +561,13 @@ Sec-WebSocket-Accept: %s\r
                 else:
                     recbuf = buf[frame['hlen']:frame['hlen'] +
                                                frame['length']]
-                self.rec.write("%s,\n" %
-                        repr("}%s}" % tdelta + recbuf))
+                reload(sys)
+                sys.setdefaultencoding("utf-8")
+                head_struct = "<iII"
+                buf_len = len(recbuf)
+                head = struct.pack(head_struct, 1, tdelta, buf_len)
+                self.rec.write(head)
+                self.rec.write(recbuf)
 
 
             bufs.append(frame['payload'])
@@ -805,10 +817,6 @@ Sec-WebSocket-Accept: %s\r
                     self.msg("opening record file: %s" % fname)
                     self.rec = open(fname, 'w+')
                     encoding = "binary"
-                    if self.base64: encoding = "base64"
-                    self.rec.write("var VNC_frame_encoding = '%s';\n"
-                            % encoding)
-                    self.rec.write("var VNC_frame_data = [\n")
 
                 self.ws_connection = True
                 # 在new_client函数中继续处理每个WebSockets连接
@@ -829,9 +837,6 @@ Sec-WebSocket-Accept: %s\r
                 if self.verbose:
                     self.msg(traceback.format_exc())
         finally:
-            if self.rec:
-                self.rec.write("'EOF'];\n")
-                self.rec.close()
 
             if attached_object.client and attached_object.client != startsock:
                 # Close the SSL wrapped socket
