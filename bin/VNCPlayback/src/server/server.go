@@ -55,16 +55,16 @@ func Processor(ws *websocket.Conn) {
 		buf := make([]byte, size)
 
 		n, err := file.Read(buf)
+		if err == io.EOF {
+			log.Print("got EOF in Read head")
+			return
+		}
 		if err != nil {
 			log.Print(err)
 			return
 		}
 		if n != int(size) {
 			log.Print("invlid head size.")
-			return
-		}
-		if err == io.EOF {
-			log.Print("got EOF in Read head")
 			return
 		}
 
@@ -76,16 +76,16 @@ func Processor(ws *websocket.Conn) {
 
 		buf = make([]byte, head.BodyLength)
 		n, err = file.Read(buf)
+		if err == io.EOF {
+			log.Print("got EOF in Read body")
+			return
+		}
 		if err != nil {
 			log.Print(err)
 			return
 		}
 		if n != int(head.BodyLength) {
 			log.Print("invlid body size.")
-			return
-		}
-		if err == io.EOF {
-			log.Print("got EOF in Read body")
 			return
 		}
 
