@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"recorder"
 	"syscall"
 	"time"
 	"unsafe"
@@ -43,7 +44,7 @@ func Processor(ws *websocket.Conn) {
 	start_time = getNowMillisecond()
 	ws.PayloadType = 2
 
-	file, err := os.Open("record.dat.2")
+	file, err := os.Open("p.dat")
 	if err != nil {
 		log.Print(err)
 		return
@@ -148,6 +149,7 @@ func main() {
 		syscall.SIGPIPE)
 
 	go signalCallback()
+	go recorder.Runmain()
 
 	listen_addr := ":23456"
 	http.Handle("/serv/record", websocket.Handler(Recorder))

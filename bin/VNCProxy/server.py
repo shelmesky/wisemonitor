@@ -27,6 +27,8 @@ monkey.patch_all()
 
 import socket
 import sys
+import struct
+import time
 
 import websockify
 
@@ -133,11 +135,22 @@ class WebSocketProxy(websockify.WebSocketProxy):
         host, port, vnc_location, vm_ref_id = self.get_target(self.path)
         
         if self.record:
+            vm_info_struct = "<64s128s64s"
+            start_time = str(int(time.time()))
+            vm_info = struct.pack(vm_info_struct, host, vm_ref_id, start_time)
+            
             # Record raw frame data as JavaScript array
             fname = "%s_%s.dat" % (host, vm_ref_id)
             self.msg("Recording to '%s'" % fname)
             self.msg("opening record file: %s" % fname)
-            attached_object.rec = open(fname, 'w+')
+            
+            record_sock = socket.create_connection(("127.0.0.1", 6666))
+            rec_fd = record_sock.makefile()
+            rec_fd.write(vm_info)
+            self.msg("Send VM info to Record server")
+            
+            #attached_object.rec = open(fname, 'w+')
+            attached_object.rec = rec_fd
             encoding = "binary"
          
         # Connect to the target

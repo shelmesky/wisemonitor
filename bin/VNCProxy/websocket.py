@@ -473,6 +473,7 @@ Sec-WebSocket-Accept: %s\r
                     buf = encbuf[lenhead:len(encbuf)-lentail]
                     buf_len = len(buf)
                     head = struct.pack(head_struct, 0, tdelta, buf_len)
+                    print(1, tdelta, buf_len)
                     attached_object.rec.write(head)
                     attached_object.rec.write(buf)
 
@@ -565,6 +566,7 @@ Sec-WebSocket-Accept: %s\r
                 head_struct = "<iII"
                 buf_len = len(recbuf)
                 head = struct.pack(head_struct, 1, tdelta, buf_len)
+                print(1, tdelta, buf_len)
                 attached_object.rec.write(head)
                 attached_object.rec.write(recbuf)
 
