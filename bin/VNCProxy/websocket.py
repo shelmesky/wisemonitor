@@ -132,13 +132,14 @@ Sec-WebSocket-Accept: %s\r
 
         # Make paths settings absolute
         self.cert = os.path.abspath(cert)
-        self.key = self.web = self.record = ''
+        self.key = self.web = ''
+        self.record = False
         if key:
             self.key = os.path.abspath(key)
         if web:
             self.web = os.path.abspath(web)
         if record:
-            self.record = os.path.abspath(record)
+            self.record = True
 
         if self.web:
             os.chdir(self.web)
@@ -167,8 +168,6 @@ Sec-WebSocket-Accept: %s\r
             print("  - No SSL/TLS support (no 'ssl' module)")
         if self.daemon:
             print("  - Backgrounding (daemon)")
-        if self.record:
-            print("  - Recording to '%s.*'" % self.record)
 
     #
     # WebSocketServer static methods
@@ -467,15 +466,15 @@ Sec-WebSocket-Accept: %s\r
                 else:
                     encbuf, lenhead, lentail = self.encode_hixie(buf)
 
-                if self.rec:
+                if attached_object.rec:
                     reload(sys)
                     sys.setdefaultencoding("utf-8")
                     head_struct = "<iII"
                     buf = encbuf[lenhead:len(encbuf)-lentail]
                     buf_len = len(buf)
                     head = struct.pack(head_struct, 0, tdelta, buf_len)
-                    self.rec.write(head)
-                    self.rec.write(buf)
+                    attached_object.rec.write(head)
+                    attached_object.rec.write(buf)
 
                 attached_object.send_parts.append(encbuf)
 
@@ -552,7 +551,7 @@ Sec-WebSocket-Accept: %s\r
 
             self.traffic("}")
 
-            if self.rec:
+            if attached_object.rec:
                 start = frame['hlen']
                 end = frame['hlen'] + frame['length']
                 if frame['masked']:
@@ -566,8 +565,8 @@ Sec-WebSocket-Accept: %s\r
                 head_struct = "<iII"
                 buf_len = len(recbuf)
                 head = struct.pack(head_struct, 1, tdelta, buf_len)
-                self.rec.write(head)
-                self.rec.write(recbuf)
+                attached_object.rec.write(head)
+                attached_object.rec.write(recbuf)
 
 
             bufs.append(frame['payload'])
@@ -810,14 +809,6 @@ Sec-WebSocket-Accept: %s\r
                 # 为每个WebSockets连接做握手协议
                 attached_object.client = self.do_handshake(startsock, address)
 
-                if self.record:
-                    # Record raw frame data as JavaScript array
-                    fname = "%s.%s" % (self.record,
-                                        self.handler_id)
-                    self.msg("opening record file: %s" % fname)
-                    self.rec = open(fname, 'w+')
-                    encoding = "binary"
-
                 self.ws_connection = True
                 # 在new_client函数中继续处理每个WebSockets连接
                 self.new_client(attached_object)
@@ -842,6 +833,7 @@ Sec-WebSocket-Accept: %s\r
                 # Close the SSL wrapped socket
                 # Original socket closed by caller
                 attached_object.client.close()
+                attached_object.rec.close()
 
     def new_client(self):
         """ Do something with a WebSockets client connection. """

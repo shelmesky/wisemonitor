@@ -122,7 +122,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
         else:
             port = 443
         
-        return (server, port, params, )
+        return (server, port, params, vm_ref_id, )
 
     def new_client(self, attached_object):
         """
@@ -130,7 +130,15 @@ class WebSocketProxy(websockify.WebSocketProxy):
         """
         # 根据websocket client传递过来的PATH
         # 找到UUID对应的vnc location
-        host, port, vnc_location = self.get_target(self.path)
+        host, port, vnc_location, vm_ref_id = self.get_target(self.path)
+        
+        if self.record:
+            # Record raw frame data as JavaScript array
+            fname = "%s_%s.dat" % (host, vm_ref_id)
+            self.msg("Recording to '%s'" % fname)
+            self.msg("opening record file: %s" % fname)
+            attached_object.rec = open(fname, 'w+')
+            encoding = "binary"
          
         # Connect to the target
         self.msg("connecting to: %s:%s" % (
@@ -167,7 +175,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
 def run_server():
     host = settings.LISTEN_HOST
     port = settings.LISTEN_PORT
-    server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True, record="record.dat")
+    server = WebSocketProxy(listen_host=host, listen_port=port, verbose=True, record=True)
     server.start_server()
 
 
