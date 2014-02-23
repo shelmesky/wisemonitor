@@ -134,24 +134,35 @@ class WebSocketProxy(websockify.WebSocketProxy):
         # 找到UUID对应的vnc location
         host, port, vnc_location, vm_ref_id = self.get_target(self.path)
         
+        # 如果启用了录制VNC数据
         if self.record:
             vm_info_struct = "<64s128s64s"
             start_time = str(int(time.time()))
             vm_info = struct.pack(vm_info_struct, host, vm_ref_id, start_time)
             
-            # Record raw frame data as JavaScript array
-            fname = "%s_%s.dat" % (host, vm_ref_id)
-            self.msg("Recording to '%s'" % fname)
-            self.msg("opening record file: %s" % fname)
+            fname = "%s_%s_%s.dat" % (host, vm_ref_id, start_time)
+            self.msg("Server Recording to '%s'" % fname)
             
-            record_sock = socket.create_connection(("127.0.0.1", 6666))
+            # Send VMInfo to Recorder Server
+            self.msg("Send VM info to Record server")
+            record_sock = socket.create_connection(("127.0.0.1", 23457), 3)
             rec_fd = record_sock.makefile()
             rec_fd.write(vm_info)
-            self.msg("Send VM info to Record server")
+            rec_fd.flush()
             
-            #attached_object.rec = open(fname, 'w+')
-            attached_object.rec = rec_fd
-            encoding = "binary"
+            # Receive Reply from server
+            self.msg("Receive Reply info from Record server")
+            vm_info_reply_struct = "<i"
+            size = struct.calcsize(vm_info_reply_struct)
+            data = rec_fd.read(size)
+            reply = struct.unpack(vm_info_reply_struct, data)
+            
+            if reply[0] == 0:
+                self.msg("Start Send VNC Data to Recorder server...")
+                attached_object.rec = rec_fd
+                encoding = "binary"
+            else:
+                attached_object.rec = None
          
         # Connect to the target
         self.msg("connecting to: %s:%s" % (

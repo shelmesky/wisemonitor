@@ -284,6 +284,14 @@ Traffic Legend:
                     self.vmsg("%s:%s: Client closed connection" %(
                         attached_object.client_address[0],
                         attached_object.client_address[1]))
+                    
+                    if attached_object.rec:
+                        # 关闭到Recoreder Server的连接
+                        self.msg("Close recorder server connection when client closed")
+                        import os
+                        os.close(attached_object.rec.fileno())
+                        attached_object.rec = None
+                        
                     raise self.CClose(closed['code'], closed['reason'])
 
 
@@ -312,6 +320,14 @@ Traffic Legend:
                 if len(buf) == 0:
                     self.vmsg("%s:%s: Target closed connection" %(
                         self.target_host, self.target_port))
+                    
+                    if attached_object.rec:
+                        # 关闭到Recoreder Server的连接
+                        self.msg("Close recorder server connection when target closed")
+                        import os
+                        os.close(attached_object.rec.fileno())
+                        attached_object.rec = None
+                    
                     raise self.CClose(1000, "Target closed")
 
                 # TODO: 增加data的translate，再存入到cqueue

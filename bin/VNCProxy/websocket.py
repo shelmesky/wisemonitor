@@ -473,9 +473,16 @@ Sec-WebSocket-Accept: %s\r
                     buf = encbuf[lenhead:len(encbuf)-lentail]
                     buf_len = len(buf)
                     head = struct.pack(head_struct, 0, tdelta, buf_len)
-                    print(1, tdelta, buf_len)
-                    attached_object.rec.write(head)
-                    attached_object.rec.write(buf)
+                    try:
+                        attached_object.rec.write(head)
+                        attached_object.rec.write(buf)
+                    except Exception, e:
+                        if attached_object.rec:
+                            self.msg("Failed write date to Recorder Server!")
+                            # 关闭到Recoreder Server的连接
+                            import os
+                            os.close(attached_object.rec.fileno())
+                            attached_object.rec = None 
 
                 attached_object.send_parts.append(encbuf)
 
@@ -566,9 +573,16 @@ Sec-WebSocket-Accept: %s\r
                 head_struct = "<iII"
                 buf_len = len(recbuf)
                 head = struct.pack(head_struct, 1, tdelta, buf_len)
-                print(1, tdelta, buf_len)
-                attached_object.rec.write(head)
-                attached_object.rec.write(recbuf)
+                try:
+                    attached_object.rec.write(head)
+                    attached_object.rec.write(recbuf)
+                except Exception, e:
+                    if attached_object.rec:
+                        self.msg("Failed write date to Recorder Server!")
+                        # 关闭到Recoreder Server的连接
+                        import os
+                        os.close(attached_object.rec.fileno())
+                        attached_object.rec = None 
 
 
             bufs.append(frame['payload'])
