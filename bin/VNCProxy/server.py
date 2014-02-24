@@ -145,25 +145,28 @@ class WebSocketProxy(websockify.WebSocketProxy):
             
             # Send VMInfo to Recorder Server
             self.msg("Send VM info to Record server")
-            record_sock = socket.create_connection(("127.0.0.1", 23457), 3)
-            rec_fd = record_sock.makefile()
-            rec_fd.write(vm_info)
-            rec_fd.flush()
-            
-            # Receive Reply from server
-            self.msg("Receive Reply info from Record server")
-            vm_info_reply_struct = "<i"
-            size = struct.calcsize(vm_info_reply_struct)
-            data = rec_fd.read(size)
-            reply = struct.unpack(vm_info_reply_struct, data)
-            
-            if reply[0] == 0:
-                self.msg("Start Send VNC Data to Recorder server...")
-                attached_object.rec = rec_fd
-                encoding = "binary"
+            try:
+                record_sock = socket.create_connection(("127.0.0.1", 23457), 3)
+                rec_fd = record_sock.makefile()
+                rec_fd.write(vm_info)
+                rec_fd.flush()
+                
+                # Receive Reply from server
+                self.msg("Receive Reply info from Record server")
+                vm_info_reply_struct = "<i"
+                size = struct.calcsize(vm_info_reply_struct)
+                data = rec_fd.read(size)
+                reply = struct.unpack(vm_info_reply_struct, data)
+            except Exception, e:
+                self.msg("Send Error: %s" % e)
             else:
-                attached_object.rec = None
-         
+                if reply[0] == 0:
+                    self.msg("Start Send VNC Data to Recorder server...")
+                    attached_object.rec = rec_fd
+                    encoding = "binary"
+                else:
+                    attached_object.rec = None
+             
         # Connect to the target
         self.msg("connecting to: %s:%s" % (
                  host, port))

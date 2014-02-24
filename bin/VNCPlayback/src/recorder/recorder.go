@@ -43,6 +43,8 @@ func GetValidByte(src []byte) []byte {
 }
 
 func Handler(conn net.Conn) {
+	defer conn.Close()
+
 	var vm_info VMInfo
 	const vm_info_size = unsafe.Sizeof(vm_info)
 
@@ -112,6 +114,7 @@ func Handler(conn net.Conn) {
 		log.Print("Recorder Server: Open Data file failed: ", err)
 		return
 	}
+	defer file.Close()
 
 	// cancel the socket deadline
 	var zero time.Time
