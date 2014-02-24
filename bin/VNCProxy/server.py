@@ -147,6 +147,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
             self.msg("Send VM info to Record server")
             try:
                 record_sock = socket.create_connection(("127.0.0.1", 23457), 3)
+                record_sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
                 rec_fd = record_sock.makefile()
                 rec_fd.write(vm_info)
                 rec_fd.flush()
