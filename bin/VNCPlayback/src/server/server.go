@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"recorder"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -255,6 +256,8 @@ func addDefaultHeaders(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	signal_chan = make(chan os.Signal, 10)
 	signal.Notify(signal_chan,
 		syscall.SIGHUP,
