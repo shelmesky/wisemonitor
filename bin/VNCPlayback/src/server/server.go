@@ -34,11 +34,12 @@ type Head struct {
 }
 
 type FileInfo struct {
-	Filename  string `json:"filename"`
-	Filesize  int64  `json:"filesize"`
-	Starttime string `json:"starttime"`
-	Endtime   string `json:"endtime"`
-	Totaltime int64  `json:"totaltime"`
+	Filename      string `json:"filename"`
+	Filesize      int64  `json:"filesize"`
+	Starttime     string `json:"starttime"`
+	Endtime       string `json:"endtime"`
+	Totaltime     int64  `json:"totaltime"`
+	ClientAddress string `json:"client"`
 }
 
 type Filelist struct {
@@ -53,6 +54,8 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 			filename_splited := strings.Split(info.Name(), "_")
 			xen_host := filename_splited[0]
 			uuid := filename_splited[1]
+			start_time := filename_splited[2]
+			client_address := filename_splited[3]
 
 			if xen_host == host && uuid == vm_uuid {
 				var file_info FileInfo
@@ -61,9 +64,8 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 				file_info.Filename = info.Name()
 				file_info.Filesize = info.Size()
 
-				// parse start_time
-				time_and_suffix := strings.Split(filename_splited[2], ".")
-				start_time := time_and_suffix[0]
+				// parse client address
+				file_info.ClientAddress = client_address
 
 				// parse total time
 				start_time_int, err := strconv.Atoi(start_time)

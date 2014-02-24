@@ -136,9 +136,10 @@ class WebSocketProxy(websockify.WebSocketProxy):
         
         # 如果启用了录制VNC数据
         if self.record:
-            vm_info_struct = "<64s128s64s"
+            vm_info_struct = "<64s128s64s128s"
             start_time = str(int(time.time()))
-            vm_info = struct.pack(vm_info_struct, host, vm_ref_id, start_time)
+            client_address = attached_object.client_address[0] + ":" +str(attached_object.client_address[1])
+            vm_info = struct.pack(vm_info_struct, host, vm_ref_id, start_time, client_address)
             
             fname = "%s_%s_%s.dat" % (host, vm_ref_id, start_time)
             self.msg("Server Recording to '%s'" % fname)

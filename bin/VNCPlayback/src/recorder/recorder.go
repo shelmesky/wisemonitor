@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -17,9 +18,10 @@ const (
 )
 
 type VMInfo struct {
-	Host      [64]byte
-	VMRef     [128]byte
-	StartTime [64]byte
+	Host          [64]byte
+	VMRef         [128]byte
+	StartTime     [64]byte
+	ClientAddress [128]byte
 }
 
 type Head struct {
@@ -110,9 +112,12 @@ func Handler(conn net.Conn) {
 	host := string(GetValidByte(vm_info.Host[:]))
 	vm_ref := string(GetValidByte(vm_info.VMRef[:]))
 	start_time := string(GetValidByte(vm_info.StartTime[:]))
+	client_address := string(GetValidByte(vm_info.ClientAddress[:]))
 
 	// Open Record file to write
-	fname := fmt.Sprintf("./data/%s_%s_%s.dat", host, vm_ref, start_time)
+	rand_int := rand.New(rand.NewSource(time.Now().UnixNano()))
+	fname := fmt.Sprintf("./data/%s_%s_%s_%s_%d.dat",
+		host, vm_ref, start_time, client_address, rand_int.Intn(100000))
 	file, err := os.Create(fname)
 	if err != nil {
 		log.Print("Recorder Server: Open Data file failed: ", err)
