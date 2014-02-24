@@ -38,7 +38,7 @@ type FileInfo struct {
 	Filesize      int64  `json:"filesize"`
 	Starttime     string `json:"starttime"`
 	Endtime       string `json:"endtime"`
-	Totaltime     int64  `json:"totaltime"`
+	Duration      int64  `json:"duration"`
 	ClientAddress string `json:"client"`
 }
 
@@ -77,7 +77,7 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 				end_time_struct := info.ModTime()
 
 				duration := end_time_struct.Sub(start_time_struct)
-				file_info.Totaltime = int64(duration.Seconds())
+				file_info.Duration = int64(duration.Seconds())
 
 				// parse start_time and end_time in format
 				file_info.Starttime = start_time_struct.Format(Layout)
