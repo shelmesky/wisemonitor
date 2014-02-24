@@ -6,4 +6,5 @@ local_conf.py
 tests/
 nohup.out
 server
-*.dat.*
+*.dat
+*.a

@@ -558,16 +558,17 @@ Sec-WebSocket-Accept: %s\r
                 frame = self.decode_hixie(buf)
 
             self.traffic("}")
+            
+            start = frame['hlen']
+            end = frame['hlen'] + frame['length']
+            if frame['masked']:
+                recbuf = WebSocketServer.unmask(buf, frame['hlen'],
+                                               frame['length'])
+            else:
+                recbuf = buf[frame['hlen']:frame['hlen'] +
+                                           frame['length']]
 
             if attached_object.rec:
-                start = frame['hlen']
-                end = frame['hlen'] + frame['length']
-                if frame['masked']:
-                    recbuf = WebSocketServer.unmask(buf, frame['hlen'],
-                                                   frame['length'])
-                else:
-                    recbuf = buf[frame['hlen']:frame['hlen'] +
-                                               frame['length']]
                 reload(sys)
                 sys.setdefaultencoding("utf-8")
                 head_struct = "<iII"
