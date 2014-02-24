@@ -247,6 +247,13 @@ func signalCallback() {
 	}
 }
 
+func addDefaultHeaders(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Server", "RPServer 0.1")
+		fn(w, r)
+	}
+}
+
 func main() {
 	signal_chan = make(chan os.Signal, 10)
 	signal.Notify(signal_chan,
@@ -265,7 +272,7 @@ func main() {
 	listen_addr := "0.0.0.0:23456"
 
 	http.Handle("/serv/playback", websocket.Handler(Processor))
-	http.HandleFunc("/serv/listfile", ListFileHandler)
+	http.HandleFunc("/serv/listfile", addDefaultHeaders(ListFileHandler))
 
 	log.Print("Playback Server: Listen on WebSocket ", listen_addr)
 	err := http.ListenAndServe(listen_addr, nil)
