@@ -43,6 +43,10 @@ func GetValidByte(src []byte) []byte {
 }
 
 func Handler(conn net.Conn) {
+	if v, ok := conn.(*net.TCPConn); ok {
+		v.SetLinger(0)
+	}
+
 	defer conn.Close()
 
 	var vm_info VMInfo
