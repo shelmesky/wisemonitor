@@ -35,6 +35,7 @@ type Head struct {
 }
 
 type FileInfo struct {
+	Id            int64  `json:"id"`
 	Filename      string `json:"filename"`
 	Filesize      int64  `json:"filesize"`
 	Starttime     string `json:"starttime"`
@@ -50,6 +51,7 @@ type Filelist struct {
 
 func GetFileList(path, host, vm_uuid string) *Filelist {
 	var file_list *Filelist = new(Filelist)
+	var Id int64 = 0
 	filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename_splited := strings.Split(info.Name(), "_")
@@ -83,6 +85,9 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 				// 转换时间戳到字符串
 				file_info.Starttime = start_time_struct.Format(Layout)
 				file_info.Endtime = end_time_struct.Format(Layout)
+
+				file_info.Id = Id
+				Id += 1
 
 				// append file_info to file_list
 				file_list.Data = append(file_list.Data, file_info)
@@ -217,36 +222,36 @@ func Processor(ws *websocket.Conn) {
 		n, err := file.Read(buf)
 		if err == io.EOF {
 			log.Print("Playback Server: got EOF in Read head")
-			return
+			break
 		}
 		if err != nil {
 			log.Print("Playback Server: Failed to Read Head", err)
-			return
+			break
 		}
 		if n != int(size) {
 			log.Print("Playback Server: invlid head size.")
-			return
+			break
 		}
 
 		err = binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &head)
 		if err != nil {
 			log.Print("Playback Server: Failed to Parse Head: ", err)
-			return
+			break
 		}
 
 		buf = make([]byte, head.BodyLength)
 		n, err = file.Read(buf)
 		if err == io.EOF {
 			log.Print("Playback Server: got EOF in Read body")
-			return
+			break
 		}
 		if err != nil {
 			log.Print("Playback Server: Failed to Read Boby: ", err)
-			return
+			break
 		}
 		if n != int(head.BodyLength) {
 			log.Print("Playback Server: invlid body size.")
-			return
+			break
 		}
 
 		// 忽略是WebSocket客户端发送的帧
@@ -270,17 +275,18 @@ func Processor(ws *websocket.Conn) {
 		n, err = ws.Write(buf)
 		if err == syscall.EPIPE {
 			log.Print("Playback Server: Websocket Got Broken PIPE")
-			return
+			break
 		} else if err != nil {
 			log.Print("Playback Server: Websocket Write Failed")
 			log.Print(err)
-			return
+			break
 		}
 		if n != int(head.BodyLength) {
 			log.Print("Playback Server: Send body failed")
-			return
+			break
 		}
 	}
+	log.Println("Playback Server: Close WebSocket Connection")
 }
 
 func signalCallback() {

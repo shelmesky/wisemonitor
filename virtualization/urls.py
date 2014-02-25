@@ -12,6 +12,7 @@ url_handlers = [
 (r"^/virtual/xenserver/hosts/([^/]+)/$", XenServer_Get_Host),
 (r"^/virtual/xenserver/([^/]+)/vms/$", XenServer_Get_ALL_vms),
 (r"^/virtual/xenserver/([^/]+)/vms/([^/]+)/console/$", XenServer_Get_VM_Console),
+(r"^/virtual/xenserver/([^/]+)/vms/([^/]+)/console/playback/$", XenServer_VM_Console_Playback),
 (r"^/virtual/xenserver/([^/]+)/vms/([^/]+)/perfmon/$", XenServer_VM_Perfmon),
 (r"^/virtual/xenserver/([^/]+)/([^/]+)/chart/([^/]+)/$", XenServer_VMs_Chart_Handler),
 

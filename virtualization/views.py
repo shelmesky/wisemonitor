@@ -6,6 +6,7 @@ import json
 
 from tornado import web
 from tornado import gen
+from tornado.httpclient import AsyncHTTPClient
 
 from common.init import *
 from common.utils import get_chart_colors
@@ -215,3 +216,20 @@ class XenServer_Get_VM_Console(WiseHandler):
                     novnc_port = settings.NOVNC_SERVER_PORT,
                     vm_ref=vm_ref, host_address=host, vm_info=vm_info)
 
+
+class XenServer_VM_Console_Playback(WiseHandler):
+    @web.asynchronous
+    @gen.coroutine
+    @require_login
+    def get(self, host, vm_ref):
+        http_client = AsyncHTTPClient()
+        query = "?host=%s&vm_uuid=%s" % (host, vm_ref)
+        url = "http://127.0.0.1:23456/serv/listfile" + query
+        logger.debug(url)
+        response = yield http_client.fetch(url)
+        vm_info = get_vm_info(host, vm_ref)
+        result = json.loads(response.body)
+        files = result['data']
+        self.render("virtualization/xenserver_console_playback.html", files=files,
+                    host_address=host, vm_info=vm_info, vm_ref=vm_ref)
+    

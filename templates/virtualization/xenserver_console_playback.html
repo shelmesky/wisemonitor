@@ -1,0 +1,216 @@
+{% extends ../base.html %}
+
+{% block title %}
+VNC回放
+{% end %}
+
+{% block extra_head %}
+    <script src="/js/playback/util.js"></script>
+    <script src="/js/playback/webutil.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){
+		$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+		$('#myModal').on('hidden', function () {
+			window.location.reload();
+			rfb.disconnect();
+			ws.close();
+			console.log("Close WebSocket...")
+		});
+	});
+	
+	function playback(filename) {
+		rfb.disconnect();
+		start(filename);
+	}
+	
+        var INCLUDE_URI= "/js/playback/";
+        // TODO: Data file should override
+        var VNC_frame_encoding = "base64";
+
+        var start_time;
+
+        function message(str) {
+            console.log(str);
+            var cell = $D('messages');
+            cell.innerHTML += str + "\n";
+            cell.scrollTop = cell.scrollHeight;
+        }
+        fname = WebUtil.getQueryVar('data', null);
+        console.log(fname);
+        Util.load_scripts(["base64.js", "websock.js", "des.js",
+                        "keysymdef.js", "keyboard.js", "input.js", "display.js",
+                        "jsunzip.js", "rfb.js", "playback.js"]);
+
+        updateState = function (rfb, state, oldstate, msg) {
+            switch (state) {
+                case 'failed':
+                case 'fatal':
+                    message("noVNC sent '" + state + "' state during iteration " + iteration + " frame " + frame_idx);
+                    test_state = 'failed';
+                    break;
+                case 'loaded':
+                    break;
+            }
+            if (typeof msg !== 'undefined') {
+                $D('VNC_status').innerHTML = msg;
+            }
+        }
+
+        function start(fname) {
+
+            var VNC_frame_encoding = 'binary';
+            recv_message = rfb.testMode(send_array, VNC_frame_encoding);
+	    $("#myModal").modal({'show':true})
+            run_client(fname);
+        }
+
+        function finish() {
+            // Finished with all iterations
+            var total_time, end_time = (new Date()).getTime();
+            total_time = end_time - start_time;
+
+            iter_time = parseInt(total_time / iterations, 10);
+            message(iterations + " iterations took " + total_time + "ms, " +
+                    iter_time + "ms per iteration");
+            // Shut-off event interception
+            rfb.get_mouse().ungrab();
+            rfb.get_keyboard().ungrab();
+            $D('startButton').disabled = false;
+            $D('startButton').value = "Start";
+
+        }
+
+        window.onscriptsload = function () {
+            rfb = new RFB({'target': $D('VNC_canvas'),
+                           'updateState': updateState});
+        }
+	</script>
+{% end %}
+
+{% block main_content %}
+<div>
+    <ul class="breadcrumb">
+        <li>
+            <a href="#">虚拟化</a> <span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/">XenServer</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/hosts/{{ host_address }}/">{{ host_address }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ host_address }}/vms/">VMS</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="#">{{ vm_info['name_label'] }}</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/console/">Console</a><span class="divider">/</span>
+        </li>
+        <li>
+            <a href="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/console/playback/">Playback</a>
+        </li>
+    </ul>
+    
+    <div>
+        <div class="box span12">
+            <div class="box-header well" data-original-title>
+					<h2><i class="icon-user"></i></h2>
+					<div class="box-icon">
+						<a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+						<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+					</div>
+	</div>
+            
+            <div class="box-content">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div id="DataTables_Table_0_wrapper" class="dataTables_length">
+                            <label>
+                                <select size="1" name="page_size">
+                                    <option value="10" selected="selected">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="25">25</option>
+                                </select>
+                                 每页数量
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="span6"> <label>
+                            搜索：
+                            <input type="text">
+                        </label> 
+                    </div>
+                    
+			<table class="table table-striped table-bordered bootstrap-datatable" id="">
+                        <thead>
+                           <tr role="row">
+                            <th rowspan="1" colspan="1" style="width: 30px;">ID</th>
+                            <th class="sorting_asc" rowspan="1" colspan="1" style="width: 100px;">文件大小</th>
+                            <th rowspan="1" colspan="1" style="width: 130px;">开始时间</th>
+                            <th rowspan="2" colspan="1" style="width: 130px;">结束时间</th>
+                            <th rowspan="2" colspan="1" style="width: 100px;">时长</th>
+                            <th rowspan="1" colspan="1" style="width: 150px;">客户端地址</th>
+                            <th rowspan="1" colspan="1" style="width: 150px;">动作</th>
+                           </tr>
+                        </thead>
+                        
+                        <tbody>
+			{% for file in files %}
+				{% if file['id'] & 1 == 0 %}
+                                <tr class="odd">
+				{% else %}
+				<tr class="even">
+				{% end %}
+                                    <td class="center">{{ file['id'] }}</td>
+                                    <td class="center">{{ file['filesize'] }}</td>
+                                    <td class="center">{{ file['starttime'] }}</td>
+                                    <td class="center">{{ file['endtime'] }}</td>
+                                    <td class="center">{{ file['duration'] }}</td>
+                                    <td class="center">{{ file['client'] }}</td>
+                                    <td class="center">
+					<a class="btn btn-success" href="#" onclick="playback('{{ file['filename'] }}');">
+                                            <i class="icon-zoom-in icon-white"></i>播放
+                                        </a>
+					<a class="btn btn-danger" href="#">
+                                            <i class="icon-trash"></i>删除
+                                        </a>
+                                    </td>
+                                </tr>
+			{% end %}
+			</tbody>
+			</table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal hide fade" id="myModal" style="display: block; width: auto; height: auto;">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">×</button>
+                <h3>Playback</h3>
+	</div>
+	<div class="modal-body" style="height: 768px;">
+		<div id="VNC_screen">
+		    <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
+			<table border=0 width=100%><tr>
+			    <td><div id="VNC_status">Loading</div></td>
+			</tr></table>
+		    </div>
+		    <canvas id="VNC_canvas" width="640px" height="20px">
+			Canvas not supported.
+		    </canvas>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a href="#" class="btn" data-dismiss="modal">Close</a>
+		<a href="#" class="btn btn-primary">Save changes</a>
+	</div>
+</div>
+
+{% end %}
