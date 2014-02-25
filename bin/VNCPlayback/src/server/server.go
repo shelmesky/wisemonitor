@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"recorder"
 	"runtime"
@@ -60,14 +61,14 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 			if xen_host == host && uuid == vm_uuid {
 				var file_info FileInfo
 
-				// parse filename and filesize
+				// 获得文件名和大小
 				file_info.Filename = info.Name()
 				file_info.Filesize = info.Size()
 
-				// parse client address
+				// 获得WebSocket客户端地址
 				file_info.ClientAddress = client_address
 
-				// parse total time
+				// 解析总时长
 				start_time_int, err := strconv.Atoi(start_time)
 				if err != nil {
 					log.Println("Playback Server: Parse start_time failed: ", err)
@@ -79,7 +80,7 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 				duration := end_time_struct.Sub(start_time_struct)
 				file_info.Duration = int64(duration.Seconds())
 
-				// parse start_time and end_time in format
+				// 转换时间戳到字符串
 				file_info.Starttime = start_time_struct.Format(Layout)
 				file_info.Endtime = end_time_struct.Format(Layout)
 
@@ -98,12 +99,50 @@ func GetFileList(path, host, vm_uuid string) *Filelist {
 	return file_list
 }
 
+func Exist(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil || os.IsExist(err)
+}
+
+// 得到毫秒级的时间戳
 func getNowMillisecond() int64 {
 	var tv syscall.Timeval
 	syscall.Gettimeofday(&tv)
 	return (int64(tv.Sec)*1e3 + int64(tv.Usec)/1e3)
 }
 
+// 删除虚拟机VNC记录文件
+func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	var filename string
+
+	if value, ok := query["filename"]; ok {
+		filename = value[0]
+	} else {
+		log.Println("Playback Server: Emptry Filename in Query")
+		http.Error(w, "Emptry Filename", 404)
+		return
+	}
+
+	var file_exist bool = true
+	// 判断文件是否存在
+	fullpath := path.Join("data", filename)
+	if !Exist(fullpath) {
+		file_exist = false
+	}
+
+	// 从文件系统上删除文件
+	if file_exist {
+		log.Println("Playback Server: Delete file:", fullpath)
+		err := os.Remove(fullpath)
+		if err != nil {
+			// 删除文件失败后，只记录日志
+			log.Println("Playback Server: Delete file failed :", err)
+		}
+	}
+}
+
+// 根据主机名和虚拟机REF ID，列出虚拟机的VNC记录文件
 func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	var host, vm_uuid string
@@ -141,6 +180,7 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(json_buf)
 }
 
+// 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
 	var filename string
 	ws_query := ws.Request().URL.Query()
@@ -152,12 +192,16 @@ func Processor(ws *websocket.Conn) {
 	}
 
 	defer ws.Close()
+	// 获取Head结构体大小
 	var head Head
 	const headSize = unsafe.Sizeof(head)
 
+	// 设置开始时间
 	start_time = getNowMillisecond()
+	// 设置WebSocket内容的编码类型为Binary
 	ws.PayloadType = 2
 
+	// 打开VNC记录文件
 	file, err := os.Open("./data/" + filename)
 	if err != nil {
 		log.Println("Playback Server: Failed to open VNC Data file: ", err)
@@ -165,6 +209,7 @@ func Processor(ws *websocket.Conn) {
 	}
 	defer file.Close()
 
+	// 循环发送VNC记录文件，直到文件结束
 	for {
 		size := int64(headSize)
 		buf := make([]byte, size)
@@ -204,7 +249,7 @@ func Processor(ws *websocket.Conn) {
 			return
 		}
 
-		// ignore packet which send from ws client
+		// 忽略是WebSocket客户端发送的帧
 		if head.Type == 1 {
 			continue
 		}
@@ -278,6 +323,7 @@ func main() {
 
 	http.Handle("/serv/playback", websocket.Handler(Processor))
 	http.HandleFunc("/serv/listfile", addDefaultHeaders(ListFileHandler))
+	http.HandleFunc("/serv/deletefile", addDefaultHeaders(DeleteFileHandler))
 
 	log.Print("Playback Server: Listen on WebSocket ", listen_addr)
 	err := http.ListenAndServe(listen_addr, nil)
