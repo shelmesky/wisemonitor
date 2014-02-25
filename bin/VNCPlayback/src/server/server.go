@@ -185,8 +185,27 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(json_buf)
 }
 
+// 从WebSocket客户端接收等待信号
+func WaitRead(ws *websocket.Conn, notify chan<- bool) {
+	buf := make([]byte, 8)
+	_, err := ws.Read(buf)
+	if err != nil {
+		log.Println("Playback Server: Read data from client failed: ", err)
+	}
+	data, _ := strconv.Atoi(string(recorder.GetValidByte(buf)))
+	if data == 800 {
+		notify <- true
+	}
+}
+
 // 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
+	// 设置WebSocket内容的编码类型为Binary
+	ws.PayloadType = 2
+
+	notify_chan := make(chan bool, 1)
+	go WaitRead(ws, notify_chan)
+
 	var filename string
 	ws_query := ws.Request().URL.Query()
 	if value, ok := ws_query["filename"]; ok {
@@ -203,8 +222,6 @@ func Processor(ws *websocket.Conn) {
 
 	// 设置开始时间
 	start_time = getNowMillisecond()
-	// 设置WebSocket内容的编码类型为Binary
-	ws.PayloadType = 2
 
 	// 打开VNC记录文件
 	file, err := os.Open("./data/" + filename)
@@ -216,76 +233,85 @@ func Processor(ws *websocket.Conn) {
 
 	// 循环发送VNC记录文件，直到文件结束
 	for {
-		size := int64(headSize)
-		buf := make([]byte, size)
+		select {
+		case quit := <-notify_chan:
+			if quit == true {
+				log.Println("Receive Close Signal, Quit Now.")
+				goto end
+			}
+		default:
+			size := int64(headSize)
+			buf := make([]byte, size)
 
-		n, err := file.Read(buf)
-		if err == io.EOF {
-			log.Print("Playback Server: got EOF in Read head")
-			break
-		}
-		if err != nil {
-			log.Print("Playback Server: Failed to Read Head", err)
-			break
-		}
-		if n != int(size) {
-			log.Print("Playback Server: invlid head size.")
-			break
-		}
+			n, err := file.Read(buf)
+			if err == io.EOF {
+				log.Print("Playback Server: got EOF in Read head")
+				goto end
+			}
+			if err != nil {
+				log.Print("Playback Server: Failed to Read Head", err)
+				goto end
+			}
+			if n != int(size) {
+				log.Print("Playback Server: invlid head size.")
+				goto end
+			}
 
-		err = binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &head)
-		if err != nil {
-			log.Print("Playback Server: Failed to Parse Head: ", err)
-			break
-		}
+			err = binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &head)
+			if err != nil {
+				log.Print("Playback Server: Failed to Parse Head: ", err)
+				goto end
+			}
 
-		buf = make([]byte, head.BodyLength)
-		n, err = file.Read(buf)
-		if err == io.EOF {
-			log.Print("Playback Server: got EOF in Read body")
-			break
-		}
-		if err != nil {
-			log.Print("Playback Server: Failed to Read Boby: ", err)
-			break
-		}
-		if n != int(head.BodyLength) {
-			log.Print("Playback Server: invlid body size.")
-			break
-		}
+			buf = make([]byte, head.BodyLength)
+			n, err = file.Read(buf)
+			if err == io.EOF {
+				log.Print("Playback Server: got EOF in Read body")
+				goto end
+			}
+			if err != nil {
+				log.Print("Playback Server: Failed to Read Boby: ", err)
+				goto end
+			}
+			if n != int(head.BodyLength) {
+				log.Print("Playback Server: invlid body size.")
+				goto end
+			}
 
-		// 忽略是WebSocket客户端发送的帧
-		if head.Type == 1 {
-			continue
-		}
+			// 忽略是WebSocket客户端发送的帧
+			if head.Type == 1 {
+				continue
+			}
 
-		now := getNowMillisecond()
-		toffset := now - start_time
+			now := getNowMillisecond()
+			toffset := now - start_time
 
-		var delay uint32
-		if head.TimeDelta <= uint32(toffset) {
-			delay = 1
-		} else {
-			delay = (head.TimeDelta) - uint32(toffset)
-		}
-		sleep := time.Duration(int(delay)) * time.Millisecond
+			var delay uint32
+			if head.TimeDelta <= uint32(toffset) {
+				delay = 1
+			} else {
+				delay = (head.TimeDelta) - uint32(toffset)
+			}
+			sleep := time.Duration(int(delay)) * time.Millisecond
 
-		time.Sleep(sleep)
+			time.Sleep(sleep)
 
-		n, err = ws.Write(buf)
-		if err == syscall.EPIPE {
-			log.Print("Playback Server: Websocket Got Broken PIPE")
-			break
-		} else if err != nil {
-			log.Print("Playback Server: Websocket Write Failed")
-			log.Print(err)
-			break
-		}
-		if n != int(head.BodyLength) {
-			log.Print("Playback Server: Send body failed")
-			break
+			n, err = ws.Write(buf)
+			if err == syscall.EPIPE {
+				log.Print("Playback Server: Websocket Got Broken PIPE")
+				goto end
+			} else if err != nil {
+				log.Print("Playback Server: Websocket Write Failed")
+				log.Print(err)
+				goto end
+			}
+			if n != int(head.BodyLength) {
+				log.Print("Playback Server: Send body failed")
+				goto end
+			}
 		}
 	}
+end:
 	log.Println("Playback Server: Close WebSocket Connection")
 }
 

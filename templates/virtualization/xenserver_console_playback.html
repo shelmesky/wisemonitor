@@ -11,9 +11,8 @@ VNC回放
 	$(document).ready(function(){
 		$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
 		$('#myModal').on('hidden', function () {
-			window.location.reload();
 			rfb.disconnect();
-			ws.close();
+			ws.send(800)
 			console.log("Close WebSocket...")
 		});
 	});
@@ -103,7 +102,7 @@ VNC回放
             <a href="/virtual/xenserver/{{ host_address }}/vms/">VMS</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="#">{{ vm_info['name_label'] }}</a><span class="divider">/</span>
+            <a href="#">123</a><span class="divider">/</span>
         </li>
         <li>
             <a href="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/console/">Console</a><span class="divider">/</span>
@@ -190,12 +189,12 @@ VNC回放
 </div>
 
 
-<div class="modal hide fade" id="myModal" style="display: block; width: auto; height: auto;">
+<div class="modal hide fade" id="myModal" style="display: block; top: 270px; width: auto; margin: 0 0 0 100;">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal">×</button>
                 <h3>Playback</h3>
 	</div>
-	<div class="modal-body" style="height: 768px;">
+	<div class="modal-body" style="max-height: 570px;">
 		<div id="VNC_screen">
 		    <div id="VNC_status_bar" class="VNC_status_bar" style="margin-top: 0px;">
 			<table border=0 width=100%><tr>
@@ -206,10 +205,6 @@ VNC回放
 			Canvas not supported.
 		    </canvas>
 		</div>
-	</div>
-	<div class="modal-footer">
-		<a href="#" class="btn" data-dismiss="modal">Close</a>
-		<a href="#" class="btn btn-primary">Save changes</a>
 	</div>
 </div>
 

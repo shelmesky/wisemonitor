@@ -1,11 +1,11 @@
 package main
 
 import (
+	"code.google.com/p/go.net/websocket"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
-	"code.google.com/p/go.net/websocket"
 )
 
 var port *int = flag.Int("p", 23456, "Port to listen.")
@@ -27,14 +27,14 @@ func readWriteServer(ws *websocket.Conn) {
 		// Next Read will read next at most 100 bytes.
 		n, err := ws.Read(buf)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error Read: ", err)
 			break
 		}
 		fmt.Printf("recv:%q\n", buf[:n])
 		// Write send a message to the client.
 		n, err = ws.Write(buf[:n])
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Error Write: ", err)
 			break
 		}
 		fmt.Printf("send:%q\n", buf[:n])

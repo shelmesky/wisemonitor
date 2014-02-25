@@ -227,9 +227,9 @@ class XenServer_VM_Console_Playback(WiseHandler):
         url = "http://127.0.0.1:23456/serv/listfile" + query
         logger.debug(url)
         response = yield http_client.fetch(url)
-        vm_info = get_vm_info(host, vm_ref)
+        #vm_info = get_vm_info(host, vm_ref)
         result = json.loads(response.body)
         files = result['data']
         self.render("virtualization/xenserver_console_playback.html", files=files,
-                    host_address=host, vm_info=vm_info, vm_ref=vm_ref)
+                    host_address=host, vm_ref=vm_ref)
     
