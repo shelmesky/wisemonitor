@@ -234,12 +234,14 @@ class XenServer_VM_Console_Playback(WiseHandler):
         except Exception, e:
             vm_info = get_vm_info(host, vm_ref)
             if e.code == 404 or e.code == 500:
-                self.render("virtualization/xenserver_console_playback.html", files=None,
-                            host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=1)
+                self.render("virtualization/xenserver_console_playback.html",
+                            files=None, host_address=host, vm_info=vm_info,
+                            vm_ref=vm_ref, status=1, playback_server=None)
                 return
             else:
-                self.render("virtualization/xenserver_console_playback.html", files=None,
-                            host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=2)
+                self.render("virtualization/xenserver_console_playback.html",
+                            files=None, host_address=host, vm_info=vm_info,
+                            vm_ref=vm_ref, status=2, playback_server=None)
                 return
         else:
             vm_info = get_vm_info(host, vm_ref)

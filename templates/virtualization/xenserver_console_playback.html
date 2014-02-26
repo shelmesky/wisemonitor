@@ -8,7 +8,11 @@ VNC回放
     <script src="/js/playback/util.js"></script>
     <script src="/js/playback/webutil.js"></script>
     <script type="text/javascript">
-	var playback_server = "{{ playback_server }}";	
+	{% if playback_server %}
+		var playback_server = "{{ playback_server }}";
+	{% else %}
+		var playback_server = "127.0.0.1:23456";
+	{% end %}
 	
 	$(document).ready(function(){
 		$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
