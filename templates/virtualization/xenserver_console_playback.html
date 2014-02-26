@@ -23,8 +23,6 @@ VNC回放
 	}
 	
         var INCLUDE_URI= "/js/playback/";
-        // TODO: Data file should override
-        var VNC_frame_encoding = "base64";
 
         var start_time;
 
@@ -57,7 +55,6 @@ VNC回放
 
         function start(fname) {
 
-            var VNC_frame_encoding = 'binary';
             recv_message = rfb.testMode(send_array, VNC_frame_encoding);
 	    $("#myModal").modal({'show':true})
             run_client(fname);
@@ -83,6 +80,47 @@ VNC回放
             rfb = new RFB({'target': $D('VNC_canvas'),
                            'updateState': updateState});
         }
+	
+	ajax_get = function(url, datatype,
+			 success_callback, error_callback) {
+		if (datatype == undefined) {
+			datatype == 'json';
+		}
+		method = "GET";
+		$.ajax({
+			url: url,
+			type: method,
+			dataType: datatype,
+			success: success_callback,
+			error: error_callback
+		})
+	}
+	
+	function do_delete_file(filename) {
+		var base_url = "http://127.0.0.1:23456/serv/deletefile?filename="
+		var url = base_url + filename;
+		ajax_get(
+			url,
+			'json',
+			function (args) {
+				window.location.reload();
+			},
+			function (args) {
+				alert("删除失败.")
+			}
+		);
+	}
+	
+	function confirm_delete(filename) {
+			var msg = "确实要删除文件吗?";
+			var ret = window.confirm(msg);
+			if(ret) {
+				do_delete_file(filename);				
+			} else {
+				return false;
+			}
+			
+	}
 	</script>
 {% end %}
 
@@ -102,7 +140,7 @@ VNC回放
             <a href="/virtual/xenserver/{{ host_address }}/vms/">VMS</a><span class="divider">/</span>
         </li>
         <li>
-            <a href="#">123</a><span class="divider">/</span>
+            <a href="#">{{ vm_info['name_label'] }}</a><span class="divider">/</span>
         </li>
         <li>
             <a href="/virtual/xenserver/{{ host_address }}/vms/{{ vm_ref }}/console/">Console</a><span class="divider">/</span>
@@ -157,30 +195,40 @@ VNC回放
                            </tr>
                         </thead>
                         
-                        <tbody>
-			{% for file in files %}
-				{% if file['id'] & 1 == 0 %}
-                                <tr class="odd">
-				{% else %}
-				<tr class="even">
+			{% if status == 0 %}
+	                        <tbody>
+				{% for file in files %}
+					{% if file['id'] & 1 == 0 %}
+					<tr class="odd">
+					{% else %}
+					<tr class="even">
+					{% end %}
+					    <td class="center">{{ file['id'] }}</td>
+					    <td class="center">{{ file['filesize'] }}</td>
+					    <td class="center">{{ file['starttime'] }}</td>
+					    <td class="center">{{ file['endtime'] }}</td>
+					    <td class="center">{{ file['duration'] }}</td>
+					    <td class="center">{{ file['client'] }}</td>
+					    <td class="center">
+						<a class="btn btn-success" href="#" onclick="playback('{{ file['filename'] }}');">
+						    <i class="icon-zoom-in icon-white"></i>播放
+						</a>
+						<a class="btn btn-danger" href="#" onclick="confirm_delete('{{ file['filename'] }}');">
+						    <i class="icon-trash"></i>删除
+						</a>
+					    </td>
+					</tr>
 				{% end %}
-                                    <td class="center">{{ file['id'] }}</td>
-                                    <td class="center">{{ file['filesize'] }}</td>
-                                    <td class="center">{{ file['starttime'] }}</td>
-                                    <td class="center">{{ file['endtime'] }}</td>
-                                    <td class="center">{{ file['duration'] }}</td>
-                                    <td class="center">{{ file['client'] }}</td>
-                                    <td class="center">
-					<a class="btn btn-success" href="#" onclick="playback('{{ file['filename'] }}');">
-                                            <i class="icon-zoom-in icon-white"></i>播放
-                                        </a>
-					<a class="btn btn-danger" href="#">
-                                            <i class="icon-trash"></i>删除
-                                        </a>
-                                    </td>
-                                </tr>
+				</tbody>
+			{% elif status== 1 %}
+	                        <tbody>
+						无数据
+				</tbody>
+			{% elif status == 2 %}
+	                        <tbody>
+						无法连接Playback服务器
+				</tbody>
 			{% end %}
-			</tbody>
 			</table>
                 </div>
             </div>

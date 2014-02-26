@@ -225,11 +225,22 @@ class XenServer_VM_Console_Playback(WiseHandler):
         http_client = AsyncHTTPClient()
         query = "?host=%s&vm_uuid=%s" % (host, vm_ref)
         url = "http://127.0.0.1:23456/serv/listfile" + query
-        logger.debug(url)
-        response = yield http_client.fetch(url)
-        #vm_info = get_vm_info(host, vm_ref)
-        result = json.loads(response.body)
-        files = result['data']
-        self.render("virtualization/xenserver_console_playback.html", files=files,
-                    host_address=host, vm_ref=vm_ref)
+        try:
+            response = yield http_client.fetch(url)
+        except Exception, e:
+            vm_info = get_vm_info(host, vm_ref)
+            if e.code == 404 or e.code == 500:
+                self.render("virtualization/xenserver_console_playback.html", files=None,
+                            host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=1)
+                return
+            else:
+                self.render("virtualization/xenserver_console_playback.html", files=None,
+                            host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=2)
+                return
+        else:
+            vm_info = get_vm_info(host, vm_ref)
+            result = json.loads(response.body)
+            files = result['data']
+            self.render("virtualization/xenserver_console_playback.html", files=files,
+                        host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=0)
     

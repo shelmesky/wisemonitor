@@ -118,6 +118,11 @@ func getNowMillisecond() int64 {
 
 // 删除虚拟机VNC记录文件
 func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With")
+	w.Header().Set("Access-Control-Max-Age", "86400")
+
 	query := r.URL.Query()
 	var filename string
 
