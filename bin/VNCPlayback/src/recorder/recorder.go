@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"path"
 	"time"
 	"unsafe"
 )
@@ -32,6 +33,11 @@ type Head struct {
 
 type HeadReply struct {
 	Status int32
+}
+
+func Exist(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil || os.IsExist(err)
 }
 
 func GetValidByte(src []byte) []byte {
@@ -115,6 +121,16 @@ func Handler(conn net.Conn) {
 	client_address := string(GetValidByte(vm_info.ClientAddress[:]))
 
 	// Open Record file to write
+	pwd, _ := os.Getwd()
+	data_dir := path.Join(pwd, "data")
+	if !Exist(data_dir) {
+		err := os.Mkdir(data_dir, 0775)
+		if err != nil {
+			log.Println("Recorder Server: Mkdir Failed: ", err)
+		}
+		log.Println("Recorder Server: Mkdir: ", data_dir)
+	}
+
 	rand_int := rand.New(rand.NewSource(time.Now().UnixNano()))
 	fname := fmt.Sprintf("./data/%s_%s_%s_%s_%d.dat",
 		host, vm_ref, start_time, client_address, rand_int.Intn(100000))

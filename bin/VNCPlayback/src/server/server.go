@@ -163,7 +163,7 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		log.Println("Playback Server: Not Found:", fullpath)
-		http.Error("Not Exist", 404)
+		http.Error(w, "Not Exist", 404)
 		return
 	}
 }
@@ -252,8 +252,19 @@ func Processor(ws *websocket.Conn) {
 	// 设置开始时间
 	start_time = getNowMillisecond()
 
+	// 判断文件路径是否正确
+	pwd, _ := os.Getwd()
+	fullpath := path.Join(pwd, "data", filename)
+	fullpath = path.Clean(fullpath)
+	fullpath_dir := path.Dir(fullpath)
+	correct_dir := path.Join(pwd, "data")
+	if fullpath_dir != correct_dir {
+		log.Println("Playback Server: Bad File Path To Open: ", fullpath)
+		return
+	}
+
 	// 打开VNC记录文件
-	file, err := os.Open("./data/" + filename)
+	file, err := os.Open(fullpath)
 	if err != nil {
 		log.Println("Playback Server: Failed to open VNC Data file: ", err)
 		return
