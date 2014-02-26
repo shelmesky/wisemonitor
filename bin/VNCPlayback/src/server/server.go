@@ -135,13 +135,25 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var file_exist bool = true
+
+	// 判断文件路径是否正确
+	pwd, _ := os.Getwd()
+	fullpath := path.Join(pwd, "data", filename)
+	fullpath = path.Clean(fullpath)
+	fullpath_dir := path.Dir(fullpath)
+	correct_dir := path.Join(pwd, "data")
+	if fullpath_dir != correct_dir {
+		log.Println("Playback Server: Bad File Path To Delete: ", fullpath)
+		http.Error(w, "Bad File", 403)
+		return
+	}
+
 	// 判断文件是否存在
-	fullpath := path.Join("data", filename)
 	if !Exist(fullpath) {
 		file_exist = false
 	}
 
-	// 从文件系统上删除文件
+	// 删除文件
 	if file_exist {
 		log.Println("Playback Server: Delete file:", fullpath)
 		err := os.Remove(fullpath)
@@ -149,6 +161,10 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 			// 删除文件失败后，只记录日志
 			log.Println("Playback Server: Delete file failed :", err)
 		}
+	} else {
+		log.Println("Playback Server: Not Found:", fullpath)
+		http.Error("Not Exist", 404)
+		return
 	}
 }
 
