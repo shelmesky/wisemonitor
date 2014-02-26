@@ -191,7 +191,7 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // 从WebSocket客户端接收等待信号
-func WaitRead(ws *websocket.Conn, notify chan<- bool) {
+func WaitRead(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.Timer) {
 	buf := make([]byte, 8)
 	_, err := ws.Read(buf)
 	if err != nil {
@@ -199,17 +199,22 @@ func WaitRead(ws *websocket.Conn, notify chan<- bool) {
 	}
 	data, _ := strconv.Atoi(string(recorder.GetValidByte(buf)))
 	if data == 800 {
-		notify <- true
+		// 取消定时器，发送结束信号
+		(*timer).Reset(time.Duration(time.Nanosecond))
+		notify_stop_chan <- true
 	}
 }
 
 // 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
+	//定时器
+	var timer *time.Timer
+
 	// 设置WebSocket内容的编码类型为Binary
 	ws.PayloadType = 2
 
 	notify_chan := make(chan bool, 1)
-	go WaitRead(ws, notify_chan)
+	go WaitRead(ws, notify_chan, &timer)
 
 	var filename string
 	ws_query := ws.Request().URL.Query()
@@ -239,9 +244,10 @@ func Processor(ws *websocket.Conn) {
 	// 循环发送VNC记录文件，直到文件结束
 	for {
 		select {
+		// 从channel中读取信号，并退出函数
 		case quit := <-notify_chan:
 			if quit == true {
-				log.Println("Receive Close Signal, Quit Now.")
+				log.Println("Receive Close Signal, Quit Goroutine Now.")
 				goto end
 			}
 		default:
@@ -299,7 +305,8 @@ func Processor(ws *websocket.Conn) {
 			}
 			sleep := time.Duration(int(delay)) * time.Millisecond
 
-			time.Sleep(sleep)
+			timer = time.NewTimer(sleep)
+			<-timer.C
 
 			n, err = ws.Write(buf)
 			if err == syscall.EPIPE {
