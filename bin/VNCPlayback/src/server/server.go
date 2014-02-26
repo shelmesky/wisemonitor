@@ -277,7 +277,7 @@ func Processor(ws *websocket.Conn) {
 		// 从channel中读取信号，并退出函数
 		case quit := <-notify_chan:
 			if quit == true {
-				log.Println("Receive Close Signal, Quit Goroutine Now.")
+				log.Println("Playback Server: Receive Close Signal, Quit Goroutine Now.")
 				goto end
 			}
 		default:
