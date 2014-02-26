@@ -846,11 +846,10 @@ Sec-WebSocket-Accept: %s\r
                     self.msg(traceback.format_exc())
         finally:
 
-            if attached_object.client and attached_object.client != startsock:
+            if attached_object.client:
                 # Close the SSL wrapped socket
                 # Original socket closed by caller
                 attached_object.client.close()
-                attached_object.rec.close()
 
     def new_client(self):
         """ Do something with a WebSockets client connection. """
