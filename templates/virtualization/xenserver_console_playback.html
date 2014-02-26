@@ -8,6 +8,8 @@ VNC回放
     <script src="/js/playback/util.js"></script>
     <script src="/js/playback/webutil.js"></script>
     <script type="text/javascript">
+	var playback_server = "{{ playback_server }}";	
+	
 	$(document).ready(function(){
 		$("#xenserver_menu").attr({"class": "active", "style": "margin-left: -2px;"});
 		$('#myModal').on('hidden', function () {
@@ -57,7 +59,7 @@ VNC回放
 
             recv_message = rfb.testMode(send_array, VNC_frame_encoding);
 	    $("#myModal").modal({'show':true})
-            run_client(fname);
+            run_client(fname, playback_server);
         }
 
         function finish() {
@@ -97,7 +99,8 @@ VNC回放
 	}
 	
 	function do_delete_file(filename) {
-		var base_url = "http://127.0.0.1:23456/serv/deletefile?filename="
+		var http_protocol = "http://";
+		var base_url = http_protocol + playback_server + "/serv/deletefile?filename="
 		var url = base_url + filename;
 		ajax_get(
 			url,

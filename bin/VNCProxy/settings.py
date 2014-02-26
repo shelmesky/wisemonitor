@@ -12,6 +12,10 @@ XEN = (
     ("192.2.4.10", "root", "123456",),
 )
 
+# VNC Record Server
+VNC_RECORD_SERVER_IP = "127.0.0.1"
+VNC_RECORD_SERVER_PORT = 23457
+
 try:
     from local_conf import *
 except:

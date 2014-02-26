@@ -222,9 +222,13 @@ class XenServer_VM_Console_Playback(WiseHandler):
     @gen.coroutine
     @require_login
     def get(self, host, vm_ref):
+        playback_server_ip = settings.VNC_PLAYBACK_SERVER_IP
+        playback_server_port = str(settings.VNC_PLAYBACK_SERVER_PORT)
+        playback_server = playback_server_ip + ":" + playback_server_port
+        
         http_client = AsyncHTTPClient()
         query = "?host=%s&vm_uuid=%s" % (host, vm_ref)
-        url = "http://127.0.0.1:23456/serv/listfile" + query
+        url = "http://%s/serv/listfile" % playback_server + query
         try:
             response = yield http_client.fetch(url)
         except Exception, e:
@@ -241,6 +245,7 @@ class XenServer_VM_Console_Playback(WiseHandler):
             vm_info = get_vm_info(host, vm_ref)
             result = json.loads(response.body)
             files = result['data']
-            self.render("virtualization/xenserver_console_playback.html", files=files,
-                        host_address=host, vm_info=vm_info, vm_ref=vm_ref, status=0)
+            self.render("virtualization/xenserver_console_playback.html",
+                        files=files, host_address=host, vm_info=vm_info,
+                        vm_ref=vm_ref,status=0, playback_server=playback_server)
     

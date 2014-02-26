@@ -114,6 +114,11 @@ API_SERVER_LOG = "api_server.log"
 # Check SNMP Interface command in Nagios
 NAGIOS_CHECK_SNMP_INT_COMMAND = "check_snmp_int_v2"
 
+# VNC Playback Server
+VNC_PLAYBACK_SERVER_IP = "127.0.0.1"
+VNC_PLAYBACK_SERVER_PORT = 23456
+
+
 try:
     from local_conf import *
 except Exception, e:

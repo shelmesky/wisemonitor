@@ -147,7 +147,9 @@ class WebSocketProxy(websockify.WebSocketProxy):
             # Send VMInfo to Recorder Server
             self.msg("Send VM info to Record server")
             try:
-                record_sock = socket.create_connection(("127.0.0.1", 23457), 3)
+                record_server_ip = settings.VNC_RECORD_SERVER_IP
+                record_server_port = settings.VNC_RECORD_SERVER_PORT
+                record_sock = socket.create_connection((record_server_ip, record_server_port), 3)
                 record_sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
                 rec_fd = record_sock.makefile()
                 rec_fd.write(vm_info)

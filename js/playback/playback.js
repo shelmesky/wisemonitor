@@ -56,8 +56,9 @@ function BinaryToString(binary) {
     }
 }
 
-run_client = function (fname) {
-    var path = "ws://localhost:23456/serv/playback?filename=";
+run_client = function (fname, playback_server) {
+    var ws_protocol = "ws://";
+    var path = ws_protocol + playback_server + "/serv/playback?filename=";
     path += fname
     ws = new WebSocket(path);
     rfb.connect('test', 0, "bogus");
