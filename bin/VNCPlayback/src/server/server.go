@@ -192,6 +192,9 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 
 // 从WebSocket客户端接收等待信号
 func WaitRead(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.Timer) {
+	// 设置Read Deadline为24小时
+	ws.SetReadDeadline(time.Now().Add(86400 * time.Second))
+
 	buf := make([]byte, 8)
 	_, err := ws.Read(buf)
 	if err != nil {
