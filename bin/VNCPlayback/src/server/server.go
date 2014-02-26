@@ -155,7 +155,7 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 删除文件
 	if file_exist {
-		log.Println("Playback Server: Delete file:", fullpath)
+		log.Println("Playback Server: Delete file:", filename)
 		err := os.Remove(fullpath)
 		if err != nil {
 			// 删除文件失败后，只记录日志
