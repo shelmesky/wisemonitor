@@ -8,6 +8,8 @@ VNC回放
     <script src="/js/playback/util.js"></script>
     <script src="/js/playback/webutil.js"></script>
     <script type="text/javascript">
+	var paused = false;
+	
 	{% if playback_server %}
 		var playback_server = "{{ playback_server }}";
 	{% else %}
@@ -128,6 +130,21 @@ VNC回放
 			}
 			
 	}
+	
+	function pause() {
+		if (paused == false) {
+			ws.send(801);
+			paused = true;
+			var pause_button = $("#pause_button");
+			pause_button.html("<i class='icon-play'></i>恢复");
+		} else if(paused == true) {
+			ws.send(802);
+			paused = false;
+			var pause_button = $("#pause_button");
+			pause_button.html("<i class='icon-pause'></i>暂停");
+		}
+	}
+	
 	</script>
 {% end %}
 
@@ -247,7 +264,7 @@ VNC回放
 <div class="modal hide fade" id="myModal" style="display: block; top: 270px; width: auto; margin: 0 0 0 100;">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal">×</button>
-                <h3>Playback</h3>
+                <h3>Playback</h3> <button id="pause_button" class="btn btn-danger" onclick="pause();"; style="display: inline-block;"><i class="icon-pause"></i>暂停</button>
 	</div>
 	<div class="modal-body" style="max-height: 570px;">
 		<div id="VNC_screen">

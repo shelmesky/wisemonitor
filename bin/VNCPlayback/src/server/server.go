@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -24,6 +25,8 @@ import (
 var (
 	start_time  int64
 	signal_chan chan os.Signal
+	mutex       sync.Mutex
+	cond        sync.Cond
 )
 
 const Layout = "2006-01-02 15:04:05"
@@ -206,34 +209,80 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(json_buf)
 }
 
-// 从WebSocket客户端接收等待信号
-func WaitRead(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.Timer) {
-	// 设置Read Deadline为24小时
-	ws.SetReadDeadline(time.Now().Add(86400 * time.Second))
+// 从WebSocket客户端接收信号
+func WaitSignal(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.Timer,
+	pause *bool, resume_chan chan bool, elapsed *int64) {
 
-	buf := make([]byte, 8)
-	_, err := ws.Read(buf)
-	if err != nil {
-		log.Println("Playback Server: Read data from client failed: ", err)
+	var start_time int64
+	var end_time int64
+
+	for {
+		// 设置Read Deadline为24小时
+		ws.SetReadDeadline(time.Now().Add(86400 * time.Second))
+
+		buf := make([]byte, 8)
+		_, err := ws.Read(buf)
+
+		if err != nil {
+			log.Println("Playback Server: Read data from client failed: ", err)
+			mutex.Lock()
+			(*timer).Reset(time.Duration(time.Nanosecond))
+			mutex.Unlock()
+			notify_stop_chan <- true
+			goto end
+		}
+
+		data, _ := strconv.Atoi(string(recorder.GetValidByte(buf)))
+		if data == 800 { // 关闭
+			// 如果执行了暂停，首先取消暂停
+			if *pause == true {
+				resume_chan <- true
+			}
+			// 取消定时器，发送结束信号
+			mutex.Lock()
+			(*timer).Reset(time.Duration(time.Nanosecond))
+			mutex.Unlock()
+			notify_stop_chan <- true
+			goto end
+		} else if data == 801 { // 暂停
+			if *pause == false {
+				// 设置暂停标志，记录暂停开始时间
+				*pause = true
+				start_time = getNowMillisecond()
+			}
+		} else if data == 802 { // 恢复
+			if *pause == true {
+				// 记录暂停结束时间，向恢复的channel发送信号
+				end_time = getNowMillisecond()
+				*elapsed += (end_time - start_time)
+				*pause = false
+				resume_chan <- true
+			}
+		}
 	}
-	data, _ := strconv.Atoi(string(recorder.GetValidByte(buf)))
-	if data == 800 {
-		// 取消定时器，发送结束信号
-		(*timer).Reset(time.Duration(time.Nanosecond))
-		notify_stop_chan <- true
-	}
+
+end:
+	ws.Close()
 }
 
 // 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
-	//定时器
+	// 发送定时器
 	var timer *time.Timer
+
+	// 暂停的标志
+	var pause bool = false
+	// 接收恢复信号的同步channel
+	resume_chan := make(chan bool)
+
+	// 暂停时间的总和
+	var elapsed int64
 
 	// 设置WebSocket内容的编码类型为Binary
 	ws.PayloadType = 2
 
-	notify_chan := make(chan bool, 1)
-	go WaitRead(ws, notify_chan, &timer)
+	notify_chan := make(chan bool)
+	go WaitSignal(ws, notify_chan, &timer, &pause, resume_chan, &elapsed)
 
 	var filename string
 	ws_query := ws.Request().URL.Query()
@@ -245,9 +294,6 @@ func Processor(ws *websocket.Conn) {
 	}
 
 	defer ws.Close()
-	// 获取Head结构体大小
-	var head Head
-	const headSize = unsafe.Sizeof(head)
 
 	// 设置开始时间
 	start_time = getNowMillisecond()
@@ -281,75 +327,92 @@ func Processor(ws *websocket.Conn) {
 				goto end
 			}
 		default:
-			size := int64(headSize)
-			buf := make([]byte, size)
+			if !pause {
+				// 获取Head结构体大小
+				var head Head
+				const headSize = unsafe.Sizeof(head)
 
-			n, err := file.Read(buf)
-			if err == io.EOF {
-				log.Print("Playback Server: got EOF in Read head")
-				goto end
-			}
-			if err != nil {
-				log.Print("Playback Server: Failed to Read Head", err)
-				goto end
-			}
-			if n != int(size) {
-				log.Print("Playback Server: invlid head size.")
-				goto end
-			}
+				size := int64(headSize)
+				buf := make([]byte, size)
 
-			err = binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &head)
-			if err != nil {
-				log.Print("Playback Server: Failed to Parse Head: ", err)
-				goto end
-			}
+				n, err := file.Read(buf)
+				if err == io.EOF {
+					log.Print("Playback Server: got EOF in Read head")
+					goto end
+				}
+				if err != nil {
+					log.Print("Playback Server: Failed to Read Head", err)
+					goto end
+				}
+				if n != int(size) {
+					log.Print("Playback Server: invlid head size.")
+					goto end
+				}
 
-			buf = make([]byte, head.BodyLength)
-			n, err = file.Read(buf)
-			if err == io.EOF {
-				log.Print("Playback Server: got EOF in Read body")
-				goto end
-			}
-			if err != nil {
-				log.Print("Playback Server: Failed to Read Boby: ", err)
-				goto end
-			}
-			if n != int(head.BodyLength) {
-				log.Print("Playback Server: invlid body size.")
-				goto end
-			}
+				err = binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &head)
+				if err != nil {
+					log.Print("Playback Server: Failed to Parse Head: ", err)
+					goto end
+				}
 
-			// 忽略是WebSocket客户端发送的帧
-			if head.Type == 1 {
-				continue
-			}
+				buf = make([]byte, head.BodyLength)
+				n, err = file.Read(buf)
+				if err == io.EOF {
+					log.Print("Playback Server: got EOF in Read body")
+					goto end
+				}
+				if err != nil {
+					log.Print("Playback Server: Failed to Read Boby: ", err)
+					goto end
+				}
+				if n != int(head.BodyLength) {
+					log.Print("Playback Server: invlid body size.")
+					goto end
+				}
 
-			now := getNowMillisecond()
-			toffset := now - start_time
+				// 忽略是WebSocket客户端发送的帧
+				if head.Type == 1 {
+					continue
+				}
 
-			var delay uint32
-			if head.TimeDelta <= uint32(toffset) {
-				delay = 1
+				// 将文件中记录的暂停时间
+				// 加上elapsed作为补偿
+				head.TimeDelta += uint32(elapsed)
+
+				now := getNowMillisecond()
+				toffset := now - start_time
+
+				var delay uint32
+				if (head.TimeDelta) < uint32(toffset) {
+					delay = 1
+				} else {
+					delay = (head.TimeDelta) - uint32(toffset)
+				}
+				sleep := time.Duration(int(delay)) * time.Millisecond
+
+				mutex.Lock()
+				timer = time.NewTimer(sleep)
+				mutex.Unlock()
+				<-timer.C
+
+				n, err = ws.Write(buf)
+				if err == syscall.EPIPE {
+					log.Print("Playback Server: Websocket Got Broken PIPE")
+					goto end
+				} else if err != nil {
+					log.Print("Playback Server: Websocket Write Failed")
+					log.Print(err)
+					goto end
+				}
+				if n != int(head.BodyLength) {
+					log.Print("Playback Server: Send body failed")
+					goto end
+				}
+				log.Println("Send: " + strconv.Itoa(n) + " Bytes")
 			} else {
-				delay = (head.TimeDelta) - uint32(toffset)
-			}
-			sleep := time.Duration(int(delay)) * time.Millisecond
-
-			timer = time.NewTimer(sleep)
-			<-timer.C
-
-			n, err = ws.Write(buf)
-			if err == syscall.EPIPE {
-				log.Print("Playback Server: Websocket Got Broken PIPE")
-				goto end
-			} else if err != nil {
-				log.Print("Playback Server: Websocket Write Failed")
-				log.Print(err)
-				goto end
-			}
-			if n != int(head.BodyLength) {
-				log.Print("Playback Server: Send body failed")
-				goto end
+				// 如果已经暂停
+				// 则以阻塞的方式读取channel
+				<-resume_chan
 			}
 		}
 	}
