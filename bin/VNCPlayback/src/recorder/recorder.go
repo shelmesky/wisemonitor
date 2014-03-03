@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"syscall"
 	"time"
 	"unsafe"
 )
@@ -138,12 +139,18 @@ func Handler(conn net.Conn) {
 	rand_int := rand.New(rand.NewSource(time.Now().UnixNano()))
 	fname := fmt.Sprintf("./data/%s_%s_%s_%s_%d.dat",
 		host, vm_ref, start_time, client_address, rand_int.Intn(100000))
-	file, err := os.Create(fname)
+	file, err := os.OpenFile(fname, os.O_WRONLY|os.O_SYNC|os.O_TRUNC|os.O_CREATE, 0664|os.ModeExclusive)
 	if err != nil {
 		log.Print("Recorder Server: Open Data file failed: ", err)
 		return
 	}
 	defer file.Close()
+
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	if err != nil {
+		log.Printf("Recorder Server: Set %s Exclusive Lock Failed: %s\n", file.Name(), err)
+		return
+	}
 
 	// cancel the socket deadline
 	var zero time.Time
@@ -221,6 +228,11 @@ func Handler(conn net.Conn) {
 		}
 	}
 
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_UN|syscall.LOCK_NB)
+	if err != nil {
+		log.Printf("Recorder Server: UNLock %s Failed: %s\n", file.Name(), err)
+		return
+	}
 	log.Printf("Recorder Server: Client %s disconnected.", conn.RemoteAddr())
 }
 

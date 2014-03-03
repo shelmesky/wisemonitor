@@ -24,10 +24,7 @@ import (
 )
 
 var (
-	start_time  int64
 	signal_chan chan os.Signal
-	mutex       sync.Mutex
-	cond        sync.Cond
 	config      GlobalConfig
 	logfile     *os.File
 )
@@ -243,7 +240,7 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 
 // 从WebSocket客户端接收信号
 func WaitSignal(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.Timer,
-	pause *bool, resume_chan chan bool, elapsed *int64) {
+	pause *bool, resume_chan chan bool, elapsed *int64, mutex *sync.Mutex) {
 
 	var start_time int64
 	var end_time int64
@@ -258,7 +255,9 @@ func WaitSignal(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.T
 		if err != nil {
 			log.Println("Playback Server: Read data from client failed: ", err)
 			mutex.Lock()
-			(*timer).Reset(time.Duration(time.Nanosecond))
+			if (*timer) != nil {
+				(*timer).Reset(time.Duration(time.Nanosecond))
+			}
 			mutex.Unlock()
 			notify_stop_chan <- true
 			goto end
@@ -272,7 +271,9 @@ func WaitSignal(ws *websocket.Conn, notify_stop_chan chan<- bool, timer **time.T
 			}
 			// 取消定时器，发送结束信号
 			mutex.Lock()
-			(*timer).Reset(time.Duration(time.Nanosecond))
+			if (*timer) != nil {
+				(*timer).Reset(time.Duration(time.Nanosecond))
+			}
 			mutex.Unlock()
 			notify_stop_chan <- true
 			goto end
@@ -299,6 +300,9 @@ end:
 
 // 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
+	var start_time int64
+	var mutex sync.Mutex
+
 	log.Println("Playback Server: New WebSocket Client: ", ws.Request().RemoteAddr)
 
 	// 发送定时器
@@ -316,7 +320,7 @@ func Processor(ws *websocket.Conn) {
 	ws.PayloadType = 2
 
 	notify_chan := make(chan bool)
-	go WaitSignal(ws, notify_chan, &timer, &pause, resume_chan, &elapsed)
+	go WaitSignal(ws, notify_chan, &timer, &pause, resume_chan, &elapsed, &mutex)
 
 	var filename string
 	ws_query := ws.Request().URL.Query()
@@ -344,12 +348,18 @@ func Processor(ws *websocket.Conn) {
 	}
 
 	// 打开VNC记录文件
-	file, err := os.Open(fullpath)
+	file, err := os.OpenFile(fullpath, os.O_RDONLY, 0664)
 	if err != nil {
 		log.Println("Playback Server: Failed to open VNC Data file: ", err)
 		return
 	}
 	defer file.Close()
+
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_SH|syscall.LOCK_NB)
+	if err != nil {
+		log.Printf("Playback Server: Set %s Shared Lock Failed: %s\n", file.Name(), err)
+		return
+	}
 
 	// 循环发送VNC记录文件，直到文件结束
 	for {
@@ -450,6 +460,13 @@ func Processor(ws *websocket.Conn) {
 		}
 	}
 end:
+
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_UN|syscall.LOCK_NB)
+	if err != nil {
+		log.Printf("Playback Server: UNLock %s Failed: %s\n", file.Name(), err)
+		return
+	}
+
 	log.Println("Playback Server: Close WebSocket Connection: ", ws.Request().RemoteAddr)
 }
 
