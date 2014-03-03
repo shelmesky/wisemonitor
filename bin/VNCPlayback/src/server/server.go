@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,9 +28,19 @@ var (
 	signal_chan chan os.Signal
 	mutex       sync.Mutex
 	cond        sync.Cond
+	config      GlobalConfig
+	logfile     *os.File
 )
 
 const Layout = "2006-01-02 15:04:05"
+const ConfigFile = "./config.json"
+
+type GlobalConfig struct {
+	PlaybackListen string `json:"playback_server_listen"`
+	RecordListen   string `json:"record_server_listen"`
+	LogFile        string `json:"log_file"`
+	DataDir        string `json:"data_dir"`
+}
 
 type Head struct {
 	Type       int32
@@ -50,6 +61,27 @@ type FileInfo struct {
 type Filelist struct {
 	Status int        `json:"status"`
 	Data   []FileInfo `json:"data"`
+}
+
+func init() {
+	// parse  JSON config file
+	data, err := ioutil.ReadFile(ConfigFile)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// init log
+	logfile, err = os.OpenFile(config.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("Error opening file: %v", err)
+	}
+	log.SetOutput(logfile)
+	log.Println("Server Start")
 }
 
 func GetFileList(path, host, vm_uuid string) *Filelist {
@@ -441,6 +473,8 @@ func addDefaultHeaders(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	defer logfile.Close()
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	signal_chan = make(chan os.Signal, 10)

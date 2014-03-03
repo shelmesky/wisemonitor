@@ -133,6 +133,8 @@ func Handler(conn net.Conn) {
 		log.Println("Recorder Server: Mkdir: ", data_dir)
 	}
 
+	log.Printf("Recorder Server: Record For: [%s][%s]\n", host, vm_ref)
+
 	rand_int := rand.New(rand.NewSource(time.Now().UnixNano()))
 	fname := fmt.Sprintf("./data/%s_%s_%s_%s_%d.dat",
 		host, vm_ref, start_time, client_address, rand_int.Intn(100000))
