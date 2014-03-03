@@ -187,8 +187,31 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 删除文件
 	if file_exist {
+		// 判断文件是否加上强制锁
+		// 如果是说明有线程在写文件
+		file, err := os.OpenFile(fullpath, os.O_RDONLY, 0664)
+		if err != nil {
+			log.Println("Playback Server: Open file for delete failed: ", filename)
+			return
+		}
+		err = syscall.Flock(int(file.Fd()), syscall.LOCK_SH|syscall.LOCK_NB)
+		if err != nil {
+			log.Printf("Playback Server: Set %s Share Lock failed: %s\n", filename, err)
+			http.Error(w, "Access Denied", 403)
+			return
+		}
+
+		err = syscall.Flock(int(file.Fd()), syscall.LOCK_UN|syscall.LOCK_NB)
+		if err != nil {
+			log.Printf("Playback Server: UNLock %s failed: %s\n", filename, err)
+			http.Error(w, "Server Error", 500)
+			return
+		}
+
+		file.Close()
+
 		log.Println("Playback Server: Delete file:", filename)
-		err := os.Remove(fullpath)
+		err = os.Remove(fullpath)
 		if err != nil {
 			// 删除文件失败后，只记录日志
 			log.Println("Playback Server: Delete file failed :", err)
