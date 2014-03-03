@@ -51,6 +51,8 @@ func GetValidByte(src []byte) []byte {
 }
 
 func Handler(conn net.Conn) {
+	log.Println("Recorder Server: New Client: ", conn.RemoteAddr())
+
 	if v, ok := conn.(*net.TCPConn); ok {
 		v.SetLinger(0)
 	}

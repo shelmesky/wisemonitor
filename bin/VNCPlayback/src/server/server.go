@@ -267,6 +267,8 @@ end:
 
 // 处理WebSocket客户端的VNC重新播放
 func Processor(ws *websocket.Conn) {
+	log.Println("Playback Server: New WebSocket Client: ", ws.Request().RemoteAddr)
+
 	// 发送定时器
 	var timer *time.Timer
 
@@ -408,7 +410,6 @@ func Processor(ws *websocket.Conn) {
 					log.Print("Playback Server: Send body failed")
 					goto end
 				}
-				log.Println("Send: " + strconv.Itoa(n) + " Bytes")
 			} else {
 				// 如果已经暂停
 				// 则以阻塞的方式读取channel
@@ -417,7 +418,7 @@ func Processor(ws *websocket.Conn) {
 		}
 	}
 end:
-	log.Println("Playback Server: Close WebSocket Connection")
+	log.Println("Playback Server: Close WebSocket Connection: ", ws.Request().RemoteAddr)
 }
 
 func signalCallback() {
