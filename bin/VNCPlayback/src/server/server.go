@@ -243,8 +243,18 @@ func ListFileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Emptry VM UUID", 404)
 		return
 	}
+	
+	if !Exist(config.DataDir) {
+		err := os.Mkdir(config.DataDir, 0775)
+		if err != nil {
+			log.Println("Playback Server: Mkdir Failed: ", err)
+			http.Error(w, "Mkdir Failed", 500)
+			return
+		}
+		log.Println("Playback Server: Mkdir: ", config.DataDir)
+	}
 
-	filelist := GetFileList("./data", host, vm_uuid)
+	filelist := GetFileList(config.DataDir, host, vm_uuid)
 	json_buf, err := json.Marshal(filelist)
 	if err != nil {
 		log.Println("Playback Server: Marshal json failed: ", err)
