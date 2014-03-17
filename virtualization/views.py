@@ -244,8 +244,7 @@ class XenServer_VM_Console_Playback(WiseHandler):
                             vm_ref=vm_ref, status=2, playback_server=None)
                 return
         else:
-            #vm_info = get_vm_info(host, vm_ref)
-            vm_info = None
+            vm_info = get_vm_info(host, vm_ref)
             result = json.loads(response.body)
             files = result['data']
             self.render("virtualization/xenserver_console_playback.html",
