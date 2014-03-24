@@ -428,12 +428,12 @@
                         console.log(response);
 	                updater.cursor = response[response.length-1].message_id;
 	                updater.errorSleepTime = 500;
-	                window.setTimeout(updater.poll, 0);
                         scene.clear();
                         draw_refreshNode();
                         draw_saveNode();
                         poll_func();
                         draw_tipNode("OK");
+	                window.setTimeout(updater.poll, 100);
                     },
 
                     error: function(xhr, textStatus, error) {
