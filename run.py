@@ -8,6 +8,7 @@ import hashlib
 from httplib2 import urlparse
 import xmlrpclib
 import httplib
+import json
 
 import __init__
 from tornado import ioloop
@@ -25,6 +26,11 @@ from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
 from common.api.watch_xenserver_events import XenServer_Alerts_Watcher
 from common.alert_handlers.xenserver import xenserver_event_handler
+
+from common.api import mongo_api
+from common.api import mongo_driver
+
+from common.tree import make_tree
 
 from logger import logger
 import settings
@@ -65,6 +71,9 @@ class iApplication(web.Application):
     
         handlers = [
             (r"^/$", MainHandler),
+            (r"^/getdata/$", DataHandler),
+            (r"^/save_position/$", PositionHandler),
+            (r"^/node_config/$", NodeConfigHandler),
             (r"^/login/$", LoginHandler),
             (r"^/logout/$", LogoutHandler),
             (r"^/static/(.*)", web.StaticFileHandler, dict(path=settings['static_path'])),
@@ -78,6 +87,150 @@ class iApplication(web.Application):
         # custom http error handler
         handlers.append((r"/.*", PageNotFound))
         web.Application.__init__(self, handlers, **settings)
+
+
+def get_state(host):
+    '''
+    取得每个主机的状态和保存的拓扑图的坐标
+    如果无坐标，则主机出现在拓扑图的0,0处
+    '''
+    state = {}
+    c = mongo_api.MongoExecuter(mongo_driver.db_handler)
+    data = c.query_one("nagios_host_status", {"host": host})
+    if data:
+        state["status"] = data["return_code"]
+        state["X"] = data.get("X", 0)
+        state["Y"] = data.get("Y", 0)
+        state["node_type"] = data.get("node_type", "host")
+        return state
+
+
+def get_allhost_state():
+    '''
+    取得所有主机和主机服务的状态
+    '''
+    hosts = {}
+    c = mongo_api.MongoExecuter(mongo_driver.db_handler)
+    data = c.query("nagios_host_status", {})
+    for host in data:
+        host_name = host["host"]
+        hosts[host_name] = {}
+        hosts[host_name]["last_update"] = str(host["last_update"])
+        hosts[host_name]["output"] = host["output"]
+        
+        host_service_status = c.query("nagios_service_status", {"host": host_name})
+        hosts[host_name]["service_ok"] = 0
+        hosts[host_name]["service_warn"] = 0
+        hosts[host_name]["service_critical"] = 0
+        hosts[host_name]["service_unknow"] = 0
+        if host_service_status:
+            for host_service in host_service_status:
+                if host_service["return_code"] == 0:
+                    hosts[host_name]["service_ok"] += 1
+                if host_service["return_code"] == 1:
+                    hosts[host_name]["service_warn"] += 1
+                if host_service["return_code"] == 2:
+                    hosts[host_name]["service_critical"] += 1
+                if host_service["return_code"] == 3:
+                    hosts[host_name]["service_unknow"] += 1
+        
+        host_info = c.query_one("nagios_hosts", {"host_name": host_name})
+        if host_info:
+            hosts[host_name]["host_name"] = host_info["host_name"]
+            hosts[host_name]["host_alias"] = host_info["host_alias"]
+            hosts[host_name]["host_address"] = host_info["host_address"]
+            
+    return hosts
+
+
+def process_data(data):
+    '''
+    根据遍历拓扑树生成的二维结构
+    填充每个节点的信息
+    '''
+    host_dic = {}
+    for item in data:
+        parents = item["parent_hosts"]
+        if len(parents) > 0:
+            host_dic[item["host_name"]] = parents[0]["0"]
+        else:
+            host_dic[item["host_name"]] = None
+    iter_tree = make_tree(host_dic)
+    
+    last_tree = []
+    for item in iter_tree:
+        temp = {}
+        temp['root'] = {}
+        temp['root']["node"] = item['root']
+        temp['root']["data"] = get_state(item['root'])
+        temp['child'] = []
+        childs = item['child']
+        if len(childs) > 0:
+            for child in childs:
+                temp_child = {}
+                temp_child['node'] = child
+                temp_child['parent'] = host_dic.get(child)
+                temp_child["data"] = get_state(child)
+                temp['child'].append(temp_child)
+        last_tree.append(temp)
+    return last_tree
+    
+    
+class NodeConfigHandler(web.RequestHandler):
+    def post(self):
+        data = json.loads(self.request.body)
+        node_config = data["data"]
+        node_name = node_config.get("node_name", None)
+        node_type = node_config.get("node_type", None)
+        if node_name and node_type:
+            c = mongo_api.MongoExecuter(mongo_driver.db_handler)
+            c.update("nagios_host_status", {"host": node_name}, {"node_type": node_type})
+            self.set_header("Content-Type", "application/json")
+            self.write(json.dumps({"return_code" :0}))
+        else:
+            self.send_error(500)
+
+
+class PositionHandler(web.RequestHandler):
+    def post(self):
+        '''
+        保存所有节点在拓扑图中的坐标位置
+        并在settings集合中记录一个'top_has_saved'的标志
+        作为判断所有节点是否保存坐标的依据
+        '''
+        c = mongo_api.MongoExecuter(mongo_driver.db_handler)
+        data = json.loads(self.request.body)
+        node_position = data["data"]
+        for host_name, position in node_position.items():
+            c.update("nagios_host_status", {"host": host_name}, {"X": position["X"], "Y": position["Y"]})
+            
+        if not c.query_one("settings", {"topo_has_saved": 1}):
+            c.insert("settings", {"topo_has_saved": 1})
+        self.set_header("Content-Type", "application/json")
+        self.write(json.dumps({"return_code" :0}))
+
+
+class DataHandler(web.RequestHandler):
+    def get(self):
+        '''
+        返回前序遍历拓扑图生成的各子树的有序列表
+        并判断拓扑图中所有节点的坐标是否保存过
+        如果保存过前端使用保存的坐标显示节点
+        否则节点的位置自动显示
+        '''
+        c = mongo_api.MongoExecuter(mongo_driver.db_handler)
+        data = c.query("nagios_hosts", {})
+        result = process_data(data)
+        
+        data = c.query_one("settings", {})
+        top_has_saved = 0
+        if data:
+            top_has_saved = 1
+        
+        self.set_header("Content-Type", "application/json")
+        self.write(json.dumps({"data": result,
+                               "all_host_data": get_allhost_state(),
+                               "topo_has_saved": top_has_saved}))
 
 
 class MainHandler(WiseHandler):
