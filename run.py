@@ -103,6 +103,12 @@ def get_state(host):
         state["Y"] = data.get("Y", 0)
         state["node_type"] = data.get("node_type", "host")
         return state
+    else:
+        state["status"] = 0
+        state["X"] = 0
+        state["Y"] = 0
+        state["node_type"] = "host"
+        return state
 
 
 def get_allhost_state():

@@ -8,3 +8,6 @@ nohup ./start.sh &
 
 cd ../PerfGetter
 nohup python ./server.py &
+
+cd ../VNCPlayback/src/server
+nohup ./server &
