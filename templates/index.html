@@ -256,7 +256,13 @@
                     if (topo_has_saved == 0) {
                         cloudNode.layout = {type: 'star', radius:180, auto:true};
                     }
-                    scene.add(cloudNode);					
+                    scene.add(cloudNode);
+                    
+                    scene.addEventListener('mouseup', function(event){
+                        if (event.button == 0) {
+                                $("#contextmenu").hide();
+                        }
+                    });
                     
                     // draw all subtree
                     for(var i=0; i<response.length; i++) {
@@ -299,27 +305,31 @@
                         scene.add(link);
                         
                         // add mouse over menu
-                        node.addEventListener('mouseover', function(event){
-                            var node_type = nodes_data[event.target.name]["node_type"];
-                            var args = node_type + "','" + event.target.name;
-                            $("#menu_content").html(get_status(event.target.name));
-                            $("#menu_footer").html("<a href='/infra/server/" +  event.target.name + "/'>Detail</a>&nbsp;&nbsp;<a href='#' onclick=\"show_config_modal('" + args + "')\"'>Edit</a>");
-                            $("#node_type").attr("host_name", event.target.name);
-                            // show menu
-                            $("#contextmenu").css({
-                                //top: scene.stage.offsetY,
-                                //left: scene.stage.offsetX,
-                                top: event.pageY,
-                                left: event.pageX,
-                                display: "inline-table",
-                            }).show();
+                        node.addEventListener('mouseup', function(event){
+                            if (event.button == 2) {
+                                var node_type = nodes_data[event.target.name]["node_type"];
+                                var args = node_type + "','" + event.target.name;
+                                $("#menu_content").html(get_status(event.target.name));
+                                $("#menu_footer").html("<a href='/infra/server/" +  event.target.name + "/'>Detail</a>&nbsp;&nbsp;<a href='#' onclick=\"show_config_modal('" + args + "')\"'>Edit</a>");
+                                $("#node_type").attr("host_name", event.target.name);
+                                // show menu
+                                $("#contextmenu").css({
+                                    //top: scene.stage.offsetY,
+                                    //left: scene.stage.offsetX,
+                                    top: event.pageY,
+                                    left: event.pageX,
+                                    display: "inline-table",
+                                }).show();
+                            }
                         });
                         
+                        /*
                         // add mouse leave event
                         node.addEventListener('mouseout', function(event){
                                 // hide menu
                                 $("#contextmenu").hide();
                         });
+                        */
                         
                         var childs = response[i]["child"];
                         
@@ -367,26 +377,30 @@
                             }
                             
                             // add mouse over menu
-                            child_node.addEventListener('mouseover', function(event){
-                                // show menu
-                                var node_type = nodes_data[event.target.name]["node_type"];
-                                var args = node_type + "','" + event.target.name;
-                                $("#menu_content").html(get_status(event.target.name));
-                                $("#menu_footer").html("<a href='/infra/server/" +  event.target.name + "/'>Detail</a>&nbsp;&nbsp;<a href='#' onclick=\"show_config_modal('" + args + "')\"'>Edit</a>");
-                                $("#node_type").attr("host_name", event.target.name);
-                                $("#contextmenu").css({
-                                    //top: scene.stage.offsetY,
-                                    //left: scene.stage.offsetX,
-                                    top: event.pageY,
-                                    left: event.pageX + 15,
-                                }).show();
+                            child_node.addEventListener('mouseup', function(event){
+                                if (event.button == 2) {
+                                    // show menu
+                                    var node_type = nodes_data[event.target.name]["node_type"];
+                                    var args = node_type + "','" + event.target.name;
+                                    $("#menu_content").html(get_status(event.target.name));
+                                    $("#menu_footer").html("<a href='/infra/server/" +  event.target.name + "/'>Detail</a>&nbsp;&nbsp;<a href='#' onclick=\"show_config_modal('" + args + "')\"'>Edit</a>");
+                                    $("#node_type").attr("host_name", event.target.name);
+                                    $("#contextmenu").css({
+                                        //top: scene.stage.offsetY,
+                                        //left: scene.stage.offsetX,
+                                        top: event.pageY,
+                                        left: event.pageX + 15,
+                                    }).show();
+                                }
                             });
                             
+                            /*
                             // add mouse leave event
                             child_node.addEventListener('mouseout', function(event){
                                     // hide menu
                                     $("#contextmenu").hide();
                             });
+                            */
                         }
                     }
                     
