@@ -2,7 +2,7 @@
 #!--encoding:utf-8--
 
 from gevent import monkey
-monkey.patch_all()
+monkey.patch_all(thread=False)
 
 import os
 import sys
@@ -32,7 +32,8 @@ import process
 
 
 gs = []
-thread_queue = queue.JoinableQueue()
+#thread_queue = queue.JoinableQueue()
+thread_queue = Queue()
 global_xenserver_conn = {}
 
 
@@ -232,8 +233,7 @@ if __name__ == '__main__':
     gsignal(signal.SIGINT, server_exit)
     gsignal(signal.SIGTERM, server_exit)
     
-    
-    gs.append(gevent.spawn(process.process, thread_queue))
+    threading.Thread(target=process.process, args=(thread_queue, )).start()
     xen_manager = XenserverManager(q)
     gs.append(gevent.spawn(xen_manager.make_10m_perf_url))
     gs.append(gevent.spawn(xen_manager.make_2h_perf_url))
