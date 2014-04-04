@@ -14,18 +14,21 @@ import urllib
 import threading
 from Queue import Queue
 from urlparse import urlparse
+import json
+import copy
 
 import gevent
 from gevent import queue
 from gevent import Timeout
 from gevent import hub
 from gevent import signal as gsignal
+from gevent.pywsgi import WSGIServer
 import signal
 
 import XenAPI
 import settings
 from logger import logger
-from process import process
+import process
 
 
 gs = []
@@ -185,11 +188,43 @@ def spawner(queue):
         gs.append(gevent.spawn(http_getter, item))
 
 
+def make_perf_list(key_func):
+    vms_perf = copy.deepcopy(process.vms_performance_list)
+    vms_perf_list = vms_perf.items()
+    process.insert_sort(vms_perf_list, key_func)
+    vms_perf_list.reverse()
+    msg = json.dumps({"data": vms_perf_list})
+    return msg
+
+
+def application(env, start_response):
+    if env['PATH_INFO'] == '/status/cpu_usage':
+        start_response('200 OK', [("Content-Type", "application/json")])
+        msg = make_perf_list(lambda x: x[1]['cpu_usage'])
+        return [msg]
+    if env['PATH_INFO'] == '/status/network_io':
+        start_response('200 OK', [("Content-Type", "application/json")])
+        msg = make_perf_list(lambda x: x[1]['network_io'])
+        return [msg]
+    if env['PATH_INFO'] == '/status/disk_io':
+        start_response('200 OK', [("Content-Type", "application/json")])
+        msg = make_perf_list(lambda x: x[1]['disk_io'])
+        return [msg]
+    else:
+        start_response('404 Not Found', [("Content-Type", "application/json")])
+        msg = json.dumps({"data": "Not Found"})
+        return [msg]
+
+
 if __name__ == '__main__':
     #TODO: 设置监视greenlet
     q = queue.JoinableQueue()
     
+    wsgi_server = WSGIServer(('', 23458), application)
+    wsgi_server.start()
+    
     def server_exit():
+        wsgi_server.stop(0)
         gevent.killall(gs, block=False)
         
     gsignal(signal.SIGALRM, signal.SIG_IGN)
@@ -197,8 +232,8 @@ if __name__ == '__main__':
     gsignal(signal.SIGINT, server_exit)
     gsignal(signal.SIGTERM, server_exit)
     
-    gs.append(gevent.spawn(process, thread_queue))
     
+    gs.append(gevent.spawn(process.process, thread_queue))
     xen_manager = XenserverManager(q)
     gs.append(gevent.spawn(xen_manager.make_10m_perf_url))
     gs.append(gevent.spawn(xen_manager.make_2h_perf_url))
@@ -206,6 +241,7 @@ if __name__ == '__main__':
     gs.append(gevent.spawn(xen_manager.make_1y_perf_url))
     g_spawner = gevent.spawn(spawner, q)
     gs.append(g_spawner)
+
     try:
         g_spawner.run()
     except KeyboardInterrupt:
