@@ -15,6 +15,7 @@ from tornado import ioloop
 from tornado import gen
 from tornado import web
 from tornado.options import options, define
+from tornado.httpclient import AsyncHTTPClient
 
 from common.init import *
 from common.api.loader import load_url_handlers
@@ -36,6 +37,8 @@ from logger import logger
 import settings
 from settings import XEN
 from settings import MOTOR_DB as DB
+from settings import PERF_RANK_SERVER_IP as perf_rank_server
+from settings import PERF_RANK_SERVER_PORT as perf_rank_port
 
 
 global_xenserver_conn = {}
@@ -74,6 +77,7 @@ class iApplication(web.Application):
             (r"^/getdata/$", DataHandler),
             (r"^/save_position/$", PositionHandler),
             (r"^/node_config/$", NodeConfigHandler),
+            (r"^/perf_rank/([^/]+)/$", PerfRankHandler),
             (r"^/login/$", LoginHandler),
             (r"^/logout/$", LogoutHandler),
             (r"^/static/(.*)", web.StaticFileHandler, dict(path=settings['static_path'])),
@@ -180,6 +184,26 @@ def process_data(data):
                 temp['child'].append(temp_child)
         last_tree.append(temp)
     return last_tree
+
+
+def replace_uuid(data):
+    pass
+
+
+class PerfRankHandler(web.RequestHandler):
+    @gen.coroutine
+    def get(self, rank_type):
+        http_client = AsyncHTTPClient()
+        url = "http://" + perf_rank_server + ":" + str(perf_rank_port) + "/status/"
+        url += rank_type
+        response = yield http_client.fetch(url)
+        if response.code != 200:
+            raise response.error
+        body = response.body
+        if len(body) == 0:
+            raise RuntimeError("Empty Body")
+        body = json.loads(body)
+        body = replace_uuid(body)
     
     
 class NodeConfigHandler(web.RequestHandler):

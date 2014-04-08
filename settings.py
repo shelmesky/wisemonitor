@@ -118,6 +118,10 @@ NAGIOS_CHECK_SNMP_INT_COMMAND = "check_snmp_int_v2"
 VNC_PLAYBACK_SERVER_IP = "127.0.0.1"
 VNC_PLAYBACK_SERVER_PORT = 23456
 
+# Perf Rand Server
+PERF_RANK_SERVER_IP = "127.0.0.1"
+PERF_RANK_SERVER_PORT = 23458
+
 
 try:
     from local_conf import *
