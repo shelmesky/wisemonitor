@@ -60,6 +60,11 @@ def get_vm_ref_by_name(host_ip, vm_name):
 
 
 def get_vm_uuid_by_name(host_ip, vm_name):
+    """
+    得到单台VM的UUID
+    @host: XenServer主机
+    @vm_uuid: VM的name label
+    """
     session = global_xenserver_conn.get(host_ip, None)
     if session != None:
         try:
@@ -81,24 +86,27 @@ def get_vm_uuid_by_name(host_ip, vm_name):
         return ret, False
 
 
-def get_vm_info_by_uuid(host, vm_uuid):
+def get_vm_info_by_uuid(host_ip, vm_uuid):
     """
     得到单台VM的详细
     @host: XenServer主机
     @vm_uuid: VM的UUID
     """
-    for ip, session in global_xenserver_conn.items():
-        if ip == host:
-            try:
-                vms = session.xenapi.VM.get_all()
-            except Exception, e:
-                session = global_xenserver_conn.get(e.details[1])
-                vms = session.xenapi.VM.get_all()
-            for vm in vms:
-                record = session.xenapi.VM.get_record(vm)
-                if not record['is_a_template'] and not record['is_control_domain']:
-                    if record['uuid'] == vm_uuid:
-                        return record
+    session = global_xenserver_conn.get(host_ip, None)
+    if session != None:
+        try:
+            vm_ref = session.xenapi.VM.get_by_uuid(vm_uuid)
+        except Exception, e:
+            session = global_xenserver_conn.get(e.details[1], None)
+            vm_ref = session.xenapi.VM.get_by_uuid(vm_uuid)
+            
+        try:
+            vm_record = session.xenapi.VM.get_record(vm_ref[0])
+        except Exception, e:
+            logger.exception(e)
+            return
+        else:
+            return vm_record
 
 
 def get_vm_info(host, vm_ref):
