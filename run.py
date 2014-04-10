@@ -22,6 +22,7 @@ from common.api.loader import load_url_handlers
 from common.api import XenAPI
 from common.decorator import require_login
 from common.utils import TimeoutTransport
+from common.api import CloudStack as cloudstack_api
 
 from common.api import rabbitmq_client
 from common.alert_handlers.nagios import nagios_alert_handler
@@ -32,6 +33,7 @@ from common.api import mongo_api
 from common.api import mongo_driver
 
 from common.tree import make_tree
+
 
 from logger import logger
 import settings
@@ -77,7 +79,9 @@ class iApplication(web.Application):
             (r"^/getdata/$", DataHandler),
             (r"^/save_position/$", PositionHandler),
             (r"^/node_config/$", NodeConfigHandler),
+            (r"^/wizcloud_capacity/$", WizCloudCapacityHandler),
             (r"^/perf_rank/([^/]+)/$", PerfRankHandler),
+            (r"^/top_alerts/([^/]+)/$", TopAlertsHandler),
             (r"^/login/$", LoginHandler),
             (r"^/logout/$", LogoutHandler),
             (r"^/static/(.*)", web.StaticFileHandler, dict(path=settings['static_path'])),
@@ -185,13 +189,16 @@ def process_data(data):
         last_tree.append(temp)
     return last_tree
 
-
-def replace_uuid(data):
-    pass
+def get_cs_conn():
+    for cs_host in settings.CLOUD_STACKS:
+        host = 'http://' + cs_host['host'] + ':' + cs_host['port']
+        client = cloudstack_api.Client(host, cs_host['api_key'], cs_host['secret_key'])
+        return client
 
 
 class PerfRankHandler(web.RequestHandler):
     @gen.coroutine
+    @require_login
     def get(self, rank_type):
         http_client = AsyncHTTPClient()
         url = "http://" + perf_rank_server + ":" + str(perf_rank_port) + "/status/"
@@ -202,11 +209,64 @@ class PerfRankHandler(web.RequestHandler):
         body = response.body
         if len(body) == 0:
             raise RuntimeError("Empty Body")
-        body = json.loads(body)
-        body = replace_uuid(body)
+        self.set_header("Content-Type", "application/json")
+        self.write(body)
+
+
+class TopAlertsHandler(WiseHandler):
+    @require_login
+    @gen.coroutine
+    def get(self, alert_type):
+        top = 10
+        alerts = dict()
+        alerts['objects'] = []
+        if alert_type == "physical":
+            cond = {
+                "type": "physical_device",
+            }
+        elif alert_type == "virtual":
+            cond = {
+                "type": "xenserver"
+            }
+        else:
+            raise RuntimeError("Error alert_type")
+        cursor = DB.alerts.find(cond).sort([("created_time", -1)]).limit(top)
+        while(yield cursor.fetch_next):
+            alert = cursor.next_object()
+            alert.pop("_id")
+            alert['created_time'] = str(alert['created_time'])
+            alerts['objects'].append(alert)
+        self.set_header("Content-Type", "application/json")
+        self.write(alerts)
+
+
+class WizCloudCapacityHandler(web.RequestHandler):
+    @gen.coroutine
+    @require_login
+    def get(self):
+        client = get_cs_conn()
+        result = yield client.listZones()
+        response = result["listzonesresponse"]
+        if response['count'] > 0:
+            zone_id = response['zone'][0]['id']
+        else:
+            raise RuntimeError("No Zones in wizcloud")
+        capacitys = yield client.listCapacity(zoneid=zone_id, fetchlatest=True)
+        
+        zone = yield client.listZones(zoneid=zone_id)
+        zone_name = zone['listzonesresponse']['zone'][0]['name']
+        
+        final_data = {
+            'capacitys': capacitys,
+            'zone_id': zone_id,
+            'zone_name': zone_name,
+        }
+        self.set_header("Content-Type", "application/json")
+        self.write(json.dumps(final_data))
     
     
 class NodeConfigHandler(web.RequestHandler):
+    @require_login
     def post(self):
         data = json.loads(self.request.body)
         node_config = data["data"]
@@ -222,6 +282,7 @@ class NodeConfigHandler(web.RequestHandler):
 
 
 class PositionHandler(web.RequestHandler):
+    @require_login
     def post(self):
         '''
         保存所有节点在拓扑图中的坐标位置
@@ -241,6 +302,7 @@ class PositionHandler(web.RequestHandler):
 
 
 class DataHandler(web.RequestHandler):
+    @require_login
     def get(self):
         '''
         返回前序遍历拓扑图生成的各子树的有序列表
