@@ -5,6 +5,8 @@
 {% end %}
 
 {% block extra_head %}
+    <script src="/static/js/justgage.1.0.1.min.js"></script>
+    <script src="/static/js/raphael.2.1.0.min.js"></script>
     <script src="/static/js/excanvas.js"></script>
     <script src="/static/js/jquery.snippet.min.js"></script>
     <script src="/static/js/jtopo-0.3.6-min.js"></script>
@@ -43,6 +45,12 @@
             
             #configModal {
                 
+            }
+            
+            .capacity_guage {
+                width:150px; height:90px;
+                display: inline-block;
+                margin: 1em;
             }
     </style>	
         
@@ -465,6 +473,48 @@
                     }
                 };
                 updater.poll();
+                
+                
+                var cloud_capacity = {
+                    capacity_type: {
+                        0: "内存",
+                        1: "CPU",
+                        2: "存储",
+                        3: "已分配的主存储",
+                        4: "公用 IP 地址",
+                        5: "管理类 IP",
+                        6: "二级存储",
+                        7: "VLAN",
+                        8: "直接 IP",
+                        9: "本地存储"
+                    },
+                    errorSleepTime: 500,
+                    success: function(response, textStatus, xhr) {
+                        console.log(response);
+                        var capacitys = response.capacitys.listcapacityresponse.capacity;
+                        cloud_capacity.show_capacity(capacitys);
+                    },
+                    error: function(xhr, textStatus, error) {
+                        console.log(error);
+                    },
+                    poll: function() {
+                        wisemonitor.ajax_get("/wizcloud_capacity/", "json", cloud_capacity.success, cloud_capacity.error);
+                    },
+                    show_capacity: function(capacitys) {
+                        for (var i=0; i<capacitys.length; i++) {
+                            var g1 = new JustGage({
+                                id: "g" + i, 
+                                value: parseInt(capacitys[i].percentused),
+                                min: 0,
+                                max: 100,
+                                title: cloud_capacity.capacity_type[capacitys[i].type],
+                                label: "",
+                                levelColorsGradient: false
+                            });
+                        }
+                    }
+                };
+                cloud_capacity.poll();
         });
     </script>
 {% end %}
@@ -482,10 +532,56 @@
         <div id="menu_footer"></div>
     </div>
     
-    <div id="content">
-        <center>
-                <canvas width="1046" height="500" id="canvas" style="background-color: rgb(238, 238, 238); border: 1px solid rgb(68, 68, 68); cursor: default;"></canvas>
-        </center>
+    <div>
+        <div class="box span12">
+                <div class="box-header well" data-original-title>
+                    <h2><i class="icon-user"></i> &nbsp;拓扑图</h2>
+                    <div class="box-icon">
+                            <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+                            <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <div class="row-fluid">
+                        <div class="span12">
+                            <div id="content">
+                                <center>
+                                        <canvas width="1024" height="500" id="canvas" style="background-color: rgb(238, 238, 238); border: 1px solid rgb(68, 68, 68); cursor: default;"></canvas>
+                                </center>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    
+    <div>
+        <div class="box span12">
+                <div class="box-header well" data-original-title>
+                    <h2><i class="icon-user"></i> &nbsp;资源使用率</h2>
+                    <div class="box-icon">
+                            <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+                            <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+                    </div>
+                </div>
+                <div class="box-content">
+                    <div class="row-fluid">
+                        <div class="span12">
+                            <div id="capacity_guage">
+                                <div id="g0" class="capacity_guage"></div>
+                                <div id="g1" class="capacity_guage"></div>
+                                <div id="g2" class="capacity_guage"></div>
+                                <div id="g3" class="capacity_guage"></div>
+                                <div id="g4" class="capacity_guage"></div>
+                                <div id="g5" class="capacity_guage"></div>
+                                <div id="g6" class="capacity_guage"></div>
+                                <div id="g7" class="capacity_guage"></div>
+                                <div id="g8" class="capacity_guage"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
     </div>
     
     <div class="modal hide fade" id="configModal">
