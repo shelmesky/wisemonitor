@@ -500,6 +500,9 @@ $(document).ready(function(){
             },
             error: function(xhr, textStatus, error) {
                 console.log(error);
+                var perfrank_html = $("#perfrank");
+                perfrank_html.empty();
+                perfrank_html.html(error);
             },
             poll: function(perfrank_type) {
                 perfranker.perfrank_type = perfrank_type;
