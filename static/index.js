@@ -486,4 +486,61 @@ $(document).ready(function(){
         $("#manual_update_capacity").click(function() {
             cloud_capacity.manual_update();
         });
+        
+        var perfranker = {
+            content_type: {
+                "cpu_usage": "CPU 使用率",
+                "network_io": "网络 I/O",
+                "disk_io": "磁盘 I/O"
+            },
+            perfrank_type: "",
+            errorSleepTime: 500,
+            success: function(response, textStatus, xhr) {
+                perfranker.show_rank(response['data']);
+            },
+            error: function(xhr, textStatus, error) {
+                console.log(error);
+            },
+            poll: function(perfrank_type) {
+                perfranker.perfrank_type = perfrank_type;
+                wisemonitor.ajax_get("/perf_rank/" + perfrank_type + "/", "json", perfranker.success, perfranker.error);
+            },
+            show_rank: function(ranks) {
+                var perfrank_html = $("#perfrank");
+                perfrank_html.empty();
+                for(var i=0; i<ranks.length; i++) {
+                    var vm_uuid = ranks[i][0];
+                    var vm_data = ranks[i][1];
+                    var rank_content = vm_data[perfranker.perfrank_type];
+                    var html = '<div class="alert alert-error"> VM UUID: ' + vm_uuid + " / " + perfranker.content_type[perfranker.perfrank_type] + ": " + rank_content + "</div>";
+                    perfrank_html.append(html);
+                }
+            },
+            manual_update: function(perfrank_type) {
+                perfranker.poll(perfrank_type);
+            }
+        };
+        perfranker.poll("cpu_usage");
+        $("#perfrank_cpu_usage").addClass("active");
+        
+        $("#perfrank_cpu_usage").click(function() {
+                $("#perfrank_cpu_usage").addClass("active");
+                $("#perfrank_network_io").removeClass("active");
+                $("#perfrank_disk_io").removeClass("active");
+                perfranker.poll("cpu_usage");
+        });
+        
+        $("#perfrank_network_io").click(function() {
+                $("#perfrank_network_io").addClass("active");
+                $("#perfrank_cpu_usage").removeClass("active");
+                $("#perfrank_disk_io").removeClass("active");
+                perfranker.poll("network_io");
+        });
+        
+        $("#perfrank_disk_io").click(function() {
+                $("#perfrank_disk_io").addClass("active");
+                $("#perfrank_network_io").removeClass("active");
+                $("#perfrank_cpu_usage").removeClass("active");
+                perfranker.poll("disk_io");
+        });
 });
