@@ -600,12 +600,13 @@ $(document).ready(function(){
                 alerter_html.empty();
                 for(var i=0; i<alerts.length; i++) {
                     var created_time = alerts[i].created_time;
+                    var message_type = alerts[i].message_type;
                     var host = alerts[i].message.host;
                     var vm_name_label = alerts[i].message.vm_name_label;
                     var trigger_value = alerts[i].message.trigger_value;
                     var current_value = alerts[i].message.current_value;
                     var html = '<div class="alert alert-error">';
-                    html += created_time + deli + host + deli + vm_name_label + deli;
+                    html += created_time + deli + message_type + deli + host + deli + vm_name_label + deli;
                     html += "Current Value: " + parseFloat(current_value).toFixed(2) + " More than: " + trigger_value;
                     html += '</div>';
                     alerter_html.append(html);
