@@ -515,7 +515,8 @@ $(document).ready(function(){
                     var vm_uuid = ranks[i][0];
                     var vm_data = ranks[i][1];
                     var rank_content = vm_data[perfranker.perfrank_type];
-                    var html = '<div class="alert alert-error"> VM UUID: ' + vm_uuid + " / " + perfranker.content_type[perfranker.perfrank_type] + ": " + rank_content + "</div>";
+                    var html = '<div class="alert alert-error"> VM UUID: ' + vm_uuid + " / ";
+                    html += perfranker.content_type[perfranker.perfrank_type] + ": " + parseFloat(rank_content).toFixed(2) + "</div>";
                     perfrank_html.append(html);
                 }
             },
@@ -545,5 +546,84 @@ $(document).ready(function(){
                 $("#perfrank_network_io").removeClass("active");
                 $("#perfrank_cpu_usage").removeClass("active");
                 perfranker.poll("disk_io");
+        });
+        
+        
+         var alert_updater = {
+            alert_type: "",
+            errorSleepTime: 500,
+            success: function(response, textStatus, xhr) {
+                if (alert_updater.alert_type == "physical") {
+                    alert_updater.show_physical_alert(response.objects);
+                } else if (alert_updater.alert_type == "virtual") {
+                    alert_updater.show_virtual_alert(response.objects);
+                }
+            },
+            error: function(xhr, textStatus, error) {
+                console.log(error);
+                var alerter_html = $("#alerter");
+                alerter_html.empty();
+                alerter_html.html(error);
+            },
+            poll: function(alert_type) {
+                alert_updater.alert_type = alert_type;
+                wisemonitor.ajax_get("/top_alerts/" + alert_type + "/", "json", alert_updater.success, alert_updater.error);
+            },
+            show_physical_alert: function(alerts) {
+                console.log(alerts);
+                var alerter_html = $("#alerter");
+                alerter_html.empty();
+                for(var i=0; i<alerts.length; i++) {
+                    var deli = ' / ';
+                    var created_time = alerts[i].created_time;
+                    var host = alerts[i].message.host;
+                    var output = alerts[i].message.output;
+                    var return_code = alerts[i].message.return_code;
+                    if (return_code == 1) {
+                        var html = '<div class="alert alert-info">';
+                    }
+                    else if (return_code == 2) {
+                        var html = '<div class="alert alert-error">';
+                    }
+                    else if (return_code == 3) {
+                        var html = '<div class="alert alert-block">';
+                    }
+                    html += created_time + deli + host + deli + output;
+                    html += '</div>';
+                    alerter_html.append(html);
+                }
+            },
+            show_virtual_alert: function(alerts) {
+                var deli = ' / ';
+                console.log(alerts);
+                var alerter_html = $("#alerter");
+                alerter_html.empty();
+                for(var i=0; i<alerts.length; i++) {
+                    var created_time = alerts[i].created_time;
+                    var host = alerts[i].message.host;
+                    var vm_name_label = alerts[i].message.vm_name_label;
+                    var trigger_value = alerts[i].message.trigger_value;
+                    var current_value = alerts[i].message.current_value;
+                    var html = '<div class="alert alert-error">';
+                    html += created_time + deli + host + deli + vm_name_label + deli;
+                    html += "Current Value: " + parseFloat(current_value).toFixed(2) + " More than: " + trigger_value;
+                    html += '</div>';
+                    alerter_html.append(html);
+                }
+            }
+        };
+        alert_updater.poll("physical");
+        $("#alerter_physical").addClass("active");
+        
+        $("#alerter_physical").click(function() {
+            $("#alerter_physical").addClass("active");
+            $("#alerter_virtual").removeClass("active");
+            alert_updater.poll("physical");
+        });
+        
+        $("#alerter_virtual").click(function() {
+            $("#alerter_physical").removeClass("active");
+            $("#alerter_virtual").addClass("active");
+            alert_updater.poll("virtual");
         });
 });
