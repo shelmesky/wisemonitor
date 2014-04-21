@@ -91,7 +91,8 @@ var updater = {
     
     showMessage: function(content) {
 	data = content.message
-	var alert_area = $("#physical-device-alert");
+	var alert_area = $("#physical-device-alert-appender");
+	var appender_table = $("#appender-table");
 	if (data.message.return_code == 1) {
 	    var msg = "<div class='alert alert-info fade in hide' id='"+ content.message_id + "'>" + "警告：" + data.created_time +  " / " + "<a href='/infra/server/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
@@ -108,6 +109,7 @@ var updater = {
 	msg += "<i class='icon-bell' style='float: right'></i>";
 	msg += "</div>";
 	alert_area.prepend(msg);
+    appender_table.show();
 	
 	var new_alert_area = $("#" + content.message_id);
 	new_alert_area.show(300);

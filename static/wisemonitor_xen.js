@@ -90,9 +90,10 @@ var updater = {
     
     showMessage: function(content) {
 	data = content.message;
-	var alert_area = $("#xenserver-alert");
 	
 	if (data.message_type == "cpu_usage") {
+	    var alert_area = $("#virtual--device-alert-appender");
+	    var appender_table = $("#appender-table");
 	    var msg = "<div class='alert alert-error fade in hide' id='"+ content.message_id + "'>" + "CPU使用率: " + data.created_time + " / " +  "<a href='/xenserver/hosts/" + data.message.host + "/'>" + data.message.host + "</a> / ";
 	}
 	if (data.message_type == "disk_usage") {
@@ -107,6 +108,7 @@ var updater = {
 	msg += "<i class='icon-bell' style='float: right'></i>";
 	msg += "</div>";
 	
+    appender_table.show();
 	alert_area.prepend(msg);
 	
 	var new_alert_area = $("#" + content.message_id);
