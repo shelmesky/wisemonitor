@@ -110,7 +110,7 @@ class Physical_Device_Alerts(WiseHandler):
             cond.setdefault("created_time", {"$gte": start_time_cond, "$lte": end_time_cond})
             
         # 分页开始
-        cursor = DB.alerts.find(cond)
+        cursor = DB.alerts.find(cond).sort([("created_time", -1)])
         record_count = yield motor.Op(cursor.count)
         cursor = cursor.skip(page * limit).limit(limit)
         
@@ -304,7 +304,7 @@ class XenServer_Alerts(WiseHandler):
             cond.setdefault("created_time", {"$gte": start_time_cond, "$lte": end_time_cond})
             
         # 分页开始
-        cursor = DB.alerts.find(cond)
+        cursor = DB.alerts.find(cond).sort([("created_time", -1)])
         record_count = yield motor.Op(cursor.count)
         cursor = cursor.skip(page * limit).limit(limit)
         
