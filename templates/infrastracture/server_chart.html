@@ -8,6 +8,9 @@
 	<script type="text/javascript">
 		$(document).ready(function(){
 			$("#server_menu").attr({"class": "active", "style": "margin-left: -2px;"});
+			
+			var chart_type = '{{ chart_type }}';
+			$("#chart_" + chart_type).addClass("disabled");
 		});
 	</script>
 {% end %}
@@ -43,7 +46,13 @@
                 <div class="row-fluid">
 					
 						{% if not data %}无数据{% end %}
-						<div style="float: right">
+						<div class="btn-group" style="float: right; display: inline-block;">
+							<a class="btn btn-primary" href="/infra/server/{{ host }}/chart/4h/" id="chart_4h">4小时</a>
+							<a class="btn btn-primary" href="/infra/server/{{ host }}/chart/24h/" id="chart_24h">24小时</a>
+							<a class="btn btn-primary" href="/infra/server/{{ host }}/chart/1w/" id="chart_1w">1星期</a>
+							<a class="btn btn-primary" href="/infra/server/{{ host }}/chart/1y/" id="chart_1y">1年</a>
+						</div>
+						<div style="float: right; display: inline-block; margin-right: 10px;">
 							<a href="?excel=yes"><button type="button" class="btn btn-primary">导出数据</button></a>
 						</div>
 						{% for key, value in data.items() %}
