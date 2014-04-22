@@ -59,6 +59,9 @@
 					
 				}
 			});
+			{% if error == "ok" %}
+				$("#submit_button").prop("disabled", true);
+			{% end %}
 		});
 	</script>
 	
