@@ -34,9 +34,23 @@
 			}
 			
 			$("#page_size").change(function() {
+				var start_time = $("#start_time").val();
+				var end_time = $("#end_time").val();
+				var start_time_formated;
+				var end_time_formated;
+				var time_url;
+				if (start_time && end_time) {
+					start_time_formated = new Date(start_time).Format("yyyyMMddhhmmss")
+					end_time_formated = new Date(end_time).Format("yyyyMMddhhmmss")
+					time_url = "start_time=" + start_time_formated + "&end_time=" + end_time_formated;
+				}
 				var page_size_selected = $("#page_size option:selected");
 				var page_size_val = page_size_selected.val();
-				window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val;
+				if (start_time && end_time) {
+					window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val + "&" + time_url;
+				} else {
+					window.location.href = document.location.origin + document.location.pathname + "?limit=" + page_size_val;
+				}
 			});
 			
 			$("#time_query_button").click(function() {
