@@ -238,7 +238,7 @@ $(document).ready(function(){
                 nodes_data[node.name] = node_data;
                 
                 if (node_data['status'] == 2) {
-                    node.setImage('/static/img/' + node_data['node_type'] + '-critical.png');
+                    node.setImage('/static/img/' + node_data['node_type'] + '_critical.png');
                     node.setSize(30, 26);
                     if (topo_has_saved == 0) {
                         node.layout = {type: 'star', radius:110, auto:true};
@@ -305,7 +305,7 @@ $(document).ready(function(){
                     nodes_data[child_node.name] = child_node_data;
                     
                     if (child_node_data['status'] == 2) {
-                        child_node.setImage('/static/img/' + child_node_data['node_type'] + '-critical.png');
+                        child_node.setImage('/static/img/' + child_node_data['node_type'] + '_critical.png');
                         child_node.setSize(30, 26);
                         if (topo_has_saved == 0) {
                             child_node.layout = {type: 'star', radius:110, auto:true};
