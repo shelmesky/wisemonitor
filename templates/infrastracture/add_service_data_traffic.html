@@ -24,8 +24,10 @@
 				$("#interface_status").show();
 				if (int_status == 1) {
 					$("#warn-and-crit").show();
+					$("#submit_button").prop("disabled", false);
 				} else if (int_status == 2) {
 					$("#warn-and-crit").hide();
+					$("#submit_button").prop("disabled", true);
 				}
 			}
 			
@@ -236,7 +238,7 @@
 					</div>
 				    </div>
 				    
-				    <input class="btn btn-large btn-primary" type="submit" value="保存">
+				    <input id="submit_button" class="btn btn-large btn-primary" type="submit" value="保存">
 				</form>
 			{% else %}
 				<div class="well well-small" style="width: 100%">
