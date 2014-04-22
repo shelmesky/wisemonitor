@@ -101,7 +101,7 @@ def get_vm_info_by_uuid(host_ip, vm_uuid):
             vm_ref = session.xenapi.VM.get_by_uuid(vm_uuid)
             
         try:
-            vm_record = session.xenapi.VM.get_record(vm_ref[0])
+            vm_record = session.xenapi.VM.get_record(vm_ref)
         except Exception, e:
             logger.exception(e)
             return
