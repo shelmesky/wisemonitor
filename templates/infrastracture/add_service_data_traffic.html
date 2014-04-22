@@ -47,6 +47,18 @@
 					)
 				}
 			});
+			
+			$("#traffic_form").submit(function() {
+				var interface_index = $("#interface_index option:selected").val();
+				if (interface_index == "") {
+					$("#submit_button").prop("disabled", true);
+					return false;
+				} else {
+					$("#submit_button").prop("disabled", false);
+					return true;
+					
+				}
+			});
 		});
 	</script>
 	
@@ -88,7 +100,7 @@
             <div class="box-content">
                 <div class="row-fluid">
                     <div class="span6" style="display: inline">
-			<form action="" method="post">
+			<form action="" method="post" id="traffic_form">
 			    {% if error == "ok" %}
 				<div class="alert alert-block" style="width: 469px;">
 					<a href="#" class="close" data-dismiss="alert">&times;</a>
