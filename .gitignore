@@ -8,3 +8,4 @@ nohup.out
 server
 *.dat
 *.a
+sms_config_local.py
