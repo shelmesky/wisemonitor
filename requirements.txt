@@ -1,0 +1,14 @@
+argparse==1.2.1
+backports.ssl-match-hostname==3.4.0.2
+greenlet==0.4.2
+httplib2==0.9
+motor==0.1.2
+pika==0.9.13
+pyasn1==0.1.7
+pycrypto==2.6.1
+pymongo==2.5
+pynag==0.7.0
+pysnmp==4.2.5
+tornado==3.2
+wsgiref==0.1.2
+xlwt==0.7.5
