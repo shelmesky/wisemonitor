@@ -8,6 +8,7 @@ from logger import logger
 import comet_backend
 from common import binproto
 from logger import logger
+from common.api.sms_client import send_sms
 
 
 class Reader(object):
@@ -80,6 +81,8 @@ class Reader(object):
                 "message_id": self.obj_id,
                 "message": json.loads(data)
             }
+	    # send sms
+	    send_sms(msg['message'], "nagios")
             comet_backend.manager.nagios_insert_msg_cache(msg)
             for user, callback in comet_backend.manager.get_nagios_waiters():
                 callback(msg)
@@ -90,6 +93,8 @@ class Reader(object):
                 "message_id": self.obj_id,
                 "message": json.loads(data)
             }
+	    # send sms
+	    send_sms(msg['message'], "xen")
             comet_backend.manager.xenserver_insert_msg_cache(msg)
             for user, callback in comet_backend.manager.get_xenserver_waiters():
                 callback(msg)

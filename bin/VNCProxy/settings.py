@@ -8,8 +8,10 @@ LOG_PATH = "server.log"
 LOG_INSTANCE = "Server"
 
 XEN = (
-    ("192.2.3.44", "root", "0x55aa",),
-    ("192.2.4.10", "root", "123456",),
+    ("172.31.11.113", "root", "SPvm123*!",),
+    ("172.31.11.114", "root", "SPvm123*!",),
+    ("172.31.11.115", "root", "SPvm123*!",),
+    ("172.31.11.116", "root", "SPvm123*!",),
 )
 
 # VNC Record Server
