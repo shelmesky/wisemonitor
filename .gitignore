@@ -1,7 +1,0 @@
-*.pyc
-
-# Don't track local specific configuration
-celeryconfig.py
-# Ignore run files
-celerybeat-schedule
-celerybeat.pid
