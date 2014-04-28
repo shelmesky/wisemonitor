@@ -111,7 +111,7 @@ class Infra_Server_Handler(WiseHandler):
                 i += 1
                 ret['objects'].append(temp)
             
-        ret['objects'].sort(key=lambda x: x['_id'])
+        ret['objects'].sort(key=lambda x: x['id'])
         
         # 因为使用了多次查询, 不能按照传统思路使用skip和limit函数
         # 所以这里直接从list中获取slice
