@@ -155,7 +155,7 @@ class Physical_Device_Alerts(WiseHandler):
             alert = cursor.next_object()
             alerts.append(alert)
         
-        alerts.reverse()
+        #alerts.reverse()
         
         # add page id for every client
         page_id = str(uuid.uuid4())
@@ -349,7 +349,7 @@ class XenServer_Alerts(WiseHandler):
             alert = cursor.next_object()
             alerts.append(alert)
         
-        alerts.reverse()
+        #alerts.reverse()
         
         # add page id for every client
         page_id = str(uuid.uuid4())
