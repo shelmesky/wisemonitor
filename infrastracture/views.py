@@ -19,7 +19,7 @@ from common.utils import get_chart_colors
 from common.decorator import require_login
 from fields_in_chinese import convert_field
 from common.api import nagios
-#from common.api import snmp
+from common.api import snmp
 
 from utils import physical_perdata_to_excel
 from logger import logger
