@@ -2,7 +2,7 @@
 #!--encoding:utf-8--
 
 from gevent import monkey
-monkey.patch_all(thread=False)
+monkey.patch_all(thread=True)
 
 import os
 import sys
