@@ -58,28 +58,30 @@ class WebSocketProxy(websockify.WebSocketProxy):
         self.https = "https://"
         
         console_location = None
-        
+
         for xen_host in settings.XEN:
             # 检查host参数
             if xen_host[0] == host:
                 proxy = xmlrpclib.ServerProxy(self.http + xen_host[0])
                 result = proxy.session.login_with_password(xen_host[1], xen_host[2])
-                session_id = result['Value']
-                
-                session = XenAPI.Session(self.http + xen_host[0])
-                account_info = self.get_username_password(xen_host[0])
-                session.login_with_password(account_info[0], account_info[1])
-                
-                try:
-                    record = session.xenapi.VM.get_record(vm_ref)
-                except Exception, e:
-                    # 如果抛出异常说明是slave机器
-                    # 从它的master机器寻找vm
-                    # 在XenServer的master/slaver架构下，所有的VM都从master寻找
-                    session = XenAPI.Session(self.http + e.details[1])
-                    account_info = self.get_username_password(e.details[1])
+                # result["Status"]为"Failure",说明主机为slave,result["ErrorDescription"][1]为其master
+                # 使用master重新获取session_id
+                if result["Status"] == "Failure":
+                    master = result["ErrorDescription"][1]
+                    proxy = xmlrpclib.ServerProxy(self.http + master)
+                    result = proxy.session.login_with_password(xen_host[1], xen_host[2])
+                    session_id = result["Value"]
+                    session = XenAPI.Session(self.http + master)
+                    account_info = self.get_username_password(master)
                     session.login_with_password(account_info[0], account_info[1])
+                else:
+                    session_id = result['Value']
                     record = session.xenapi.VM.get_record(vm_ref)
+                    session = XenAPI.Session(self.http + xen_host[0])
+                    account_info = self.get_username_password(xen_host[0])
+                    session.login_with_password(account_info[0], account_info[1])
+
+                record = session.xenapi.VM.get_record(vm_ref)
 
                 if not record['is_a_template'] and not record['is_a_snapshot']:
                     if record['power_state'] == "Running":
@@ -95,6 +97,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
                                 protocol = self.http
                                 server = xen_host[0]
                                 params =  ref + "&session_id=" + session_id
+                                print (protocol, server, params, )
                                 return (protocol, server, params, )
                     else:
                         return None

@@ -52,7 +52,16 @@ def connect_to_xenserver():
             try:
                 transport = TimeoutTransport()
                 session = XenAPI.Session("http://" + host[0], transport)
-                session.login_with_password(host[1], host[2])
+                try:
+                    session.login_with_password(host[1], host[2])
+                except XenAPI.Failure as e:
+                    master = e.details[1]
+                    for i in XEN:
+                        if master == i[0]:
+                            user = i[1]
+                            passwd = i[2]
+                    session = XenAPI.Session("http://" + master, transport)
+                    session.login_with_password(user, passwd)
                 global_xenserver_conn[host[0]] = session
                 logger.warn("Connect to XenServer: {0} are success(with timeout).".format(host[0]))
             except Exception, e:
