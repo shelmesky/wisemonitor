@@ -25,6 +25,8 @@ Leverages websockify by Joel Martin
 from gevent import monkey
 monkey.patch_all()
 
+import pdb
+
 import socket
 import sys
 import struct
@@ -76,7 +78,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
                     session.login_with_password(account_info[0], account_info[1])
                 else:
                     session_id = result['Value']
-                    record = session.xenapi.VM.get_record(vm_ref)
+                    #record = session.xenapi.VM.get_record(vm_ref)
                     session = XenAPI.Session(self.http + xen_host[0])
                     account_info = self.get_username_password(xen_host[0])
                     session.login_with_password(account_info[0], account_info[1])
@@ -120,13 +122,13 @@ class WebSocketProxy(websockify.WebSocketProxy):
         host = args['host'][0].rstrip('\n')
         vm_ref_id = args['vm_ref'][0].rstrip('\n')
         vm_ref_str = "OpaqueRef:" + vm_ref_id
-        
+
         protocol, server, params = self.do_get_target(host, vm_ref_str)
         if protocol == self.http:
             port = 80
         else:
             port = 443
-        
+
         return (server, port, params, vm_ref_id, )
 
     def new_client(self, attached_object):
@@ -136,7 +138,7 @@ class WebSocketProxy(websockify.WebSocketProxy):
         # 根据websocket client传递过来的PATH
         # 找到UUID对应的vnc location
         host, port, vnc_location, vm_ref_id = self.get_target(self.path)
-        
+
         # 如果启用了录制VNC数据
         if self.record:
             vm_info_struct = "<64s128s64s128s"
