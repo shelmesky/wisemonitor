@@ -1,9 +1,9 @@
 # --encoding: utf-8--
-from run import global_xenserver_conn
+from run import global_xenserver_conn, global_xenserver_master_conn
 from logger import logger
 from pprint import pprint
 from common.api import XenAPI
-
+import pdb
 
 def get_xenserver_conn(xenhost):
     return global_xenserver_conn.get(xenhost, None)
@@ -201,6 +201,7 @@ def get_xenserver_host(xenhost):
     获取单台xenserver的相信信息
     @xenhost: xenserver的IP
     '''
+    #pdb.set_trace()
     session = global_xenserver_conn.get(xenhost, None)
     if session != None:
         try:
@@ -231,7 +232,7 @@ def get_xenserver_host_all():
     获取所有xenserver的简略信息
     '''
     final_hosts = []
-    for ip, session in global_xenserver_conn.items():
+    for ip, session in global_xenserver_master_conn.items():
         temp = {}
         try:
             hosts = session.xenapi.host.get_all()
