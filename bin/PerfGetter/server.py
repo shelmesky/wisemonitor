@@ -43,7 +43,13 @@ def connect_to_xenserver():
             try:
                 proxy = xmlrpclib.ServerProxy("http://" + host[0])
                 result = proxy.session.login_with_password(host[1], host[2])
-                session_id = result['Value']
+                if result["Status"] == "Failure":
+                    master = result["ErrorDescription"][1]
+                    proxy = xmlrpclib.ServerProxy("http://" + master)
+                    result = proxy.session.login_with_password(host[1], host[2])
+                    session_id = result["Value"]
+                else:
+                    session_id = result['Value']
                 global_xenserver_conn[host[0]] = session_id
             except Exception, e:
                 logger.exception(e)
